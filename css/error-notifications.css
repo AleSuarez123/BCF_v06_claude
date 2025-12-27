@@ -1,0 +1,213 @@
+/**
+ * ERROR NOTIFICATIONS STYLES
+ * ==========================
+ * Estilos para el sistema de notificaciones de errores
+ */
+
+/* Contenedor de notificaciones */
+.error-notifications-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 10000;
+    max-width: 400px;
+    pointer-events: none;
+}
+
+/* Notificación individual */
+.error-notification {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    margin-bottom: 10px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15),
+                0 0 0 1px rgba(0, 0, 0, 0.05);
+    pointer-events: auto;
+    animation: slideIn 0.3s ease-out;
+    transition: all 0.3s ease;
+    max-width: 100%;
+    word-wrap: break-word;
+}
+
+/* Animación de entrada */
+@keyframes slideIn {
+    from {
+        transform: translateX(120%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Animación de salida */
+.error-notification.removing {
+    animation: slideOut 0.3s ease-out forwards;
+}
+
+@keyframes slideOut {
+    to {
+        transform: translateX(120%);
+        opacity: 0;
+    }
+}
+
+/* Icono del error */
+.error-icon {
+    font-size: 20px;
+    flex-shrink: 0;
+    line-height: 1;
+}
+
+/* Mensaje del error */
+.error-message {
+    flex: 1;
+    font-size: 14px;
+    line-height: 1.4;
+    color: #333;
+}
+
+/* Botón de cerrar */
+.error-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    line-height: 1;
+    cursor: pointer;
+    color: #999;
+    padding: 0;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+
+.error-close:hover {
+    background: rgba(0, 0, 0, 0.05);
+    color: #333;
+}
+
+.error-close:active {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+/* Severidades */
+
+/* CRÍTICO - Rojo */
+.error-notification.critical {
+    background: #fee;
+    border-left: 4px solid #dc3545;
+}
+
+.error-notification.critical .error-message {
+    color: #721c24;
+    font-weight: 500;
+}
+
+/* ALTO - Naranja */
+.error-notification.high {
+    background: #fff3cd;
+    border-left: 4px solid #ffc107;
+}
+
+.error-notification.high .error-message {
+    color: #856404;
+}
+
+/* MEDIO - Amarillo claro */
+.error-notification.medium {
+    background: #fff9e6;
+    border-left: 4px solid #ffeb3b;
+}
+
+.error-notification.medium .error-message {
+    color: #7d6608;
+}
+
+/* BAJO - Azul claro */
+.error-notification.low {
+    background: #e7f3ff;
+    border-left: 4px solid #2196f3;
+}
+
+.error-notification.low .error-message {
+    color: #014361;
+}
+
+/* Hover effect */
+.error-notification:hover {
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2),
+                0 0 0 1px rgba(0, 0, 0, 0.08);
+    transform: translateY(-2px);
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    .error-notifications-container {
+        left: 10px;
+        right: 10px;
+        top: 10px;
+        max-width: none;
+    }
+
+    .error-notification {
+        padding: 10px 12px;
+        font-size: 13px;
+    }
+
+    .error-icon {
+        font-size: 18px;
+    }
+}
+
+/* Para modo oscuro (opcional) */
+@media (prefers-color-scheme: dark) {
+    .error-notification {
+        background: #2a2a2a;
+        color: #e0e0e0;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5),
+                    0 0 0 1px rgba(255, 255, 255, 0.1);
+    }
+
+    .error-message {
+        color: #e0e0e0 !important;
+    }
+
+    .error-close {
+        color: #999;
+    }
+
+    .error-close:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+    }
+
+    /* Ajustar backgrounds para modo oscuro */
+    .error-notification.critical {
+        background: #3a1f1f;
+        border-left-color: #ff5252;
+    }
+
+    .error-notification.high {
+        background: #3a2f1f;
+        border-left-color: #ffb74d;
+    }
+
+    .error-notification.medium {
+        background: #3a3a1f;
+        border-left-color: #fff176;
+    }
+
+    .error-notification.low {
+        background: #1f2a3a;
+        border-left-color: #64b5f6;
+    }
+}

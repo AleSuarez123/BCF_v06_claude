@@ -26,6 +26,7 @@ import { openIssueDetail } from './issue-detail.js';
 import { applyBulkStatus, applyBulkUpdate, applyBulkDelete, deselectAllIssues, toggleIssueSelection, selectAllIssues } from './selection-utils.js';
 import { openEditSidebar } from './edit-panel.js';
 import { blobManager } from './blob-url-manager.js';
+import { errorHandler, ErrorTypes, ErrorSeverity } from './error-handler.js';
 
 // Inicializar API Client
 export const bcfApi = new BCFApiClient('');
@@ -54,12 +55,91 @@ function toggleFavorite(guid) {
     renderAppIssues();
 }
 
+/**
+ * Configura el error handler global con estrategias de recuperación
+ */
+function setupErrorHandler() {
+    logger.info('⚙️ Configurando error handler global...');
+
+    // Estrategia de recuperación para errores de red
+    errorHandler.registerRecovery(ErrorTypes.NETWORK, (error) => {
+        logger.debug('Recovery: Error de red detectado');
+
+        // Si hay servidor configurado, intentar reconectar
+        if (AppState.bcfServer.url) {
+            // Marcar servidor como potencialmente inaccesible
+            const serverStatus = $('#server-status-indicator');
+            if (serverStatus) {
+                serverStatus.classList.add('offline');
+                serverStatus.title = 'Servidor sin conexión';
+            }
+        }
+    });
+
+    // Estrategia de recuperación para errores de almacenamiento
+    errorHandler.registerRecovery(ErrorTypes.STORAGE, async (error) => {
+        logger.debug('Recovery: Error de almacenamiento detectado');
+
+        const message = error.message.toLowerCase();
+
+        // Si es quota excedida, intentar limpiar datos antiguos
+        if (message.includes('quota') || message.includes('full')) {
+            try {
+                // Limpiar blobs antiguos
+                const cleaned = blobManager.cleanOldUrls(30 * 60 * 1000); // 30 minutos
+                if (cleaned > 0) {
+                    logger.info(`Recovery: ${cleaned} blob URLs antiguas limpiadas`);
+                }
+
+                notify('Espacio de almacenamiento bajo. Se limpiaron datos antiguos.', 'warning');
+            } catch (cleanupError) {
+                logger.error('Error al intentar limpiar almacenamiento:', cleanupError);
+            }
+        }
+    });
+
+    // Estrategia de recuperación para errores de parsing
+    errorHandler.registerRecovery(ErrorTypes.PARSE, (error) => {
+        logger.debug('Recovery: Error de parsing detectado');
+
+        // Sugerir al usuario verificar el formato del archivo
+        const message = error.message.toLowerCase();
+        if (message.includes('bcf') || message.includes('xml')) {
+            notify('El archivo BCF podría estar corrupto o tener formato incorrecto', 'error');
+        } else if (message.includes('json')) {
+            notify('Error al procesar datos JSON. Verifica el formato.', 'error');
+        }
+    });
+
+    // Estrategia de recuperación para errores de renderizado
+    errorHandler.registerRecovery(ErrorTypes.RENDER, (error) => {
+        logger.debug('Recovery: Error de renderizado detectado');
+
+        // Intentar refrescar la vista actual
+        if (AppState.viewMode === 'list') {
+            logger.info('Recovery: Intentando re-renderizar lista de incidencias');
+            setTimeout(() => {
+                try {
+                    renderAppIssues();
+                } catch (retryError) {
+                    logger.error('Error al reintentar renderizado:', retryError);
+                }
+            }, 100);
+        }
+    });
+
+    logger.info('✅ Error handler configurado con 4 estrategias de recuperación');
+}
+
 // Inicialización principal
 const init = async () => {
     try {
         logger.info('🚀 Iniciando BCF Viewer Pro...');
         logger.debug('Configuración:', CONFIG.getVersionInfo?.() || { version: CONFIG.VERSION });
-        
+
+        // Configurar error handler con estrategias de recuperación
+        setupErrorHandler();
+
         // Inicializar DB
         await dbManager.init();
         
@@ -1578,6 +1658,6 @@ async function loadIssueFromAnyProject(issueId) {
     notify('Incidencia no encontrada en ningún proyecto', 'warning');
 }
 
-export { loadIssueFromAnyProject };
+export { loadIssueFromAnyProject, errorHandler, ErrorTypes };
 
 document.addEventListener('DOMContentLoaded', init);
