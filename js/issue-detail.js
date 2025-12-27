@@ -112,7 +112,24 @@ export function openIssueDetail(guid, onUpdate) {
     if (modalIssue) {
         modalIssue.classList.add('active');
         document.body.style.overflow = 'hidden';
+
+        // Inicializar panel de comentarios
+        setTimeout(() => {
+            initCommentsPanel();
+        }, 100);
     }
+}
+
+/**
+ * Obtiene las iniciales del nombre del autor
+ */
+function getInitials(name) {
+    if (!name) return '?';
+    const parts = name.trim().split(' ');
+    if (parts.length >= 2) {
+        return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
 }
 
 /**
@@ -120,6 +137,8 @@ export function openIssueDetail(guid, onUpdate) {
  */
 export function renderComments(issue) {
     const commentsList = $('#comments-list');
+    const commentsCount = $('#comments-count');
+
     if (!commentsList) return;
 
     const allComments = [
@@ -127,22 +146,68 @@ export function renderComments(issue) {
         ...(issue.localComments || []).map(c => ({ ...c, isLocal: true }))
     ];
 
+    // Actualizar contador
+    if (commentsCount) {
+        commentsCount.textContent = allComments.length;
+    }
+
     if (allComments.length === 0) {
-        commentsList.innerHTML = '<p style="color:var(--text-muted);font-size:0.9rem;">Sin comentarios</p>';
+        commentsList.innerHTML = '';
         return;
     }
 
-    commentsList.innerHTML = allComments.map(comment => `
-        <div class="comment-item">
-            <div class="comment-header">
-                <span class="comment-author">
-                    ${escapeHtml(comment.author)}${comment.isLocal ? ' (local)' : ''}
-                </span>
-                <span class="comment-date">${comment.dateFormatted || comment.date || 'Sin fecha'}</span>
+    commentsList.innerHTML = allComments.map(comment => {
+        const author = comment.author || 'Anónimo';
+        const initials = getInitials(author);
+        const badgeClass = comment.isLocal ? 'local' : 'remote';
+        const badgeText = comment.isLocal ? 'Local' : 'BCF';
+
+        return `
+            <div class="comment-item">
+                <div class="comment-avatar">
+                    ${initials}
+                </div>
+                <div class="comment-content">
+                    <div class="comment-header">
+                        <span class="comment-author">${escapeHtml(author)}</span>
+                        <span class="comment-badge ${badgeClass}">${badgeText}</span>
+                        <span class="comment-date">${comment.dateFormatted || comment.date || 'Ahora'}</span>
+                    </div>
+                    <p class="comment-text">${escapeHtml(comment.comment || comment.text || '')}</p>
+                    <div class="comment-actions-hover">
+                        <button class="comment-action-btn" title="Responder">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="9 17 4 12 9 7"></polyline>
+                                <path d="M20 18v-2a4 4 0 0 0-4-4H4"></path>
+                            </svg>
+                            <span>Responder</span>
+                        </button>
+                        ${comment.isLocal ? `
+                        <button class="comment-action-btn" title="Editar">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                            </svg>
+                            <span>Editar</span>
+                        </button>
+                        <button class="comment-action-btn" title="Eliminar" style="color: var(--color-danger, #ef4444);">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                            </svg>
+                            <span>Eliminar</span>
+                        </button>
+                        ` : ''}
+                    </div>
+                </div>
             </div>
-            <p class="comment-text">${escapeHtml(comment.comment || comment.text || '')}</p>
-        </div>
-    `).join('');
+        `;
+    }).join('');
+
+    // Scroll to bottom
+    setTimeout(() => {
+        commentsList.scrollTop = commentsList.scrollHeight;
+    }, 100);
 }
 
 /**
@@ -219,11 +284,56 @@ export async function addLocalComment(onUpdate) {
     }
 
     newCommentInput.value = '';
+
+    // Resetear contador
+    const charCounter = $('#char-counter');
+    if (charCounter) charCounter.textContent = '0';
+
     await Storage.saveAll();
-    
+
     if (typeof onUpdate === 'function') {
         onUpdate();
     }
-    
+
     notify('Comentario añadido', 'success');
+}
+
+/**
+ * Inicializa los eventos del panel de comentarios
+ */
+export function initCommentsPanel() {
+    const newCommentInput = $('#new-comment');
+    const charCounter = $('#char-counter');
+
+    if (!newCommentInput) return;
+
+    // Contador de caracteres
+    if (charCounter) {
+        newCommentInput.addEventListener('input', () => {
+            const length = newCommentInput.value.length;
+            charCounter.textContent = length;
+
+            // Cambiar color si supera cierto límite
+            if (length > 500) {
+                charCounter.style.color = 'var(--color-danger, #ef4444)';
+            } else if (length > 300) {
+                charCounter.style.color = 'var(--color-warning, #f59e0b)';
+            } else {
+                charCounter.style.color = 'var(--text-muted)';
+            }
+        });
+    }
+
+    // Auto-expand textarea
+    newCommentInput.addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = Math.min(this.scrollHeight, 200) + 'px';
+    });
+
+    // Reset height when empty
+    newCommentInput.addEventListener('blur', function() {
+        if (!this.value.trim()) {
+            this.style.height = '42px';
+        }
+    });
 }
