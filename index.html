@@ -751,7 +751,9 @@
             s.src = 'js/tests.js';
             document.body.appendChild(s);
           }
-        } catch {}
+        } catch (error) {
+          console.warn('Error loading test script:', error);
+        }
       })();
     </script>
 </body>

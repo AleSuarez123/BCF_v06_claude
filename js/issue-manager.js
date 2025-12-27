@@ -4,6 +4,7 @@
 
 import { AppState, STATUS_COLORS, STATUS_LABELS, PRIORITY_COLORS, PRIORITY_LABELS } from './state.js';
 import { $, $$, escapeHtml } from './ui-utils.js';
+import { sanitizeBCFContent, escapeHTML } from './sanitizer.js';
 import { BCFParser } from './bcf-parser.js';
 import { updateBulkActionsBar } from './selection-utils.js';
 

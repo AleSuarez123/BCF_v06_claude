@@ -1089,7 +1089,9 @@ function getIssueByGuid(guid) {
   try {
     const { AppState } = window.__modules || {};
     if (AppState) return AppState.currentIssues.find(i => i.guid === guid);
-  } catch {}
+  } catch (error) {
+    console.warn('Error accessing AppState from window.__modules:', error);
+  }
   return null;
 }
 

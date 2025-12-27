@@ -4,6 +4,7 @@
 
 import { AppState, STATUS_COLORS, STATUS_LABELS, PRIORITY_COLORS, PRIORITY_LABELS } from './state.js';
 import { $, $$, escapeHtml, notify } from './ui-utils.js';
+import { sanitizeURL } from './sanitizer.js';
 import { BCFParser } from './bcf-parser.js';
 import { Storage } from './storage.js';
 
@@ -73,20 +74,35 @@ export function openIssueDetail(guid, onUpdate) {
     const snapshotContainer = $('#issue-snapshot');
     if (snapshotContainer) {
         if (issue.snapshot) {
-            snapshotContainer.innerHTML = `
-                <img src="${issue.snapshot}" alt="Snapshot" style="cursor: pointer;" 
-                     id="detail-snapshot-img">
-            `;
-            const img = $('#detail-snapshot-img');
-            if (img) {
-                img.onclick = () => {
-                    const snapshotImg = $('#snapshot-image');
-                    const snapshotModal = $('#modal-snapshot');
-                    if (snapshotImg && snapshotModal) {
-                        snapshotImg.src = issue.snapshot;
-                        snapshotModal.classList.add('active');
-                    }
-                };
+            // Sanitizar URL para prevenir XSS
+            const sanitizedUrl = sanitizeURL(issue.snapshot);
+
+            if (sanitizedUrl) {
+                snapshotContainer.innerHTML = `
+                    <img src="${sanitizedUrl}" alt="Snapshot" style="cursor: pointer;"
+                         id="detail-snapshot-img">
+                `;
+                const img = $('#detail-snapshot-img');
+                if (img) {
+                    img.onclick = () => {
+                        const snapshotImg = $('#snapshot-image');
+                        const snapshotModal = $('#modal-snapshot');
+                        if (snapshotImg && snapshotModal) {
+                            snapshotImg.src = sanitizedUrl;
+                            snapshotModal.classList.add('active');
+                        }
+                    };
+                }
+            } else {
+                // URL peligrosa bloqueada
+                snapshotContainer.innerHTML = `
+                    <div class="no-snapshot">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <rect x="3" y="3" width="18" height="18" rx="2"/>
+                        </svg>
+                        <span>URL inválida</span>
+                    </div>
+                `;
             }
         } else {
             snapshotContainer.innerHTML = `
