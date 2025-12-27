@@ -27,6 +27,7 @@ import { applyBulkStatus, applyBulkUpdate, applyBulkDelete, deselectAllIssues, t
 import { openEditSidebar } from './edit-panel.js';
 import { blobManager } from './blob-url-manager.js';
 import { errorHandler, ErrorTypes, ErrorSeverity } from './error-handler.js';
+import { eventBus, Events } from './event-bus.js';
 
 // Inicializar API Client
 export const bcfApi = new BCFApiClient('');
@@ -247,11 +248,24 @@ const init = async () => {
         
         // Mostrar la aplicación principal
         $('#app').classList.remove('hidden');
-        
+
         logger.info('✅ Aplicación iniciada correctamente');
+
+        // Emitir evento de app lista
+        eventBus.emit(Events.APP_READY, {
+            timestamp: Date.now(),
+            version: CONFIG.VERSION
+        });
+
     } catch (error) {
         console.error('Error fatal al iniciar:', error);
         notify(`Error fatal: ${error.message}`, 'error');
+
+        // Emitir evento de error de app
+        eventBus.emit(Events.APP_ERROR, {
+            error: error.message,
+            stack: error.stack
+        });
         
         const loadingScreen = $('#loading-screen');
         if (loadingScreen) {
@@ -899,6 +913,13 @@ export async function loadProject(projectId) {
     renderIssues();
 
     navigateTo('viewer');
+
+    // Emitir evento de proyecto cargado
+    eventBus.emit(Events.PROJECT_LOADED, {
+        projectId: project.id,
+        projectName: project.name,
+        issueCount: AppState.currentIssues.length
+    });
 }
 
 function setupNavigation() {
@@ -1658,6 +1679,6 @@ async function loadIssueFromAnyProject(issueId) {
     notify('Incidencia no encontrada en ningún proyecto', 'warning');
 }
 
-export { loadIssueFromAnyProject, errorHandler, ErrorTypes };
+export { loadIssueFromAnyProject, errorHandler, ErrorTypes, eventBus, Events };
 
 document.addEventListener('DOMContentLoaded', init);
