@@ -25,6 +25,7 @@ import { initColumnCustomizer } from './column-customizer.js';
 import { openIssueDetail } from './issue-detail.js';
 import { applyBulkStatus, applyBulkUpdate, applyBulkDelete, deselectAllIssues, toggleIssueSelection, selectAllIssues } from './selection-utils.js';
 import { openEditSidebar } from './edit-panel.js';
+import { blobManager } from './blob-url-manager.js';
 
 // Inicializar API Client
 export const bcfApi = new BCFApiClient('');
@@ -772,20 +773,32 @@ async function addFilesToProject(files) {
 export async function loadProject(projectId) {
     const project = AppState.projects.find(p => p.id === projectId);
     if (!project) return;
-    
+
+    // Limpiar URLs del proyecto anterior si existe
+    if (AppState.currentProject && AppState.currentProject.id !== projectId) {
+        const oldContext = `project-${AppState.currentProject.id}`;
+        blobManager.revokeContext(oldContext);
+        logger.debug(`Limpiadas URLs del proyecto anterior: ${oldContext}`);
+    }
+
     AppState.currentProject = project;
     AppState.currentIssues = [];
-    
+
+    // Context para este proyecto
+    const projectContext = `project-${projectId}`;
+
     // Process issues and generate blob URLs for current session
     project.bcfFiles.forEach(bcf => {
         bcf.topics?.forEach(topic => {
             // Generate temporary URL for snapshot if it's a Blob
             let snapshotUrl = null;
             if (topic.snapshot instanceof Blob) {
-                snapshotUrl = URL.createObjectURL(topic.snapshot);
+                // Usar blob manager en lugar de crear URL directamente
+                snapshotUrl = blobManager.create(topic.snapshot, topic.guid, projectContext);
             } else if (typeof topic.snapshot === 'string' && topic.snapshot.startsWith('blob:')) {
                 // Warning: Old stale blob URL, cannot recover if Blob is lost
-                snapshotUrl = null; 
+                logger.warn(`URL de blob obsoleta detectada para ${topic.guid}`);
+                snapshotUrl = null;
             }
 
             AppState.currentIssues.push({
@@ -796,15 +809,15 @@ export async function loadProject(projectId) {
             });
         });
     });
-    
+
     // Update project name in UI
     const currentNameEl = $('#current-project-name');
     if (currentNameEl) currentNameEl.textContent = project.name;
-    
+
     updateFilterOptions();
     applyFiltersAndSort();
     renderIssues();
-    
+
     navigateTo('viewer');
 }
 

@@ -35,6 +35,257 @@ export const $ = selector => document.querySelector(selector);
 export const $$ = selector => document.querySelectorAll(selector);
 
 /**
+ * SAFE DOM ACCESS - Helpers que previenen crashes por elementos null
+ */
+
+/**
+ * Query selector seguro que retorna un objeto con métodos chainables
+ * @param {string} selector - Selector CSS
+ * @param {Element} parent - Elemento padre (default: document)
+ * @returns {Object} Objeto con métodos seguros
+ */
+export const $safe = (selector, parent = document) => {
+    const element = parent.querySelector(selector);
+
+    const safeObj = {
+        element,
+        exists: element !== null,
+
+        // Métodos de clase
+        addClass(...classes) {
+            if (element) element.classList.add(...classes);
+            return safeObj;
+        },
+
+        removeClass(...classes) {
+            if (element) element.classList.remove(...classes);
+            return safeObj;
+        },
+
+        toggleClass(className, force) {
+            if (element) element.classList.toggle(className, force);
+            return safeObj;
+        },
+
+        hasClass(className) {
+            return element ? element.classList.contains(className) : false;
+        },
+
+        // Atributos
+        attr(name, value) {
+            if (!element) return safeObj;
+            if (value === undefined) {
+                return element.getAttribute(name);
+            }
+            element.setAttribute(name, value);
+            return safeObj;
+        },
+
+        removeAttr(name) {
+            if (element) element.removeAttribute(name);
+            return safeObj;
+        },
+
+        // Contenido
+        text(value) {
+            if (!element) return value === undefined ? '' : safeObj;
+            if (value === undefined) {
+                return element.textContent;
+            }
+            element.textContent = value;
+            return safeObj;
+        },
+
+        html(value) {
+            if (!element) return value === undefined ? '' : safeObj;
+            if (value === undefined) {
+                return element.innerHTML;
+            }
+            element.innerHTML = value;
+            return safeObj;
+        },
+
+        val(value) {
+            if (!element) return value === undefined ? '' : safeObj;
+            if (value === undefined) {
+                return element.value;
+            }
+            element.value = value;
+            return safeObj;
+        },
+
+        // Estilos
+        css(prop, value) {
+            if (!element) return safeObj;
+            if (typeof prop === 'object') {
+                Object.entries(prop).forEach(([k, v]) => {
+                    element.style[k] = v;
+                });
+            } else if (value !== undefined) {
+                element.style[prop] = value;
+            } else {
+                return getComputedStyle(element)[prop];
+            }
+            return safeObj;
+        },
+
+        show() {
+            if (element) element.style.display = '';
+            return safeObj;
+        },
+
+        hide() {
+            if (element) element.style.display = 'none';
+            return safeObj;
+        },
+
+        // Eventos
+        on(event, handler, options) {
+            if (element) element.addEventListener(event, handler, options);
+            return safeObj;
+        },
+
+        off(event, handler, options) {
+            if (element) element.removeEventListener(event, handler, options);
+            return safeObj;
+        },
+
+        // Otros
+        focus() {
+            if (element) element.focus();
+            return safeObj;
+        },
+
+        click() {
+            if (element) element.click();
+            return safeObj;
+        },
+
+        remove() {
+            if (element && element.parentElement) {
+                element.parentElement.removeChild(element);
+            }
+            return safeObj;
+        },
+
+        append(...nodes) {
+            if (element) element.append(...nodes);
+            return safeObj;
+        },
+
+        prepend(...nodes) {
+            if (element) element.prepend(...nodes);
+            return safeObj;
+        },
+
+        // Callback condicional
+        if(callback) {
+            if (element) callback(element);
+            return safeObj;
+        },
+
+        // Fallback si no existe
+        else(callback) {
+            if (!element) callback();
+            return safeObj;
+        },
+
+        // Log de warning si no existe
+        warnIfMissing(message) {
+            if (!element) {
+                console.warn(message || `Element not found: ${selector}`);
+            }
+            return safeObj;
+        }
+    };
+
+    return safeObj;
+};
+
+/**
+ * Versión múltiple del selector seguro
+ * @param {string} selector - Selector CSS
+ * @param {Element} parent - Elemento padre (default: document)
+ * @returns {Object} Objeto con métodos para operar sobre múltiples elementos
+ */
+export const $$safe = (selector, parent = document) => {
+    const elements = Array.from(parent.querySelectorAll(selector));
+
+    return {
+        elements,
+        length: elements.length,
+        exists: elements.length > 0,
+
+        forEach(callback) {
+            elements.forEach(callback);
+            return this;
+        },
+
+        map(callback) {
+            return elements.map(callback);
+        },
+
+        filter(callback) {
+            return elements.filter(callback);
+        },
+
+        addClass(...classes) {
+            elements.forEach(el => el.classList.add(...classes));
+            return this;
+        },
+
+        removeClass(...classes) {
+            elements.forEach(el => el.classList.remove(...classes));
+            return this;
+        },
+
+        toggleClass(className, force) {
+            elements.forEach(el => el.classList.toggle(className, force));
+            return this;
+        },
+
+        on(event, handler, options) {
+            elements.forEach(el => el.addEventListener(event, handler, options));
+            return this;
+        },
+
+        off(event, handler, options) {
+            elements.forEach(el => el.removeEventListener(event, handler, options));
+            return this;
+        },
+
+        remove() {
+            elements.forEach(el => {
+                if (el.parentElement) el.parentElement.removeChild(el);
+            });
+            return this;
+        },
+
+        css(prop, value) {
+            if (typeof prop === 'object') {
+                elements.forEach(el => {
+                    Object.entries(prop).forEach(([k, v]) => {
+                        el.style[k] = v;
+                    });
+                });
+            } else {
+                elements.forEach(el => {
+                    el.style[prop] = value;
+                });
+            }
+            return this;
+        },
+
+        warnIfMissing(message) {
+            if (elements.length === 0) {
+                console.warn(message || `No elements found: ${selector}`);
+            }
+            return this;
+        }
+    };
+};
+
+/**
  * Cierra todos los modales abiertos en la aplicación
  */
 export const closeAllModals = () => {

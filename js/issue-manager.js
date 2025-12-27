@@ -967,7 +967,9 @@ function attachListeners(container, onIssueClick, onFavoriteClick) {
             const guid = btn.dataset.guid;
             const issue = AppState.currentIssues.find(i => i.guid === guid);
             if (issue && issue.snapshot) {
-                const url = issue.snapshotUrl || (issue.snapshot instanceof Blob ? URL.createObjectURL(issue.snapshot) : issue.snapshot);
+                // Usar snapshotUrl que ya fue creado con blobManager en loadProject
+                // o crear uno nuevo solo si es necesario
+                const url = issue.snapshotUrl || issue.snapshot;
                 if (window.openSnapshot) {
                     window.openSnapshot(url);
                 } else {
