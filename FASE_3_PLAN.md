@@ -1,6 +1,6 @@
 # FASE 3 - MEDIUM PRIORITY: Code Quality & Arquitectura
 
-## 📊 Estado: 13% COMPLETADO (1/10 items al 100%, 1/10 al 30%)
+## 📊 Estado: 16% COMPLETADO (1/10 items al 100%, 1/10 al 60%)
 
 ---
 
@@ -82,11 +82,11 @@ Mejorar la **calidad del código**, **mantenibilidad** y **accesibilidad** del p
 
 ---
 
-### **3.2 🔄 Agregar JSDoc a Funciones Públicas** (PARCIAL - 30%)
+### **3.2 🔄 Agregar JSDoc a Funciones Públicas** (PARCIAL - 60%)
 **Prioridad:** Media
 **Esfuerzo:** 8-10 horas
 **ROI:** Medio
-**Progreso:** 30% - 12 funciones documentadas
+**Progreso:** 60% - 24 funciones documentadas
 
 **Problema:**
 - Solo ~15% de funciones documentadas
@@ -122,7 +122,21 @@ Mejorar la **calidad del código**, **mantenibilidad** y **accesibilidad** del p
   - `applyFiltersAndSort()` - Aplicación de filtros
   - `updateFilterOptions()` - Generación dinámica de filtros
 
-**Total:** 12 funciones documentadas (~30% del objetivo)
+✅ Documentado en `js/main.js` - Segunda fase (12 funciones de setup):
+  - `setupErrorHandler()` - Configuración de error recovery strategies
+  - `initUI()` - Orquestación de componentes UI
+  - `setupBulkActionsBar()` - Acciones masivas en issues
+  - `setupModals()` - Sistema de modales con validación
+  - `setupDropdowns()` - Menús dropdown interactivos
+  - `setupDropZones()` - Drag & drop de archivos BCF
+  - `setupFilters()` - Sistema de filtros con debouncing
+  - `setupExport()` - Exportación a múltiples formatos
+  - `setupTheme()` - Light/dark mode con persistencia
+  - `setupNavigation()` - Sistema completo de navegación (~184 líneas)
+  - `goToDashboard()` - Helper de navegación
+  - `addFilesToProject(files)` - Agregar archivos a proyecto
+
+**Total:** 24 funciones documentadas (~60% del objetivo)
 
 **Patrón JSDoc utilizado:**
 ```javascript

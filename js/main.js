@@ -70,7 +70,17 @@ function toggleFavorite(guid) {
 }
 
 /**
- * Configura el error handler global con estrategias de recuperación
+ * Configura el sistema de manejo de errores global con estrategias de recuperación
+ *
+ * Registra 4 estrategias de recuperación automática:
+ * - NETWORK: Marca servidor como offline y notifica al usuario
+ * - STORAGE: Limpia blobs antiguos si quota excedida
+ * - PARSE: Notifica errores de formato BCF/XML/JSON
+ * - RENDER: Intenta re-renderizar la vista actual
+ *
+ * @example
+ * setupErrorHandler();
+ * // Error handler queda activo durante toda la sesión
  */
 function setupErrorHandler() {
     logger.info('⚙️ Configurando error handler global...');
@@ -309,10 +319,29 @@ const init = async () => {
     }
 };
 
+/**
+ * Inicializa todos los componentes de la interfaz de usuario
+ *
+ * Orquesta la configuración de:
+ * - Drop zones para drag & drop de archivos
+ * - Sistema de navegación y routing
+ * - Panel de filtros
+ * - Barra de acciones masivas
+ * - Exportación de datos
+ * - Dropdowns y menús
+ * - Sistema de temas (light/dark)
+ * - Paneles de notificaciones
+ * - Personalizador de columnas
+ * - Modales y formularios
+ *
+ * @example
+ * initUI();
+ * // Todos los componentes UI quedan funcionales
+ */
 function initUI() {
     // Configurar drop zones
     setupDropZones();
-    
+
     // Configurar navegación
     setupNavigation();
     
@@ -341,6 +370,23 @@ function initUI() {
     setupModals();
 }
 
+/**
+ * Configura la barra de acciones masivas para modificar múltiples issues
+ *
+ * Configura event listeners para:
+ * - Cambio masivo de estado (status)
+ * - Cambio masivo de prioridad (priority)
+ * - Asignación masiva (assignee)
+ * - Exportación masiva a Excel
+ * - Eliminación masiva con confirmación
+ *
+ * Todas las acciones se aplican solo a issues seleccionados
+ * y refrescan automáticamente la vista después de ejecutarse.
+ *
+ * @example
+ * setupBulkActionsBar();
+ * // Los botones de bulk actions quedan funcionales
+ */
 function setupBulkActionsBar() {
     // Status
     const btnApplyStatus = document.getElementById('btn-bulk-status');
@@ -419,6 +465,21 @@ function navigateIssue(delta) {
     updateNavIndicatorUI();
 }
 
+/**
+ * Configura todos los modales de la aplicación y sus formularios
+ *
+ * Configura:
+ * - Modal de proyecto (crear/editar) con FormValidator
+ * - Modal de servidor BCF con validación de URL
+ * - Modal de issue detail con lazy loading
+ * - Listeners de botones de cierre (X y backdrop)
+ * - Validación y sanitización de datos
+ * - Escape key para cerrar modales
+ *
+ * @example
+ * setupModals();
+ * // Todos los modales quedan operativos con validación
+ */
 function setupModals() {
     // Modal Nuevo Proyecto
     const modalProject = $('#modal-project');
@@ -556,9 +617,21 @@ function setupModals() {
     }
 }
 
+/**
+ * Configura el comportamiento de todos los menús dropdown
+ *
+ * Implementa:
+ * - Toggle al hacer click en trigger
+ * - Cierre automático al hacer click fuera
+ * - Prevención de propagación de eventos
+ *
+ * @example
+ * setupDropdowns();
+ * // Todos los .dropdown quedan funcionales
+ */
 function setupDropdowns() {
     const dropdowns = $$('.dropdown');
-    
+
     dropdowns.forEach(dropdown => {
         const trigger = dropdown.querySelector('.dropdown-trigger');
         if (trigger) {
@@ -579,9 +652,24 @@ function setupDropdowns() {
     });
 }
 
+/**
+ * Configura las zonas de drag & drop para archivos BCF
+ *
+ * Implementa:
+ * - Drop zone en dashboard para archivos y carpetas
+ * - Overlay global de drop zone en toda la ventana
+ * - Soporte para carpetas usando webkitGetAsEntry API
+ * - Feedback visual con clase 'drag-over'
+ * - Filtrado automático de archivos .bcf/.bcfzip/.zip
+ * - Escaneo recursivo de carpetas
+ *
+ * @example
+ * setupDropZones();
+ * // Usuario puede arrastrar archivos BCF a cualquier parte de la app
+ */
 function setupDropZones() {
     const dashboardDropZone = $('#dashboard-drop-zone');
-    
+
     if (dashboardDropZone) {
         dashboardDropZone.addEventListener('dragover', (e) => {
             e.preventDefault();
@@ -950,6 +1038,21 @@ async function createNewProject(name, description, files = []) {
     await loadProject(newProject.id);
 }
 
+/**
+ * Agrega archivos BCF al proyecto actual
+ *
+ * Parsea cada archivo usando BCFParser, los agrega al proyecto,
+ * guarda los cambios y recarga el proyecto para mostrar las nuevas incidencias.
+ *
+ * @param {File[]} files - Array de archivos BCF a agregar
+ * @returns {Promise<void>}
+ *
+ * @example
+ * await addFilesToProject([bcfFile1, bcfFile2]);
+ * // Archivos parseados y agregados al proyecto actual
+ *
+ * @throws {Error} Si falla el parsing o guardado
+ */
 async function addFilesToProject(files) {
     for (const file of files) {
         try {
@@ -966,11 +1069,6 @@ async function addFilesToProject(files) {
     notify('Archivos cargados correctamente', 'success');
 }
 
-/**
- * Actualiza el UI basado en loading states
- * @param {boolean} isLoading - Si está cargando
- * @param {string} type - Tipo de loading ('project', 'issues', 'save', 'sync')
- */
 /**
  * Establece el estado de carga y muestra/oculta indicadores visuales
  *
@@ -1170,6 +1268,47 @@ export async function loadProject(projectId) {
     }
 }
 
+/**
+ * Configura todo el sistema de navegación y controles de la aplicación
+ *
+ * Esta es una función monolítica grande (~184 líneas) que configura:
+ *
+ * **Proyectos:**
+ * - Botón nuevo proyecto con modal
+ * - Botón editar proyecto actual
+ * - Formulario con validación
+ *
+ * **Búsqueda:**
+ * - Spotlight search (Ctrl/Cmd+K)
+ * - Search trigger button
+ *
+ * **Filtros:**
+ * - Toggle de panel de filtros con sidebar responsive
+ * - Backdrop para cerrar en mobile
+ * - ARIA attributes para accesibilidad
+ * - Animaciones y transiciones
+ *
+ * **Navegación de Issues:**
+ * - Botones prev/next para navegar entre issues
+ * - Indicador de posición (3/25)
+ * - Flechas de teclado para navegación
+ *
+ * **Vista:**
+ * - Botones list/grid view mode
+ * - Toggle de tema light/dark
+ * - Dropdowns de acciones
+ *
+ * **Keyboard Shortcuts:**
+ * - Spotlight (Ctrl/Cmd+K)
+ * - Ayuda de teclado (?)
+ * - Escape para cerrar modales
+ *
+ * @example
+ * setupNavigation();
+ * // Todo el sistema de navegación queda funcional
+ *
+ * @todo Refactorizar en funciones más pequeñas (FASE 3.6)
+ */
 function setupNavigation() {
     const btnNewProject = $('#btn-new-project');
     if (btnNewProject) {
@@ -1457,6 +1596,14 @@ function navigateTo(pageId) {
     }
 }
 
+/**
+ * Navega al dashboard de proyectos
+ *
+ * Atajo para navigateTo('dashboard').
+ *
+ * @example
+ * goToDashboard(); // Vuelve a la vista principal de proyectos
+ */
 function goToDashboard() {
     navigateTo('dashboard');
 }
@@ -1482,6 +1629,30 @@ function toggleViewMode() {
     renderIssues();
 }
 
+/**
+ * Configura el sistema de filtros de incidencias
+ *
+ * Implementa:
+ * - Debouncing (300ms) para inputs de texto (autor, búsqueda)
+ * - Filtrado inmediato para selects, dates y chips
+ * - Select all checkbox para selección masiva
+ * - Botón de favoritos con toggle
+ * - Delegación de eventos para filter chips
+ * - Cache de DOM queries para optimización
+ *
+ * Filtros disponibles:
+ * - Autor (debounced)
+ * - Búsqueda de texto (debounced)
+ * - BCF file (inmediato)
+ * - Rango de fechas (inmediato)
+ * - Orden/sorting (inmediato)
+ * - Favoritos (inmediato)
+ * - Chips de estado/prioridad/tipo (inmediato)
+ *
+ * @example
+ * setupFilters();
+ * // Sistema de filtros queda operativo con debouncing optimizado
+ */
 function setupFilters() {
     // Crear función debounced para filtros de texto (300ms de espera)
     const debouncedFilter = debounce(() => {
@@ -1581,6 +1752,20 @@ function resetFilters() {
     renderAppIssues();
 }
 
+/**
+ * Configura los botones de exportación de datos
+ *
+ * Formatos soportados:
+ * - Excel (.xlsx) - Tabla completa de issues
+ * - CSV (.csv) - Datos en formato texto
+ * - PDF (.pdf) - Resumen visual de issues
+ * - PDF Detail - Reporte detallado con imágenes
+ * - JSON (.json) - Estructura completa de datos
+ *
+ * @example
+ * setupExport();
+ * // Botones de exportación quedan funcionales
+ */
 function setupExport() {
     const btnExcel = $('#btn-export-excel');
     if (btnExcel) btnExcel.addEventListener('click', () => exportToExcel());
@@ -1598,9 +1783,23 @@ function setupExport() {
     if (btnJson) btnJson.addEventListener('click', () => exportToJSON());
 }
 
+/**
+ * Configura el sistema de temas (light/dark mode)
+ *
+ * Implementa:
+ * - Toggle entre temas light y dark
+ * - Persistencia en localStorage
+ * - Detección de preferencia del sistema (prefers-color-scheme)
+ * - Actualización de iconos (sol/luna)
+ * - Aplicación de atributo data-theme en documentElement
+ *
+ * @example
+ * setupTheme();
+ * // Sistema de temas queda operativo con persistencia
+ */
 function setupTheme() {
     const btnTheme = $('#btn-theme-toggle');
-    
+
     const applyTheme = (theme) => {
         document.documentElement.setAttribute('data-theme', theme);
         AppState.theme = theme;
