@@ -747,14 +747,25 @@
       (function() {
         try {
           const params = new URLSearchParams(location.search);
+
+          // Cargar tests si ?tests=1
           if (params.get('tests') === '1') {
             const s = document.createElement('script');
             s.type = 'module';
             s.src = 'js/tests.js';
             document.body.appendChild(s);
           }
+
+          // Cargar DevTools si ?dev=1
+          if (params.get('dev') === '1') {
+            const s = document.createElement('script');
+            s.type = 'module';
+            s.src = 'js/debug/dev-tools.js';
+            document.body.appendChild(s);
+            console.log('🛠️ DevTools enabled - use DevTools.help() for commands');
+          }
         } catch (error) {
-          console.warn('Error loading test script:', error);
+          console.warn('Error loading optional scripts:', error);
         }
       })();
     </script>
