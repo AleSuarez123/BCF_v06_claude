@@ -12,7 +12,7 @@
 
 import { CONFIG, logger, validators } from './config.js';
 import { AppState } from './state.js';
-import { $, $$, notify, withErrorHandling, updateGlobalStats, closeAllModals, escapeHtml } from './ui-utils.js';
+import { $, $$, notify, withErrorHandling, updateGlobalStats, closeAllModals, escapeHtml, debounce, throttle } from './ui-utils.js';
 import { Storage } from './storage.js';
 import { dbManager } from './db-manager.js';
 import { renderProjects, renderIssues, applyFiltersAndSort, updateFilterOptions, openEditIssueModal, saveIssue, clearColumnFilters, updateNavIndicatorUI } from './issue-manager.js';
@@ -1215,39 +1215,62 @@ function toggleViewMode() {
 }
 
 function setupFilters() {
-    const filterInputs = ['filter-bcf', 'filter-author', 'filter-date-from', 'filter-date-to', 'filter-search', 'sort-by'];
-    
-    filterInputs.forEach(id => {
+    // Crear función debounced para filtros de texto (300ms de espera)
+    const debouncedFilter = debounce(() => {
+        applyFiltersAndSort();
+        renderAppIssues();
+    }, 300);
+
+    // Función inmediata para selects y otros controles
+    const immediateFilter = () => {
+        applyFiltersAndSort();
+        renderAppIssues();
+    };
+
+    // Inputs de texto que deben usar debouncing
+    const textInputs = ['filter-author', 'filter-search'];
+
+    // Inputs que deben ser inmediatos (dates, selects)
+    const immediateInputs = ['filter-bcf', 'filter-date-from', 'filter-date-to', 'sort-by'];
+
+    // Aplicar debouncing a inputs de texto
+    textInputs.forEach(id => {
         const el = $(`#${id}`);
         if (el) {
-            el.addEventListener('input', () => {
-                applyFiltersAndSort();
-                renderAppIssues();
-            });
-            el.addEventListener('change', () => {
-                applyFiltersAndSort();
-                renderAppIssues();
-            });
+            // 'input' event con debouncing (mientras escribe)
+            el.addEventListener('input', debouncedFilter);
+            // 'change' event inmediato (blur, enter)
+            el.addEventListener('change', immediateFilter);
         }
     });
 
+    // Aplicar filtrado inmediato a selects y dates
+    immediateInputs.forEach(id => {
+        const el = $(`#${id}`);
+        if (el) {
+            el.addEventListener('input', immediateFilter);
+            el.addEventListener('change', immediateFilter);
+        }
+    });
+
+    // Botón de favoritos - inmediato
     const btnFilterFavorites = $('#btn-filter-favorites');
     if (btnFilterFavorites) {
         btnFilterFavorites.addEventListener('click', () => {
             btnFilterFavorites.classList.toggle('active');
-            applyFiltersAndSort();
-            renderAppIssues();
+            immediateFilter();
         });
     }
-    
+
+    // Filter chips - inmediatos (delegación de eventos)
     document.addEventListener('click', (e) => {
         if (e.target.classList.contains('filter-chip')) {
             e.target.classList.toggle('active');
-            applyFiltersAndSort();
-            renderAppIssues();
+            immediateFilter();
         }
     });
-    
+
+    // Select all checkbox - inmediato
     const selectAll = $('#select-all-checkbox');
     if (selectAll) {
         selectAll.addEventListener('change', (e) => {
@@ -1260,6 +1283,7 @@ function setupFilters() {
         });
     }
 
+    // Botones de limpiar filtros - inmediatos
     const btnClearFilters = $('#btn-clear-filters');
     if (btnClearFilters) {
         btnClearFilters.addEventListener('click', () => resetFilters());
@@ -1268,6 +1292,8 @@ function setupFilters() {
     if (btnClearFiltersHeader) {
         btnClearFiltersHeader.addEventListener('click', () => resetFilters());
     }
+
+    logger.info('✅ Filtros configurados con debouncing (300ms para texto)');
 }
 
 function resetFilters() {
@@ -1416,10 +1442,12 @@ function setupServer() {
 }
 
 function initGlobalEvents() {
-    window.addEventListener('resize', () => {
+    // Throttle resize para evitar ejecuciones excesivas (máx 1 cada 250ms)
+    window.addEventListener('resize', throttle(() => {
         // Ajustar layout si es necesario
-    });
-    
+        // Futuro: responsive adjustments
+    }, 250));
+
     window.addEventListener('beforeunload', (e) => {
         if (Object.keys(AppState.localChanges).length > 0) {
             e.preventDefault();
@@ -1427,10 +1455,14 @@ function initGlobalEvents() {
         }
     });
 
-    // Escuchar evento de refresco de incidencias (para Sort y Drag&Drop)
-    document.addEventListener('issues:refresh', () => {
+    // Debounce refresh de incidencias para evitar renders múltiples rápidos
+    const debouncedRefresh = debounce(() => {
         renderAppIssues();
-    });
+    }, 100);
+
+    document.addEventListener('issues:refresh', debouncedRefresh);
+
+    logger.info('✅ Eventos globales configurados con throttle/debounce');
 }
 
 function checkUpcomingDeadlines() {

@@ -309,15 +309,50 @@ export const escapeHtml = text => {
     return div.innerHTML;
 };
 
-export const debounce = (func, wait) => {
+/**
+ * PERFORMANCE UTILITIES
+ * Funciones para optimizar eventos y renderizado
+ */
+
+/**
+ * Debounce - Retrasa la ejecución hasta que pasen X ms sin llamadas
+ * Útil para: inputs de búsqueda, validación, auto-save
+ * @param {Function} func - Función a ejecutar
+ * @param {number} wait - Milisegundos de espera
+ * @param {boolean} immediate - Ejecutar inmediatamente la primera vez
+ * @returns {Function} Función debounced
+ */
+export const debounce = (func, wait = 300, immediate = false) => {
     let timeout;
     return function executedFunction(...args) {
+        const context = this;
         const later = () => {
-            clearTimeout(timeout);
-            func(...args);
+            timeout = null;
+            if (!immediate) func.apply(context, args);
         };
+        const callNow = immediate && !timeout;
         clearTimeout(timeout);
         timeout = setTimeout(later, wait);
+        if (callNow) func.apply(context, args);
+    };
+};
+
+/**
+ * Throttle - Limita ejecuciones a máximo una cada X ms
+ * Útil para: scroll, resize, mousemove
+ * @param {Function} func - Función a ejecutar
+ * @param {number} limit - Milisegundos mínimos entre ejecuciones
+ * @returns {Function} Función throttled
+ */
+export const throttle = (func, limit = 300) => {
+    let inThrottle;
+    return function(...args) {
+        const context = this;
+        if (!inThrottle) {
+            func.apply(context, args);
+            inThrottle = true;
+            setTimeout(() => inThrottle = false, limit);
+        }
     };
 };
 
