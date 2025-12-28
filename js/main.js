@@ -456,6 +456,18 @@ function setupBulkActionsBar() {
     }
 }
 
+/**
+ * Navega entre issues usando prev/next
+ *
+ * Actualiza AppState.focusedIndex y el indicador UI.
+ * Previene overflow/underflow con Math.max/min.
+ *
+ * @param {number} delta - Cantidad de issues a avanzar (+1) o retroceder (-1)
+ *
+ * @example
+ * navigateIssue(1);  // Siguiente issue
+ * navigateIssue(-1); // Issue anterior
+ */
 function navigateIssue(delta) {
     const total = AppState.filteredIssues.length;
     if (total === 0) return;
@@ -793,11 +805,35 @@ function setupDropZones() {
 }
 
 // Helpers para lectura de carpetas
+/**
+ * Verifica si un archivo es BCF por su extensión
+ *
+ * @param {File} file - Archivo a verificar
+ * @returns {boolean} true si es .bcf, .bcfzip o .zip
+ *
+ * @example
+ * if (isBcfFile(file)) {
+ *   // Procesar archivo BCF
+ * }
+ */
 function isBcfFile(file) {
     const name = file.name.toLowerCase();
     return name.endsWith('.bcf') || name.endsWith('.bcfzip') || name.endsWith('.zip');
 }
 
+/**
+ * Escanea recursivamente entries de drag & drop para encontrar archivos BCF
+ *
+ * Usa webkitGetAsEntry API para soportar carpetas en drag & drop.
+ * Escanea recursivamente directorios y filtra solo archivos BCF.
+ *
+ * @param {FileSystemEntry[]} entries - Entries de DataTransferItems
+ * @returns {Promise<File[]>} Array de archivos BCF encontrados
+ *
+ * @example
+ * const entries = Array.from(e.dataTransfer.items).map(i => i.webkitGetAsEntry());
+ * const files = await scanEntries(entries);
+ */
 async function scanEntries(entries) {
     const files = [];
     for (const entry of entries) {
@@ -812,10 +848,25 @@ async function scanEntries(entries) {
     return files;
 }
 
+/**
+ * Convierte FileSystemFileEntry a File object
+ *
+ * @param {FileSystemFileEntry} fileEntry - Entry de archivo
+ * @returns {Promise<File>} File object
+ */
 function getFileFromEntry(fileEntry) {
     return new Promise((resolve, reject) => fileEntry.file(resolve, reject));
 }
 
+/**
+ * Lee recursivamente un directorio y retorna todos los archivos BCF
+ *
+ * Maneja el batch reading de DirectoryReader (100 entries por batch en algunos navegadores).
+ * Continúa leyendo hasta que no hay más entries.
+ *
+ * @param {FileSystemDirectoryEntry} dirEntry - Entry de directorio
+ * @returns {Promise<File[]>} Array de archivos BCF en el directorio
+ */
 function readDirectory(dirEntry) {
     return new Promise((resolve) => {
         const dirReader = dirEntry.createReader();
@@ -840,6 +891,20 @@ function readDirectory(dirEntry) {
     });
 }
 
+/**
+ * Procesa la selección de una carpeta con archivos BCF
+ *
+ * Filtra solo archivos BCF, valida que haya al menos uno,
+ * y muestra modal de resumen para confirmar la carga.
+ *
+ * @param {File[]} files - Array de archivos de la carpeta seleccionada
+ *
+ * @example
+ * // Desde input webkitdirectory
+ * folderInput.addEventListener('change', (e) => {
+ *   handleFolderSelection(Array.from(e.target.files));
+ * });
+ */
 function handleFolderSelection(files) {
     // 1. Filtrar BCF (si vienen de input.files ya son File objects, si vienen de scanEntries también)
     // El input.files de webkitdirectory devuelve todos los archivos, hay que filtrar por extensión
@@ -855,6 +920,20 @@ function handleFolderSelection(files) {
     showFolderSummary(bcfFiles);
 }
 
+/**
+ * Muestra modal de resumen con archivos BCF encontrados en carpeta
+ *
+ * Genera modal dinámico con:
+ * - Contador de archivos
+ * - Lista de archivos
+ * - Botones confirmar/cancelar
+ *
+ * @param {File[]} files - Archivos BCF a mostrar en resumen
+ *
+ * @example
+ * showFolderSummary(bcfFiles);
+ * // Muestra modal con lista de archivos para confirmar
+ */
 function showFolderSummary(files) {
     const modal = document.createElement('div');
     modal.className = 'modal active';
@@ -1735,6 +1814,21 @@ function setupFilters() {
     logger.info('✅ Filtros configurados con debouncing y DOM cache');
 }
 
+/**
+ * Resetea todos los filtros a sus valores por defecto
+ *
+ * Limpia:
+ * - Inputs de texto (BCF, autor, fechas, búsqueda)
+ * - Ordenamiento → 'date-desc'
+ * - Chips de estado, prioridad, disciplina
+ * - Botón de favoritos
+ * - Filtros de columnas personalizadas
+ *
+ * Luego aplica filtros y re-renderiza.
+ *
+ * @example
+ * resetFilters(); // Vuelve a mostrar todas las issues sin filtros
+ */
 function resetFilters() {
     ['filter-bcf','filter-author','filter-date-from','filter-date-to','filter-search'].forEach(id => {
         const el = document.getElementById(id);
@@ -1908,6 +2002,18 @@ function setupServer() {
     }
 }
 
+/**
+ * Inicializa event listeners globales con throttle/debounce
+ *
+ * Configura:
+ * - Window resize con throttle (250ms)
+ * - beforeunload para advertir cambios sin guardar
+ * - 'issues:refresh' custom event con debounce (100ms)
+ *
+ * @example
+ * initGlobalEvents();
+ * // Eventos globales optimizados quedan activos
+ */
 function initGlobalEvents() {
     // Throttle resize para evitar ejecuciones excesivas (máx 1 cada 250ms)
     window.addEventListener('resize', throttle(() => {
@@ -1932,9 +2038,22 @@ function initGlobalEvents() {
     logger.info('✅ Eventos globales configurados con throttle/debounce');
 }
 
+/**
+ * Verifica y notifica issues con fecha límite cercana (próximos 7 días)
+ *
+ * Filtra issues con:
+ * - dueDate en los próximos 0-7 días
+ * - Estado NO cerrado/resuelto
+ *
+ * Muestra badge de notificación si encuentra issues.
+ *
+ * @example
+ * checkUpcomingDeadlines();
+ * // Badge de notificación aparece si hay deadlines próximos
+ */
 function checkUpcomingDeadlines() {
     if (!AppState.currentIssues) return;
-    
+
     const today = new Date();
     const upcoming = AppState.currentIssues.filter(issue => {
         if (!issue.dueDate) return false;

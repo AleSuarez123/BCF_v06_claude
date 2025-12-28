@@ -1,6 +1,6 @@
 # FASE 3 - MEDIUM PRIORITY: Code Quality & Arquitectura
 
-## 📊 Estado: 16% COMPLETADO (1/10 items al 100%, 1/10 al 60%)
+## 📊 Estado: 18.5% COMPLETADO (1/10 items al 100%, 1/10 al 85%)
 
 ---
 
@@ -82,11 +82,11 @@ Mejorar la **calidad del código**, **mantenibilidad** y **accesibilidad** del p
 
 ---
 
-### **3.2 🔄 Agregar JSDoc a Funciones Públicas** (PARCIAL - 60%)
+### **3.2 🔄 Agregar JSDoc a Funciones Públicas** (PARCIAL - 85%)
 **Prioridad:** Media
 **Esfuerzo:** 8-10 horas
 **ROI:** Medio
-**Progreso:** 60% - 24 funciones documentadas
+**Progreso:** 85% - 34 funciones documentadas
 
 **Problema:**
 - Solo ~15% de funciones documentadas
@@ -136,7 +136,19 @@ Mejorar la **calidad del código**, **mantenibilidad** y **accesibilidad** del p
   - `goToDashboard()` - Helper de navegación
   - `addFilesToProject(files)` - Agregar archivos a proyecto
 
-**Total:** 24 funciones documentadas (~60% del objetivo)
+✅ Documentado en `js/main.js` - Tercera fase (10 helpers y utilidades):
+  - `navigateIssue(delta)` - Navegación prev/next entre issues
+  - `isBcfFile(file)` - Validación de extensión BCF
+  - `scanEntries(entries)` - Escaneo recursivo de carpetas drag & drop
+  - `getFileFromEntry(fileEntry)` - Conversión FileSystemFileEntry → File
+  - `readDirectory(dirEntry)` - Lectura recursiva de directorios
+  - `handleFolderSelection(files)` - Procesamiento de carpetas BCF
+  - `showFolderSummary(files)` - Modal de confirmación de archivos
+  - `resetFilters()` - Reset completo de filtros
+  - `initGlobalEvents()` - Event listeners globales con throttle
+  - `checkUpcomingDeadlines()` - Notificación de deadlines próximos
+
+**Total:** 34 funciones documentadas (~85% del objetivo)
 
 **Patrón JSDoc utilizado:**
 ```javascript
