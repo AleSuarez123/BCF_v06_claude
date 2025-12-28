@@ -12,7 +12,7 @@
 
 import { CONFIG, logger, validators } from './config.js';
 import { AppState } from './state.js';
-import { $, $$, notify, withErrorHandling, updateGlobalStats, closeAllModals, escapeHtml, debounce, throttle } from './ui-utils.js';
+import { $, $$, notify, withErrorHandling, updateGlobalStats, closeAllModals, escapeHtml, debounce, throttle, $cached, clearDOMCache } from './ui-utils.js';
 import { Storage } from './storage.js';
 import { dbManager } from './db-manager.js';
 import { renderProjects, renderIssues, applyFiltersAndSort, updateFilterOptions, openEditIssueModal, saveIssue, clearColumnFilters, updateNavIndicatorUI } from './issue-manager.js';
@@ -904,8 +904,8 @@ export async function loadProject(projectId) {
         });
     });
 
-    // Update project name in UI
-    const currentNameEl = $('#current-project-name');
+    // Update project name in UI (usar $cached - se accede frecuentemente)
+    const currentNameEl = $cached('#current-project-name');
     if (currentNameEl) currentNameEl.textContent = project.name;
 
     updateFilterOptions();
@@ -1182,15 +1182,15 @@ function setupNavigation() {
 
 function navigateTo(pageId) {
     $$('.page').forEach(p => p.classList.remove('active'));
-    
+
     if (pageId === 'viewer') {
-        const viewerPage = $('#viewer-page');
+        const viewerPage = $cached('#viewer-page');
         if (viewerPage) viewerPage.classList.add('active');
-        $('#dashboard-page').classList.remove('active');
-        $('#app').classList.remove('hidden');
+        $cached('#dashboard-page')?.classList.remove('active');
+        $cached('#app')?.classList.remove('hidden');
     } else {
-        $('#dashboard-page').classList.add('active');
-        const viewerPage = $('#viewer-page');
+        $cached('#dashboard-page')?.classList.add('active');
+        const viewerPage = $cached('#viewer-page');
         if (viewerPage) viewerPage.classList.remove('active');
     }
 }
@@ -1233,9 +1233,9 @@ function setupFilters() {
     // Inputs que deben ser inmediatos (dates, selects)
     const immediateInputs = ['filter-bcf', 'filter-date-from', 'filter-date-to', 'sort-by'];
 
-    // Aplicar debouncing a inputs de texto
+    // Aplicar debouncing a inputs de texto (usar $cached - se acceden frecuentemente)
     textInputs.forEach(id => {
-        const el = $(`#${id}`);
+        const el = $cached(`#${id}`);
         if (el) {
             // 'input' event con debouncing (mientras escribe)
             el.addEventListener('input', debouncedFilter);
@@ -1244,17 +1244,17 @@ function setupFilters() {
         }
     });
 
-    // Aplicar filtrado inmediato a selects y dates
+    // Aplicar filtrado inmediato a selects y dates (usar $cached)
     immediateInputs.forEach(id => {
-        const el = $(`#${id}`);
+        const el = $cached(`#${id}`);
         if (el) {
             el.addEventListener('input', immediateFilter);
             el.addEventListener('change', immediateFilter);
         }
     });
 
-    // Botón de favoritos - inmediato
-    const btnFilterFavorites = $('#btn-filter-favorites');
+    // Botón de favoritos - inmediato (usar $cached)
+    const btnFilterFavorites = $cached('#btn-filter-favorites');
     if (btnFilterFavorites) {
         btnFilterFavorites.addEventListener('click', () => {
             btnFilterFavorites.classList.toggle('active');
@@ -1262,7 +1262,7 @@ function setupFilters() {
         });
     }
 
-    // Filter chips - inmediatos (delegación de eventos)
+    // Filter chips - inmediatos (delegación de eventos - no cachear)
     document.addEventListener('click', (e) => {
         if (e.target.classList.contains('filter-chip')) {
             e.target.classList.toggle('active');
@@ -1270,8 +1270,8 @@ function setupFilters() {
         }
     });
 
-    // Select all checkbox - inmediato
-    const selectAll = $('#select-all-checkbox');
+    // Select all checkbox - inmediato (usar $cached)
+    const selectAll = $cached('#select-all-checkbox');
     if (selectAll) {
         selectAll.addEventListener('change', (e) => {
             if (e.target.checked) {
@@ -1283,17 +1283,17 @@ function setupFilters() {
         });
     }
 
-    // Botones de limpiar filtros - inmediatos
-    const btnClearFilters = $('#btn-clear-filters');
+    // Botones de limpiar filtros - inmediatos (usar $cached)
+    const btnClearFilters = $cached('#btn-clear-filters');
     if (btnClearFilters) {
         btnClearFilters.addEventListener('click', () => resetFilters());
     }
-    const btnClearFiltersHeader = $('#btn-clear-filters-header');
+    const btnClearFiltersHeader = $cached('#btn-clear-filters-header');
     if (btnClearFiltersHeader) {
         btnClearFiltersHeader.addEventListener('click', () => resetFilters());
     }
 
-    logger.info('✅ Filtros configurados con debouncing (300ms para texto)');
+    logger.info('✅ Filtros configurados con debouncing y DOM cache');
 }
 
 function resetFilters() {

@@ -35,6 +35,163 @@ export const $ = selector => document.querySelector(selector);
 export const $$ = selector => document.querySelectorAll(selector);
 
 /**
+ * DOM QUERY CACHE - Sistema de cacheo para selectores frecuentes
+ * =================================================================
+ * Evita llamadas repetidas a querySelector() cacheando resultados
+ */
+
+class DOMCache {
+    constructor() {
+        this.cache = new Map();
+        this.stats = { hits: 0, misses: 0, size: 0 };
+
+        // Auto-limpiar cache cuando DOM cambia significativamente
+        this._setupInvalidation();
+    }
+
+    /**
+     * Get con cacheo - igual que $ pero con cache
+     * @param {string} selector - Selector CSS
+     * @returns {Element|null}
+     */
+    get(selector) {
+        if (this.cache.has(selector)) {
+            const cached = this.cache.get(selector);
+            // Verificar que el elemento sigue en el DOM
+            if (cached && document.contains(cached)) {
+                this.stats.hits++;
+                return cached;
+            } else {
+                // Elemento fue removido del DOM, limpiar cache
+                this.cache.delete(selector);
+            }
+        }
+
+        // Cache miss - buscar y cachear
+        this.stats.misses++;
+        const element = document.querySelector(selector);
+
+        if (element) {
+            this.cache.set(selector, element);
+            this.stats.size = this.cache.size;
+        }
+
+        return element;
+    }
+
+    /**
+     * GetAll con cacheo - igual que $$ pero con cache
+     * @param {string} selector - Selector CSS
+     * @returns {NodeList}
+     */
+    getAll(selector) {
+        // NodeList es estático, siempre refrescar
+        return document.querySelectorAll(selector);
+    }
+
+    /**
+     * Invalida el cache de un selector específico
+     * @param {string} selector
+     */
+    invalidate(selector) {
+        if (selector) {
+            this.cache.delete(selector);
+        } else {
+            // Invalidar todo
+            this.cache.clear();
+        }
+        this.stats.size = this.cache.size;
+    }
+
+    /**
+     * Invalida todo el cache
+     */
+    clear() {
+        this.cache.clear();
+        this.stats.size = 0;
+    }
+
+    /**
+     * Obtiene estadísticas del cache
+     */
+    getStats() {
+        const total = this.stats.hits + this.stats.misses;
+        const hitRate = total > 0 ? ((this.stats.hits / total) * 100).toFixed(2) : 0;
+
+        return {
+            ...this.stats,
+            hitRate: `${hitRate}%`,
+            total
+        };
+    }
+
+    /**
+     * Configura invalidación automática del cache
+     * @private
+     */
+    _setupInvalidation() {
+        // Invalidar cache cuando se modifica el DOM significativamente
+        if (typeof MutationObserver !== 'undefined') {
+            const observer = new MutationObserver((mutations) => {
+                // Solo invalidar en cambios estructurales significativos
+                for (const mutation of mutations) {
+                    if (mutation.type === 'childList' && mutation.removedNodes.length > 0) {
+                        // Nodos removidos - puede afectar cache
+                        this.clear();
+                        break;
+                    }
+                }
+            });
+
+            // Observar cambios en el body
+            if (document.body) {
+                observer.observe(document.body, {
+                    childList: true,
+                    subtree: false // Solo nivel raíz para performance
+                });
+            } else {
+                // Si body no existe aún, observar cuando esté listo
+                document.addEventListener('DOMContentLoaded', () => {
+                    observer.observe(document.body, {
+                        childList: true,
+                        subtree: false
+                    });
+                });
+            }
+        }
+    }
+}
+
+// Instancia singleton del cache
+const domCache = new DOMCache();
+
+/**
+ * $ con cache - usar para elementos que se buscan frecuentemente
+ * Ejemplo: $cached('#btn-new-issue')
+ */
+export const $cached = (selector) => domCache.get(selector);
+
+/**
+ * $$ con cache (siempre retorna NodeList actual)
+ */
+export const $$cached = (selector) => domCache.getAll(selector);
+
+/**
+ * Limpiar cache manualmente (útil después de renderizados grandes)
+ */
+export const clearDOMCache = () => domCache.clear();
+
+/**
+ * Obtener stats del cache (para debugging)
+ */
+export const getDOMCacheStats = () => domCache.getStats();
+
+// Exponer en window para debugging
+if (typeof window !== 'undefined') {
+    window.__domCache = domCache;
+}
+
+/**
  * SAFE DOM ACCESS - Helpers que previenen crashes por elementos null
  */
 
