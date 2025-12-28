@@ -7,6 +7,7 @@ import { $, $$, escapeHtml } from './ui-utils.js';
 import { sanitizeBCFContent, escapeHTML } from './sanitizer.js';
 import { BCFParser } from './bcf-parser.js';
 import { updateBulkActionsBar } from './selection-utils.js';
+import { VirtualScroller, shouldUseVirtualScrolling } from './virtual-renderer.js';
 
 // Configuración de Iconos para cabeceras
 export const HEADER_ICONS = {
@@ -119,6 +120,9 @@ let currentSort = { colId: null, direction: 'asc' };
 let activeColumnFilters = {};
 export function clearColumnFilters() { activeColumnFilters = {}; }
 
+// Virtual Scroller instance (para listas grandes >100 items)
+let virtualScrollerInstance = null;
+
 // Helpers para avatares
 function stringToColor(str) {
     if (!str) return '#ccc';
@@ -201,16 +205,40 @@ export function renderIssues(onIssueClick, onFavoriteClick) {
     updateNavIndicator();
 }
 
+/**
+ * Crea el elemento HTML de una fila de issue
+ * (Separado para reutilizar en virtual scrolling)
+ */
+function createIssueRowElement(issue, index, visibleColumns) {
+    const isSelected = AppState.selectedIssues.has(issue.guid);
+    const isFocused = index === AppState.focusedIndex;
+    const isFavorite = AppState.favorites.has(issue.guid);
+    const statusColor = `var(--status-${STATUS_COLORS[issue.topicStatus] || 'open'})`;
+
+    // Crear elemento DOM
+    const row = document.createElement('div');
+    row.className = `issue-row ${isSelected ? 'selected' : ''} ${isFocused ? 'focused' : ''} ${isFavorite ? 'favorite' : ''}`;
+    row.dataset.id = issue.guid;
+    row.dataset.idx = index;
+    row.style.setProperty('--row-status-color', statusColor);
+
+    // Generar celdas dinámicamente (solo columnas visibles)
+    const cellsHtml = visibleColumns.map(col => getCellContent(col, issue, isFavorite, index)).join('');
+    row.innerHTML = cellsHtml;
+
+    return row;
+}
+
 function renderIssuesList(onIssueClick, onFavoriteClick) {
     const container = $('#issues-list');
-    
+
     // Filtrar columnas ocultas
     const visibleColumns = columnConfig.filter(col => !col.hidden);
-    
+
     // Generar estilo de grid dinámico
     const gridTemplate = visibleColumns.map(col => col.width).join(' ');
     container.style.setProperty('--grid-columns', gridTemplate);
-    
+
     // Header dinámico
     const headerCols = visibleColumns.map((col, index) => {
         if (col.id === 'checkbox') {
@@ -227,19 +255,19 @@ function renderIssuesList(onIssueClick, onFavoriteClick) {
             <span class="col-header-label">ACCIONES</span>
         </div>`;
     }
-        
+
         const isSorted = currentSort.colId === col.id;
-        const sortIcon = isSorted 
-            ? (currentSort.direction === 'asc' ? '↑' : '↓') 
+        const sortIcon = isSorted
+            ? (currentSort.direction === 'asc' ? '↑' : '↓')
             : '';
         const isFiltered = activeColumnFilters[col.id];
-            
+
         if (col.id === 'guid') {
             return `<div class="col-header" data-col-id="${col.id}" data-col-index="${index}" aria-hidden="true"></div>`;
         }
         return `
-            <div class="col-header ${col.resize ? 'draggable' : ''} ${isSorted ? 'sorted' : ''}" 
-                 draggable="${col.resize}" 
+            <div class="col-header ${col.resize ? 'draggable' : ''} ${isSorted ? 'sorted' : ''}"
+                 draggable="${col.resize}"
                  data-col-id="${col.id}"
                  data-col-index="${index}">
                 <div class="col-header-content ${col.sortable ? 'sortable' : ''}" onclick="${col.sortable ? `window.handleSort('${col.id}')` : ''}">
@@ -247,7 +275,7 @@ function renderIssuesList(onIssueClick, onFavoriteClick) {
                     ${col.id === 'comments' ? '' : `<span>${col.label}</span>`}
                     ${isSorted ? `<span class="sort-indicator">${sortIcon}</span>` : ''}
                     ${col.sortable ? `
-                    <div class="col-header-filter ${isFiltered ? 'active' : ''}" 
+                    <div class="col-header-filter ${isFiltered ? 'active' : ''}"
                          onclick="event.stopPropagation(); window.handleFilter('${col.id}', this)">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
@@ -260,13 +288,13 @@ function renderIssuesList(onIssueClick, onFavoriteClick) {
     }).join('');
 
     const headerHtml = `<div class="issues-list-header">${headerCols}</div>`;
-    
+
     // Aplicar ordenamiento si es necesario
     let issuesToRender = [...AppState.filteredIssues];
     if (currentSort.colId) {
         issuesToRender.sort((a, b) => {
             let valA, valB;
-            
+
             // Obtener valores según columna
             switch (currentSort.colId) {
                 case 'title': valA = a.title; valB = b.title; break;
@@ -277,12 +305,59 @@ function renderIssuesList(onIssueClick, onFavoriteClick) {
                 case 'date': valA = new Date(a.creationDate); valB = new Date(b.creationDate); break;
                 default: valA = ''; valB = '';
             }
-            
+
             // Comparación
             if (valA < valB) return currentSort.direction === 'asc' ? -1 : 1;
             if (valA > valB) return currentSort.direction === 'asc' ? 1 : -1;
             return 0;
         });
+    }
+
+    // ============================================================================
+    // VIRTUAL SCROLLING para listas grandes (>100 items)
+    // ============================================================================
+    if (shouldUseVirtualScrolling(issuesToRender.length)) {
+        // Destruir instancia anterior si existe
+        if (virtualScrollerInstance) {
+            virtualScrollerInstance.destroy();
+        }
+
+        // Limpiar y preparar container
+        container.innerHTML = headerHtml;
+
+        // Crear contenedor para virtual scroller
+        const virtualContainer = document.createElement('div');
+        virtualContainer.id = 'virtual-issues-container';
+        virtualContainer.style.flex = '1';
+        virtualContainer.style.overflow = 'auto';
+        container.appendChild(virtualContainer);
+
+        // Inicializar virtual scroller
+        virtualScrollerInstance = new VirtualScroller(virtualContainer, {
+            estimatedItemHeight: 60,
+            overscanCount: 5
+        });
+
+        // Configurar render callback
+        virtualScrollerInstance.setItems(issuesToRender, (issue, index) => {
+            return createIssueRowElement(issue, index, visibleColumns);
+        });
+
+        // Listeners (delegados en el container principal)
+        setupListListeners(container, onIssueClick, onFavoriteClick);
+        setupColumnInteractions(container);
+
+        return; // Salir, virtual scroller se encarga del resto
+    }
+
+    // ============================================================================
+    // RENDERIZADO NORMAL para listas pequeñas (<100 items)
+    // ============================================================================
+
+    // Destruir virtual scroller si existía
+    if (virtualScrollerInstance) {
+        virtualScrollerInstance.destroy();
+        virtualScrollerInstance = null;
     }
 
     const rowsHtml = issuesToRender.map((issue, index) => {
@@ -295,7 +370,7 @@ function renderIssuesList(onIssueClick, onFavoriteClick) {
         const cellsHtml = visibleColumns.map(col => getCellContent(col, issue, isFavorite, index)).join('');
 
         return `
-            <div class="issue-row ${isSelected ? 'selected' : ''} ${isFocused ? 'focused' : ''} ${isFavorite ? 'favorite' : ''}" 
+            <div class="issue-row ${isSelected ? 'selected' : ''} ${isFocused ? 'focused' : ''} ${isFavorite ? 'favorite' : ''}"
                  data-id="${issue.guid}" data-idx="${index}"
                  style="--row-status-color: ${statusColor}">
                 ${cellsHtml}
