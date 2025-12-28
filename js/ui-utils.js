@@ -4,6 +4,8 @@
 
 // Registro global de URLs de Blobs para limpieza controlada
 import { AppState } from './state.js';
+import { TIMEOUTS, CSS_CLASSES, COLORS } from './constants.js';
+
 const blobRegistry = new Set();
 
 /**
@@ -446,16 +448,16 @@ export const $$safe = (selector, parent = document) => {
  * Cierra todos los modales abiertos en la aplicación
  */
 export const closeAllModals = () => {
-    $$('.modal.active').forEach(modal => {
-        modal.classList.remove('active');
+    $$(`.modal.${CSS_CLASSES.ACTIVE}`).forEach(modal => {
+        modal.classList.remove(CSS_CLASSES.ACTIVE);
     });
-    
+
     // También cerrar cualquier modal dinámico creado (como el de snapshot)
     $$('.modal').forEach(modal => {
         if (modal.parentElement === document.body && !modal.id) {
             modal.remove();
         } else {
-            modal.classList.remove('active');
+            modal.classList.remove(CSS_CLASSES.ACTIVE);
         }
     });
 };
@@ -479,7 +481,7 @@ export const escapeHtml = text => {
  * @param {boolean} immediate - Ejecutar inmediatamente la primera vez
  * @returns {Function} Función debounced
  */
-export const debounce = (func, wait = 300, immediate = false) => {
+export const debounce = (func, wait = TIMEOUTS.DEBOUNCE_DEFAULT, immediate = false) => {
     let timeout;
     return function executedFunction(...args) {
         const context = this;
@@ -501,7 +503,7 @@ export const debounce = (func, wait = 300, immediate = false) => {
  * @param {number} limit - Milisegundos mínimos entre ejecuciones
  * @returns {Function} Función throttled
  */
-export const throttle = (func, limit = 300) => {
+export const throttle = (func, limit = TIMEOUTS.THROTTLE_DEFAULT) => {
     let inThrottle;
     return function(...args) {
         const context = this;
@@ -516,7 +518,7 @@ export const throttle = (func, limit = 300) => {
 /**
  * Sistema de notificación/error visual
  */
-export const notify = (message, type = 'info', duration = 5000) => {
+export const notify = (message, type = 'info', duration = TIMEOUTS.NOTIFICATION_DURATION) => {
     const container = $('#notifications-container') || createNotificationsContainer();
     const notification = document.createElement('div');
     notification.className = `notification notification-${type}`;
