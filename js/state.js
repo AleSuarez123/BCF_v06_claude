@@ -30,6 +30,19 @@ export const AppState = {
     bcfServer: {
         url: '',
         token: ''
+    },
+    // Loading states para prevenir race conditions
+    loading: {
+        project: false,        // Cargando proyecto
+        issues: false,         // Cargando incidencias
+        save: false,           // Guardando datos
+        sync: false            // Sincronizando con servidor
+    },
+    // Abort controllers para cancelar operaciones en progreso
+    abortControllers: {
+        projectLoad: null,
+        issueLoad: null,
+        serverSync: null
     }
 };
 

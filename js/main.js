@@ -864,62 +864,180 @@ async function addFilesToProject(files) {
     notify('Archivos cargados correctamente', 'success');
 }
 
-export async function loadProject(projectId) {
-    const project = AppState.projects.find(p => p.id === projectId);
-    if (!project) return;
+/**
+ * Actualiza el UI basado en loading states
+ * @param {boolean} isLoading - Si está cargando
+ * @param {string} type - Tipo de loading ('project', 'issues', 'save', 'sync')
+ */
+function setLoadingState(isLoading, type = 'project') {
+    const body = document.body;
 
-    // Limpiar URLs del proyecto anterior si existe
-    if (AppState.currentProject && AppState.currentProject.id !== projectId) {
-        const oldContext = `project-${AppState.currentProject.id}`;
-        blobManager.revokeContext(oldContext);
-        logger.debug(`Limpiadas URLs del proyecto anterior: ${oldContext}`);
+    // Agregar/remover clase global de loading
+    if (isLoading) {
+        body.classList.add(`loading-${type}`);
+        body.style.cursor = 'wait';
+    } else {
+        body.classList.remove(`loading-${type}`);
+        body.style.cursor = '';
     }
 
-    AppState.currentProject = project;
-    AppState.currentIssues = [];
-
-    // Context para este proyecto
-    const projectContext = `project-${projectId}`;
-
-    // Process issues and generate blob URLs for current session
-    project.bcfFiles.forEach(bcf => {
-        bcf.topics?.forEach(topic => {
-            // Generate temporary URL for snapshot if it's a Blob
-            let snapshotUrl = null;
-            if (topic.snapshot instanceof Blob) {
-                // Usar blob manager en lugar de crear URL directamente
-                snapshotUrl = blobManager.create(topic.snapshot, topic.guid, projectContext);
-            } else if (typeof topic.snapshot === 'string' && topic.snapshot.startsWith('blob:')) {
-                // Warning: Old stale blob URL, cannot recover if Blob is lost
-                logger.warn(`URL de blob obsoleta detectada para ${topic.guid}`);
-                snapshotUrl = null;
+    // Deshabilitar project cards durante carga
+    if (type === 'project') {
+        const projectCards = $$('.project-card');
+        projectCards.forEach(card => {
+            if (isLoading) {
+                card.style.pointerEvents = 'none';
+                card.style.opacity = '0.6';
+            } else {
+                card.style.pointerEvents = '';
+                card.style.opacity = '';
             }
+        });
 
-            AppState.currentIssues.push({
-                ...topic,
-                bcfFile: bcf.fileName,
-                bcfVersion: bcf.version,
-                snapshotUrl: snapshotUrl // Use this for display
+        // Mostrar/ocultar loading screen si existe
+        const loadingScreen = $cached('#loading-screen');
+        if (loadingScreen && isLoading) {
+            loadingScreen.classList.remove('fade-out');
+            loadingScreen.style.display = 'flex';
+            const loadingText = loadingScreen.querySelector('.loading-text');
+            if (loadingText) {
+                loadingText.textContent = 'Cargando proyecto...';
+            }
+        } else if (loadingScreen && !isLoading) {
+            loadingScreen.classList.add('fade-out');
+            setTimeout(() => {
+                loadingScreen.style.display = 'none';
+            }, 300);
+        }
+    }
+}
+
+/**
+ * Carga un proyecto con protección contra race conditions
+ * @param {string} projectId - ID del proyecto a cargar
+ * @returns {Promise<boolean>} - true si se cargó exitosamente
+ */
+export async function loadProject(projectId) {
+    // === RACE CONDITION PREVENTION ===
+
+    // 1. Si ya está cargando, ignorar nueva petición
+    if (AppState.loading.project) {
+        logger.debug(`Carga de proyecto ya en progreso, ignorando: ${projectId}`);
+        return false;
+    }
+
+    // 2. Abortar carga anterior si existe
+    if (AppState.abortControllers.projectLoad) {
+        AppState.abortControllers.projectLoad.abort();
+        logger.debug('Carga de proyecto anterior abortada');
+    }
+
+    // 3. Crear nuevo abort controller
+    const abortController = new AbortController();
+    AppState.abortControllers.projectLoad = abortController;
+
+    // 4. Marcar como loading
+    AppState.loading.project = true;
+    setLoadingState(true, 'project');
+
+    try {
+        // Verificar que el proyecto existe
+        const project = AppState.projects.find(p => p.id === projectId);
+        if (!project) {
+            logger.error(`Proyecto no encontrado: ${projectId}`);
+            notify('Proyecto no encontrado', 'error');
+            return false;
+        }
+
+        // Check si fue abortado
+        if (abortController.signal.aborted) {
+            logger.debug('Carga abortada durante búsqueda de proyecto');
+            return false;
+        }
+
+        // Limpiar URLs del proyecto anterior si existe
+        if (AppState.currentProject && AppState.currentProject.id !== projectId) {
+            const oldContext = `project-${AppState.currentProject.id}`;
+            blobManager.revokeContext(oldContext);
+            logger.debug(`Limpiadas URLs del proyecto anterior: ${oldContext}`);
+        }
+
+        AppState.currentProject = project;
+        AppState.currentIssues = [];
+
+        // Context para este proyecto
+        const projectContext = `project-${projectId}`;
+
+        // Simular delay para operaciones pesadas (ej: cargar de DB)
+        // En futuro: aquí iría fetch de servidor o loadProject de IndexedDB
+        await new Promise(resolve => setTimeout(resolve, 50));
+
+        // Check si fue abortado durante procesamiento
+        if (abortController.signal.aborted) {
+            logger.debug('Carga abortada durante procesamiento');
+            return false;
+        }
+
+        // Process issues and generate blob URLs for current session
+        project.bcfFiles.forEach(bcf => {
+            bcf.topics?.forEach(topic => {
+                // Generate temporary URL for snapshot if it's a Blob
+                let snapshotUrl = null;
+                if (topic.snapshot instanceof Blob) {
+                    // Usar blob manager en lugar de crear URL directamente
+                    snapshotUrl = blobManager.create(topic.snapshot, topic.guid, projectContext);
+                } else if (typeof topic.snapshot === 'string' && topic.snapshot.startsWith('blob:')) {
+                    // Warning: Old stale blob URL, cannot recover if Blob is lost
+                    logger.warn(`URL de blob obsoleta detectada para ${topic.guid}`);
+                    snapshotUrl = null;
+                }
+
+                AppState.currentIssues.push({
+                    ...topic,
+                    bcfFile: bcf.fileName,
+                    bcfVersion: bcf.version,
+                    snapshotUrl: snapshotUrl // Use this for display
+                });
             });
         });
-    });
 
-    // Update project name in UI (usar $cached - se accede frecuentemente)
-    const currentNameEl = $cached('#current-project-name');
-    if (currentNameEl) currentNameEl.textContent = project.name;
+        // Update project name in UI (usar $cached - se accede frecuentemente)
+        const currentNameEl = $cached('#current-project-name');
+        if (currentNameEl) currentNameEl.textContent = project.name;
 
-    updateFilterOptions();
-    applyFiltersAndSort();
-    renderIssues();
+        updateFilterOptions();
+        applyFiltersAndSort();
+        renderIssues();
 
-    navigateTo('viewer');
+        navigateTo('viewer');
 
-    // Emitir evento de proyecto cargado
-    eventBus.emit(Events.PROJECT_LOADED, {
-        projectId: project.id,
-        projectName: project.name,
-        issueCount: AppState.currentIssues.length
-    });
+        // Emitir evento de proyecto cargado
+        eventBus.emit(Events.PROJECT_LOADED, {
+            projectId: project.id,
+            projectName: project.name,
+            issueCount: AppState.currentIssues.length
+        });
+
+        logger.info(`✅ Proyecto cargado: ${project.name} (${AppState.currentIssues.length} incidencias)`);
+        return true;
+
+    } catch (error) {
+        // Si es un abort, no es realmente un error
+        if (error.name === 'AbortError') {
+            logger.debug('Carga de proyecto abortada');
+            return false;
+        }
+
+        logger.error('Error al cargar proyecto:', error);
+        notify(`Error al cargar proyecto: ${error.message}`, 'error');
+        return false;
+
+    } finally {
+        // 5. Limpiar loading state SIEMPRE
+        AppState.loading.project = false;
+        AppState.abortControllers.projectLoad = null;
+        setLoadingState(false, 'project');
+    }
 }
 
 function setupNavigation() {
