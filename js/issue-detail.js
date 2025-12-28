@@ -7,6 +7,7 @@ import { $, $$, escapeHtml, notify } from './ui-utils.js';
 import { sanitizeURL } from './sanitizer.js';
 import { BCFParser } from './bcf-parser.js';
 import { Storage } from './storage.js';
+import { getInitials, stringToColor } from './ui-helpers.js';
 
 /**
  * Abre el modal de detalle para una incidencia específica
@@ -134,18 +135,6 @@ export function openIssueDetail(guid, onUpdate) {
             initCommentsPanel();
         }, 100);
     }
-}
-
-/**
- * Obtiene las iniciales del nombre del autor
- */
-function getInitials(name) {
-    if (!name) return '?';
-    const parts = name.trim().split(' ');
-    if (parts.length >= 2) {
-        return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-    }
-    return name.substring(0, 2).toUpperCase();
 }
 
 /**

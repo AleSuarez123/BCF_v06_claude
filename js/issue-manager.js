@@ -9,6 +9,7 @@ import { BCFParser } from './bcf-parser.js';
 import { updateBulkActionsBar } from './selection-utils.js';
 import { VirtualScroller, shouldUseVirtualScrolling } from './virtual-renderer.js';
 import { CSS_CLASSES, VIEW_MODES } from './constants.js';
+import { getInitials, stringToColor, createAvatar, createUserBadge } from './ui-helpers.js';
 
 // Configuración de Iconos para cabeceras
 export const HEADER_ICONS = {
@@ -123,38 +124,6 @@ export function clearColumnFilters() { activeColumnFilters = {}; }
 
 // Virtual Scroller instance (para listas grandes >100 items)
 let virtualScrollerInstance = null;
-
-// Helpers para avatares
-function stringToColor(str) {
-    if (!str) return '#ccc';
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-        hash = str.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    const h = Math.abs(hash) % 360;
-    return `hsl(${h}, 65%, 45%)`;
-}
-
-function getInitials(name) {
-    if (!name) return '-';
-    
-    // Si parece un email, usar las 2 primeras letras del usuario (antes del @)
-    if (name.includes('@')) {
-        const localPart = name.split('@')[0];
-        if (localPart.length >= 2) {
-            return localPart.substring(0, 2).toUpperCase();
-        }
-        return localPart.substring(0, 1).toUpperCase();
-    }
-    
-    // Si no es email, intentar usar iniciales de Nombre Apellido
-    return name
-        .split(/[\s.@]+/) // Split by space, dot, or @
-        .map(n => n[0])
-        .slice(0, 2)
-        .join('')
-        .toUpperCase();
-}
 
 // Callbacks almacenados para re-renderizado
 let listCallbacks = { 
