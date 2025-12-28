@@ -927,49 +927,34 @@ function renderIssuesGrid(onIssueClick, onFavoriteClick) {
     attachListeners(container, onIssueClick, onFavoriteClick);
 }
 
+/**
+ * EVENT DELEGATION - Reescrito para usar UN solo listener
+ * En lugar de N listeners (uno por elemento), usa delegación de eventos
+ * Mejora: De 500+ listeners a 1 solo (con 100 issues)
+ */
 function attachListeners(container, onIssueClick, onFavoriteClick) {
-    // Click en la fila/tarjeta para abrir detalle
-    container.querySelectorAll('.issue-row, .issue-card').forEach(el => {
-        el.addEventListener('click', e => {
-            if (e.target.closest('.issue-checkbox, .checkbox-wrapper, .issue-row-actions, .issue-card-checkbox')) {
-                return;
-            }
-            if (onIssueClick && typeof onIssueClick === 'function') {
-                onIssueClick(el.dataset.id);
-            }
-        });
-    });
+    // Remover listeners previos si existen
+    if (container._delegatedListenersAttached) return;
 
-    // Checkboxes de selección
-    container.querySelectorAll('.issue-checkbox').forEach(cb => {
-        cb.addEventListener('change', e => {
-            const guid = cb.dataset.guid;
-            if (cb.checked) AppState.selectedIssues.add(guid);
-            else AppState.selectedIssues.delete(guid);
-            updateBulkActionsBar();
-            cb.closest('.issue-row, .issue-card').classList.toggle('selected', cb.checked);
-        });
-    });
-
-    // Favoritos
-    container.querySelectorAll('.btn-favorite').forEach(btn => {
-        btn.addEventListener('click', e => {
+    // === DELEGATION: Click events ===
+    container.addEventListener('click', async (e) => {
+        // 1. Favoritos
+        const btnFavorite = e.target.closest('.btn-favorite');
+        if (btnFavorite) {
             e.stopPropagation();
             if (typeof onFavoriteClick === 'function') {
-                onFavoriteClick(btn.dataset.id);
+                onFavoriteClick(btnFavorite.dataset.id);
             }
-        });
-    });
+            return;
+        }
 
-    // Snapshot
-    container.querySelectorAll('.btn-snapshot').forEach(btn => {
-        btn.addEventListener('click', e => {
+        // 2. Snapshot
+        const btnSnapshot = e.target.closest('.btn-snapshot');
+        if (btnSnapshot) {
             e.stopPropagation();
-            const guid = btn.dataset.guid;
+            const guid = btnSnapshot.dataset.guid;
             const issue = AppState.currentIssues.find(i => i.guid === guid);
             if (issue && issue.snapshot) {
-                // Usar snapshotUrl que ya fue creado con blobManager en loadProject
-                // o crear uno nuevo solo si es necesario
                 const url = issue.snapshotUrl || issue.snapshot;
                 if (window.openSnapshot) {
                     window.openSnapshot(url);
@@ -982,65 +967,22 @@ function attachListeners(container, onIssueClick, onFavoriteClick) {
                     }
                 }
             }
-        });
-    });
+            return;
+        }
 
-  container.querySelectorAll('.comment-badge').forEach(badge => {
-    badge.addEventListener('dblclick', e => {
-      e.stopPropagation();
-      const row = badge.closest('.issue-row, .issue-card');
-      const guid = row?.dataset.id;
-      if (guid) {
-          // Use dynamic import but ensure store is available or pass intent differently
-          import('./edit-panel.js').then(m => {
-              m.store.dispatch({ type: 'SET_TAB', payload: 'comentarios' });
-              m.openEditSidebar(guid);
-          });
-      }
-    });
-  });
-
-  // Editar (solo desde los botones específicos)
-  container.querySelectorAll('.btn-edit').forEach(btn => {
-    btn.addEventListener('click', e => {
-      e.stopPropagation();
-      import('./edit-panel.js').then(m => m.openEditSidebar(btn.dataset.id));
-    });
-  });
-  
-  container.querySelectorAll('.issue-title-text').forEach(span => {
-    span.addEventListener('dblclick', e => {
-      e.stopPropagation();
-      const row = span.closest('.issue-row, .issue-card');
-      const guid = row?.dataset.id;
-      const issue = AppState.currentIssues.find(i => i.guid === guid);
-      if (!issue) return;
-      const input = document.createElement('input');
-      input.type = 'text';
-      input.className = 'list-title-input';
-      input.value = issue.title || '';
-      const parent = span.parentElement;
-      if (!parent) return;
-      parent.replaceChild(input, span);
-      input.focus();
-      const commit = async () => {
-        issue.title = input.value.trim();
-        import('./storage.js').then(m => m.Storage.saveAll());
-        renderIssues(onIssueClick, onFavoriteClick);
-      };
-      input.addEventListener('keydown', (ev) => {
-        if (ev.key === 'Enter') { commit(); }
-        if (ev.key === 'Escape') { renderIssues(onIssueClick, onFavoriteClick); }
-      });
-      input.addEventListener('blur', () => commit());
-    });
-  });
-    
-    // Copiar GUID
-    container.querySelectorAll('.btn-copy-guid').forEach(btn => {
-        btn.addEventListener('click', async e => {
+        // 3. Editar
+        const btnEdit = e.target.closest('.btn-edit');
+        if (btnEdit) {
             e.stopPropagation();
-            const guid = btn.dataset.guid;
+            import('./edit-panel.js').then(m => m.openEditSidebar(btnEdit.dataset.id));
+            return;
+        }
+
+        // 4. Copiar GUID
+        const btnCopyGuid = e.target.closest('.btn-copy-guid');
+        if (btnCopyGuid) {
+            e.stopPropagation();
+            const guid = btnCopyGuid.dataset.guid;
             try {
                 if (navigator.clipboard && navigator.clipboard.writeText) {
                     await navigator.clipboard.writeText(guid);
@@ -1052,17 +994,99 @@ function attachListeners(container, onIssueClick, onFavoriteClick) {
                     document.execCommand('copy');
                     document.body.removeChild(ta);
                 }
-                btn.title = 'GUID copiado';
-                btn.classList.add('active');
+                btnCopyGuid.title = 'GUID copiado';
+                btnCopyGuid.classList.add('active');
                 setTimeout(() => {
-                    btn.title = 'Copiar GUID';
-                    btn.classList.remove('active');
+                    btnCopyGuid.title = 'Copiar GUID';
+                    btnCopyGuid.classList.remove('active');
                 }, 1500);
             } catch (err) {
                 console.warn('No se pudo copiar el GUID:', err);
             }
-        });
+            return;
+        }
+
+        // 5. Click en fila/tarjeta (solo si no es checkbox ni acciones)
+        const issueRow = e.target.closest('.issue-row, .issue-card');
+        if (issueRow) {
+            if (e.target.closest('.issue-checkbox, .checkbox-wrapper, .issue-row-actions, .issue-card-checkbox')) {
+                return; // Ignorar si es checkbox o acciones
+            }
+            if (onIssueClick && typeof onIssueClick === 'function') {
+                onIssueClick(issueRow.dataset.id);
+            }
+            return;
+        }
     });
+
+    // === DELEGATION: Change events (checkboxes) ===
+    container.addEventListener('change', (e) => {
+        const checkbox = e.target.closest('.issue-checkbox');
+        if (checkbox) {
+            const guid = checkbox.dataset.guid;
+            if (checkbox.checked) {
+                AppState.selectedIssues.add(guid);
+            } else {
+                AppState.selectedIssues.delete(guid);
+            }
+            updateBulkActionsBar();
+            checkbox.closest('.issue-row, .issue-card')?.classList.toggle('selected', checkbox.checked);
+        }
+    });
+
+    // === DELEGATION: Double-click events ===
+    container.addEventListener('dblclick', (e) => {
+        // 1. Comment badge
+        const commentBadge = e.target.closest('.comment-badge');
+        if (commentBadge) {
+            e.stopPropagation();
+            const row = commentBadge.closest('.issue-row, .issue-card');
+            const guid = row?.dataset.id;
+            if (guid) {
+                import('./edit-panel.js').then(m => {
+                    m.store.dispatch({ type: 'SET_TAB', payload: 'comentarios' });
+                    m.openEditSidebar(guid);
+                });
+            }
+            return;
+        }
+
+        // 2. Inline edit de título
+        const titleText = e.target.closest('.issue-title-text');
+        if (titleText) {
+            e.stopPropagation();
+            const row = titleText.closest('.issue-row, .issue-card');
+            const guid = row?.dataset.id;
+            const issue = AppState.currentIssues.find(i => i.guid === guid);
+            if (!issue) return;
+
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'list-title-input';
+            input.value = issue.title || '';
+            const parent = titleText.parentElement;
+            if (!parent) return;
+
+            parent.replaceChild(input, titleText);
+            input.focus();
+
+            const commit = async () => {
+                issue.title = input.value.trim();
+                import('./storage.js').then(m => m.Storage.saveAll());
+                renderIssues(onIssueClick, onFavoriteClick);
+            };
+
+            input.addEventListener('keydown', (ev) => {
+                if (ev.key === 'Enter') commit();
+                if (ev.key === 'Escape') renderIssues(onIssueClick, onFavoriteClick);
+            });
+
+            input.addEventListener('blur', () => commit());
+        }
+    });
+
+    // Marcar que listeners están attachados
+    container._delegatedListenersAttached = true;
 }
 
 /**
@@ -1121,14 +1145,9 @@ export function updateFilterOptions() {
         ).join('');
     }
 
-    // Re-vincular listeners de chips
-    $$('.filter-chip').forEach(chip => {
-        chip.addEventListener('click', () => {
-            chip.classList.toggle('active');
-            // Nota: applyFiltersAndSort debe ser llamado desde fuera
-            document.dispatchEvent(new CustomEvent('filter-changed'));
-        });
-    });
+    // Event delegation para filter chips (evitar N listeners)
+    // Los chips ya tienen delegación desde main.js en setupFilters()
+    // No es necesario agregar listeners aquí
 }
 
 /**
