@@ -168,6 +168,22 @@ let listCallbacks = {
 
 /**
  * Renderiza la lista o cuadrícula de incidencias según el modo de vista actual
+ *
+ * Implementa virtual scrolling automático para listas >100 items.
+ * Utiliza event delegation para optimizar memoria.
+ *
+ * @param {Function} [onIssueClick] - Callback al hacer click en una incidencia (guid) => void
+ * @param {Function} [onFavoriteClick] - Callback al marcar favorito (guid) => void
+ *
+ * @example
+ * renderIssues(
+ *   (guid) => openIssueDetail(guid),
+ *   (guid) => toggleFavorite(guid)
+ * );
+ *
+ * @example
+ * // Sin callbacks (usa los almacenados previamente)
+ * renderIssues();
  */
 export function renderIssues(onIssueClick, onFavoriteClick) {
     // Actualizar callbacks si se proporcionan
@@ -1168,6 +1184,16 @@ function attachListeners(container, onIssueClick, onFavoriteClick) {
 /**
  * Actualiza las opciones de los filtros basadas en las incidencias actuales
  */
+/**
+ * Actualiza las opciones de filtros basándose en las incidencias actuales
+ *
+ * Genera listas dinámicas de: autores, estados, prioridades, tipos y asignados.
+ * Usa datalist de HTML5 para autocompletado.
+ *
+ * @example
+ * // Después de cargar proyecto o cambiar issues
+ * updateFilterOptions();
+ */
 export function updateFilterOptions() {
     const bcfSelect = $('#filter-bcf');
     if (bcfSelect) {
@@ -1270,6 +1296,17 @@ export function filterIssuesByColumns(issues, columnFilters) {
 
 /**
  * Aplica filtros y ordenamiento a las incidencias actuales
+ */
+/**
+ * Aplica filtros activos y ordena las incidencias
+ *
+ * Filtra por: autor, búsqueda de texto, estado, prioridad, tipo, asignado, fecha y favoritos.
+ * Actualiza AppState.filteredIssues con el resultado.
+ *
+ * @example
+ * // Después de cambiar filtros
+ * applyFiltersAndSort();
+ * renderIssues();
  */
 export function applyFiltersAndSort() {
     const filterBcf = $('#filter-bcf');
@@ -1483,6 +1520,16 @@ export function updateNavIndicatorUI() {
     updateNavIndicator();
 }
 
+/**
+ * Renderiza la cuadrícula de proyectos en el dashboard
+ *
+ * Muestra tarjetas con estadísticas de cada proyecto.
+ * Maneja estado vacío cuando no hay proyectos.
+ *
+ * @example
+ * // Después de crear/modificar proyectos
+ * renderProjects();
+ */
 export function renderProjects() {
     const container = document.getElementById('projects-grid');
     if (!container) return;

@@ -51,6 +51,14 @@ const renderAppIssues = () => {
     );
 };
 
+/**
+ * Alterna el estado de favorito de una incidencia
+ *
+ * @param {string} guid - GUID único de la incidencia
+ *
+ * @example
+ * toggleFavorite('a3f5d8e2-1b4c-4d3a-9e7f-2c1a8b5d3e4f');
+ */
 function toggleFavorite(guid) {
     if (AppState.favorites.has(guid)) {
         AppState.favorites.delete(guid);
@@ -138,6 +146,22 @@ function setupErrorHandler() {
 }
 
 // Inicialización principal
+/**
+ * Inicializa la aplicación BCF Viewer Pro
+ *
+ * Punto de entrada principal que:
+ * - Configura error handler global
+ * - Inicializa storage (localStorage/IndexedDB)
+ * - Carga datos guardados
+ * - Configura UI y event listeners
+ * - Restaura último proyecto abierto si existe
+ *
+ * @returns {Promise<void>}
+ *
+ * @example
+ * // Llamado automáticamente al cargar la página
+ * document.addEventListener('DOMContentLoaded', init);
+ */
 const init = async () => {
     try {
         logger.info('🚀 Iniciando BCF Viewer Pro...');
@@ -813,6 +837,26 @@ const handleFileDrop = withErrorHandling(async (e) => {
     await handleFiles(files);
 }, 'Error al procesar archivos');
 
+/**
+ * Procesa archivos BCF subidos por el usuario
+ *
+ * Determina si crear nuevo proyecto o agregar a proyecto existente.
+ * Soporta drag & drop y selección de archivos.
+ *
+ * @param {FileList|File[]} files - Archivos a procesar
+ * @returns {Promise<void>}
+ *
+ * @example
+ * // Desde input file
+ * inputFile.addEventListener('change', (e) => {
+ *   handleFiles(e.target.files);
+ * });
+ *
+ * // Desde drag & drop
+ * dropZone.addEventListener('drop', (e) => {
+ *   handleFiles(e.dataTransfer.files);
+ * });
+ */
 async function handleFiles(files) {
     if (files.length === 0) return;
     
@@ -864,6 +908,23 @@ async function handleFiles(files) {
     }
 }
 
+/**
+ * Crea un nuevo proyecto BCF con archivos opcionales
+ *
+ * @param {string} name - Nombre del proyecto (3-100 caracteres)
+ * @param {string} [description=''] - Descripción opcional del proyecto
+ * @param {File[]} [files=[]] - Array de archivos BCF a agregar al proyecto
+ * @returns {Promise<Object>} El proyecto creado
+ *
+ * @example
+ * const project = await createNewProject(
+ *   'Edificio Central',
+ *   'Proyecto de construcción',
+ *   [bcfFile1, bcfFile2]
+ * );
+ *
+ * @throws {Error} Si el nombre es inválido o falla el guardado
+ */
 async function createNewProject(name, description, files = []) {
     const newProject = {
         id: crypto.randomUUID(),
@@ -909,6 +970,17 @@ async function addFilesToProject(files) {
  * Actualiza el UI basado en loading states
  * @param {boolean} isLoading - Si está cargando
  * @param {string} type - Tipo de loading ('project', 'issues', 'save', 'sync')
+ */
+/**
+ * Establece el estado de carga y muestra/oculta indicadores visuales
+ *
+ * @param {boolean} isLoading - true para mostrar loading, false para ocultar
+ * @param {string} [type='project'] - Tipo de carga ('project', 'issues', 'save', 'sync')
+ *
+ * @example
+ * setLoadingState(true, 'project');  // Mostrar loading de proyecto
+ * // ... operación asíncrona ...
+ * setLoadingState(false, 'project'); // Ocultar loading
  */
 function setLoadingState(isLoading, type = 'project') {
     const body = document.body;
@@ -957,6 +1029,23 @@ function setLoadingState(isLoading, type = 'project') {
  * Carga un proyecto con protección contra race conditions
  * @param {string} projectId - ID del proyecto a cargar
  * @returns {Promise<boolean>} - true si se cargó exitosamente
+ */
+/**
+ * Carga un proyecto BCF y renderiza sus incidencias
+ *
+ * Implementa protección contra race conditions usando AbortController
+ * y loading states. Solo permite una carga a la vez.
+ *
+ * @param {string} projectId - ID del proyecto a cargar
+ * @returns {Promise<boolean>} true si la carga fue exitosa, false si fue abortada o falló
+ *
+ * @example
+ * const success = await loadProject('project-123');
+ * if (success) {
+ *   console.log('Proyecto cargado correctamente');
+ * }
+ *
+ * @throws {Error} Si el proyecto no existe o hay error de storage
  */
 export async function loadProject(projectId) {
     // === RACE CONDITION PREVENTION ===
@@ -1341,6 +1430,18 @@ function setupNavigation() {
     }
 }
 
+/**
+ * Navega entre páginas de la aplicación (dashboard/viewer)
+ *
+ * Maneja la visibilidad de páginas y actualiza el estado de navegación.
+ * Limpia cache DOM para evitar referencias obsoletas.
+ *
+ * @param {string} pageId - ID de la página ('dashboard' o 'viewer')
+ *
+ * @example
+ * navigateTo(PAGES.DASHBOARD); // Ir al dashboard
+ * navigateTo(PAGES.VIEWER);    // Ir al visor de issues
+ */
 function navigateTo(pageId) {
     $$('.page').forEach(p => p.classList.remove(CSS_CLASSES.ACTIVE));
 
@@ -1360,6 +1461,12 @@ function goToDashboard() {
     navigateTo('dashboard');
 }
 
+/**
+ * Alterna entre modos de vista (lista/mosaico)
+ *
+ * @example
+ * toggleViewMode(); // Cambia de list a grid o viceversa
+ */
 function toggleViewMode() {
     AppState.viewMode = AppState.viewMode === 'list' ? 'grid' : 'list';
     const btnViewList = $('#btn-view-list');
