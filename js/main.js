@@ -41,6 +41,16 @@ let pendingFiles = [];
 let projectValidator = null;
 
 // Envolver renderIssues para inyectar dependencias
+/**
+ * Renderiza las incidencias del proyecto actual con callbacks configurados
+ *
+ * Wrapper que llama a renderIssues() con callbacks predefinidos para:
+ * - Click en issue → abrir edit sidebar
+ * - Click en favorito → toggle favorite
+ *
+ * @example
+ * renderAppIssues(); // Re-renderiza issues con comportamiento por defecto
+ */
 const renderAppIssues = () => {
     renderIssues(
         (guid) => {
@@ -1919,6 +1929,20 @@ function setupTheme() {
     applyTheme(AppState.theme || 'light');
 }
 
+/**
+ * Configura la conexión con servidor BCF remoto
+ *
+ * Implementa:
+ * - Modal de configuración de servidor
+ * - Botón de test de conexión con BCFApiClient temporal
+ * - Guardado de URL y token de autenticación
+ * - Sincronización de proyectos desde servidor
+ * - Indicadores de estado de conexión
+ *
+ * @example
+ * setupServer();
+ * // Modal de conexión queda operativo con test y sincronización
+ */
 function setupServer() {
     const btnConnect = $('#btn-connect-server');
     const modalServer = $('#modal-connect-server');
@@ -2102,6 +2126,20 @@ const syncServerProjects = withErrorHandling(async () => {
     }
 }, 'Error al sincronizar con el servidor');
 
+/**
+ * Abre un modal lightbox para mostrar snapshot/imagen en pantalla completa
+ *
+ * Crea modal dinámico con:
+ * - Fondo transparente
+ * - Imagen con max-width 90vw, max-height 80vh
+ * - Cierre con backdrop o botón X
+ *
+ * @param {string} src - URL de la imagen a mostrar
+ *
+ * @example
+ * window.openSnapshot('blob:http://localhost/abc-123');
+ * // Abre imagen en modal fullscreen
+ */
 window.openSnapshot = (src) => { 
     const modal = document.createElement('div');
     modal.className = 'modal active';
@@ -2117,6 +2155,26 @@ window.openSnapshot = (src) => {
     modal.querySelector('.modal-close').onclick = () => modal.remove();
 };
 
+/**
+ * Maneja clicks en cards de estadísticas del dashboard para aplicar filtros rápidos
+ *
+ * Filtros disponibles:
+ * - 'priority': Filtra issues con prioridad High
+ * - 'due': Filtra issues con fecha límite en próximos 7 días
+ * - 'unresolved': Filtra issues con estado Open
+ * - 'comments': Filtra issues con comentarios
+ *
+ * Resetea todos los filtros existentes antes de aplicar el nuevo.
+ * Actualiza URL con query param ?quickFilter=type.
+ * Navega automáticamente a página viewer.
+ *
+ * @param {string} type - Tipo de filtro rápido
+ * @returns {Promise<void>}
+ *
+ * @example
+ * window.handleStatClick('priority');
+ * // Resetea filtros, aplica prioridad High, navega a viewer
+ */
 window.handleStatClick = async (type) => {
     if (!type) return;
     
@@ -2243,6 +2301,28 @@ window.handleStatClick = async (type) => {
  * ═══════════════════════════════════════════════════════════════════════════
  * BÚSQUEDA CROSS-PROJECT
  * ═══════════════════════════════════════════════════════════════════════════
+ */
+/**
+ * Busca y carga una incidencia por GUID en todos los proyectos disponibles
+ *
+ * Flujo:
+ * 1. Valida GUID con validators.guid()
+ * 2. Itera por todos los proyectos de AppState.projects
+ * 3. Carga cada proyecto con loadProject() si no está activo
+ * 4. Busca issue por GUID en currentIssues
+ * 5. Si encuentra: renderiza, hace scroll, añade highlight-pulse
+ * 6. Si no encuentra: notifica warning
+ *
+ * Útil para deep linking y búsqueda global.
+ *
+ * @param {string} issueId - GUID de la incidencia a buscar
+ * @returns {Promise<void>}
+ *
+ * @example
+ * await loadIssueFromAnyProject('a3f5d8e2-1b4c-4d3a-9e7f-2c1a8b5d3e4f');
+ * // Busca en todos los proyectos, carga el que la contiene y muestra la issue
+ *
+ * @throws {Error} Si falla la carga de proyectos (continúa con siguiente)
  */
 async function loadIssueFromAnyProject(issueId) {
     logger.info('🔍 Buscando incidencia en todos los proyectos:', issueId);
