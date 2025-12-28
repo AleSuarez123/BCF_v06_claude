@@ -1,6 +1,6 @@
 # FASE 3 - MEDIUM PRIORITY: Code Quality & Arquitectura
 
-## 📊 Estado: 10% COMPLETADO (1/10 items en progreso)
+## 📊 Estado: 10% COMPLETADO (1/10 items - 3.1 al 100%)
 
 ---
 
@@ -16,11 +16,11 @@ Mejorar la **calidad del código**, **mantenibilidad** y **accesibilidad** del p
 
 ## 📋 Items de FASE 3 (Prioridad MEDIA)
 
-### **3.1 🔄 Eliminar Magic Numbers y Magic Strings** (EN PROGRESO)
+### **3.1 ✅ Eliminar Magic Numbers y Magic Strings** (COMPLETADO)
 **Prioridad:** Alta
 **Esfuerzo:** 6-8 horas
 **ROI:** Alto
-**Progreso:** 30% - Infraestructura completa + ejemplo en ui-utils.js
+**Progreso:** 100% - Sistema completo implementado
 
 **Problema:**
 - 15+ magic numbers dispersos sin constantes
@@ -57,7 +57,18 @@ Mejorar la **calidad del código**, **mantenibilidad** y **accesibilidad** del p
   - `TIMEOUTS.NOTIFICATION_DURATION` → notify()
   - `CSS_CLASSES.ACTIVE` → closeAllModals()
 
-⏳ Pendiente aplicar en 9 archivos más (94 ocurrencias)
+✅ Aplicado en `js/main.js` (~50 reemplazos):
+  - `TIMEOUTS.BLOB_CLEANUP` → blobManager.cleanOldUrls()
+  - `CSS_CLASSES.ACTIVE` → todos los modales y dropdowns
+  - `CSS_CLASSES.HIDDEN` → visibilidad de elementos
+  - Import centralizado de constantes
+
+✅ Aplicado en `js/issue-manager.js` (~20 reemplazos):
+  - `CSS_CLASSES.ACTIVE` → filtros, columnas
+  - `CSS_CLASSES.HIDDEN` → visibilidad de listas
+  - Import de CSS_CLASSES y VIEW_MODES
+
+**Total:** ~75+ magic strings reemplazadas
 
 **Impacto:**
 ✅ Código más mantenible
@@ -65,7 +76,9 @@ Mejorar la **calidad del código**, **mantenibilidad** y **accesibilidad** del p
 ✅ Reduce bugs por typos
 ✅ Preparado para i18n futura
 
-**Commit:** (próximo) - "FASE 3 Code Quality (3.1): Sistema de Constantes Centralizadas"
+**Commits:**
+- `f741694` - "FASE 3 (3.1): Sistema de Constantes [PARCIAL]"
+- (próximo) - "FASE 3 (3.1): Aplicación Completa en Main Files"
 
 ---
 

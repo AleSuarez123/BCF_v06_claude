@@ -29,6 +29,7 @@ import { blobManager } from './blob-url-manager.js';
 import { errorHandler, ErrorTypes, ErrorSeverity } from './error-handler.js';
 import { eventBus, Events } from './event-bus.js';
 import { FormValidator } from './form-validation.js';
+import { TIMEOUTS, CSS_CLASSES, PAGES, VIEW_MODES, STORAGE_KEYS, CUSTOM_EVENTS } from './constants.js';
 
 // Inicializar API Client
 export const bcfApi = new BCFApiClient('');
@@ -91,7 +92,7 @@ function setupErrorHandler() {
         if (message.includes('quota') || message.includes('full')) {
             try {
                 // Limpiar blobs antiguos
-                const cleaned = blobManager.cleanOldUrls(30 * 60 * 1000); // 30 minutos
+                const cleaned = blobManager.cleanOldUrls(TIMEOUTS.BLOB_CLEANUP);
                 if (cleaned > 0) {
                     logger.info(`Recovery: ${cleaned} blob URLs antiguas limpiadas`);
                 }
@@ -251,7 +252,7 @@ const init = async () => {
         }
         
         // Mostrar la aplicación principal
-        $('#app').classList.remove('hidden');
+        $('#app').classList.remove(CSS_CLASSES.HIDDEN);
 
         logger.info('✅ Aplicación iniciada correctamente');
 
@@ -460,7 +461,7 @@ function setupModals() {
                 pendingFiles = []; // Limpiar pendientes
             }
 
-            modalProject.classList.remove('active');
+            modalProject.classList.remove(CSS_CLASSES.ACTIVE);
             projectValidator.reset();
         });
     }
@@ -471,12 +472,12 @@ function setupModals() {
 
     if (btnTargetNew) {
         btnTargetNew.addEventListener('click', () => {
-            modalTarget.classList.remove('active');
+            modalTarget.classList.remove(CSS_CLASSES.ACTIVE);
             // Abrir modal de nuevo proyecto
             $('#project-name').value = '';
             $('#project-description').value = '';
             if (projectValidator) projectValidator.clearErrors();
-            $('#modal-project').classList.add('active');
+            $('#modal-project').classList.add(CSS_CLASSES.ACTIVE);
             $('#project-name').focus();
         });
     }
@@ -507,7 +508,7 @@ function setupModals() {
             data.append('labels', $('#edit-issue-labels').value);
 
             await saveIssue(data);
-            $('#modal-edit-issue').classList.remove('active');
+            $('#modal-edit-issue').classList.remove(CSS_CLASSES.ACTIVE);
             notify('Incidencia guardada correctamente', 'success');
             renderAppIssues();
             updateGlobalStats(); // Actualizar contadores globales
@@ -518,7 +519,7 @@ function setupModals() {
     $$('[data-close-modal]').forEach(btn => {
         btn.addEventListener('click', () => {
             const modal = btn.closest('.modal');
-            if (modal) modal.classList.remove('active');
+            if (modal) modal.classList.remove(CSS_CLASSES.ACTIVE);
         });
     });
 
@@ -526,7 +527,7 @@ function setupModals() {
     const btnCloseKeyboard = $('[data-close-keyboard]');
     if (btnCloseKeyboard) {
         btnCloseKeyboard.addEventListener('click', () => {
-            $('#keyboard-help').classList.remove('active');
+            $('#keyboard-help').classList.remove(CSS_CLASSES.ACTIVE);
         });
     }
 }
@@ -539,7 +540,7 @@ function setupDropdowns() {
         if (trigger) {
             trigger.addEventListener('click', (e) => {
                 e.stopPropagation();
-                dropdown.classList.toggle('active');
+                dropdown.classList.toggle(CSS_CLASSES.ACTIVE);
             });
         }
     });
@@ -548,7 +549,7 @@ function setupDropdowns() {
     document.addEventListener('click', (e) => {
         dropdowns.forEach(dropdown => {
             if (!dropdown.contains(e.target)) {
-                dropdown.classList.remove('active');
+                dropdown.classList.remove(CSS_CLASSES.ACTIVE);
             }
         });
     });
@@ -604,19 +605,19 @@ function setupDropZones() {
     window.addEventListener('dragover', (e) => {
         e.preventDefault();
         if (e.dataTransfer.types.includes('Files')) {
-            $('#drop-zone-overlay').classList.add('active');
+            $('#drop-zone-overlay').classList.add(CSS_CLASSES.ACTIVE);
         }
     });
     
     $('#drop-zone-overlay').addEventListener('dragleave', (e) => {
         if (e.relatedTarget === null) {
-            $('#drop-zone-overlay').classList.remove('active');
+            $('#drop-zone-overlay').classList.remove(CSS_CLASSES.ACTIVE);
         }
     });
     
     $('#drop-zone-overlay').addEventListener('drop', (e) => {
         e.preventDefault();
-        $('#drop-zone-overlay').classList.remove('active');
+        $('#drop-zone-overlay').classList.remove(CSS_CLASSES.ACTIVE);
         const files = Array.from(e.dataTransfer.files).filter(f => 
             f.name.toLowerCase().endsWith('.bcf') || 
             f.name.toLowerCase().endsWith('.bcfzip') ||
@@ -785,7 +786,7 @@ function showFolderSummary(files) {
     document.body.appendChild(modal);
     
     const close = () => {
-        modal.classList.remove('active');
+        modal.classList.remove(CSS_CLASSES.ACTIVE);
         setTimeout(() => modal.remove(), 300);
     };
     
@@ -846,7 +847,7 @@ async function handleFiles(files) {
             listContainer.querySelectorAll('.existing-project-option').forEach(btn => {
                 btn.addEventListener('click', async () => {
                     const projectId = btn.dataset.id;
-                    modalTarget.classList.remove('active');
+                    modalTarget.classList.remove(CSS_CLASSES.ACTIVE);
                     
                     // Cargar proyecto y añadir archivos
                     await loadProject(projectId);
@@ -856,7 +857,7 @@ async function handleFiles(files) {
             });
         }
         
-        modalTarget.classList.add('active');
+        modalTarget.classList.add(CSS_CLASSES.ACTIVE);
     } else {
         // Fallback si no hay modal (no debería pasar)
         await createNewProject(`Proyecto ${new Date().toLocaleDateString()}`, '', files);
@@ -1090,7 +1091,7 @@ function setupNavigation() {
             if (projectValidator) projectValidator.clearErrors();
             $('#modal-project-title').textContent = 'Nuevo Proyecto';
             $('#project-id').value = '';
-            $('#modal-project').classList.add('active');
+            $('#modal-project').classList.add(CSS_CLASSES.ACTIVE);
             $('#project-name').focus();
         });
     }
@@ -1107,7 +1108,7 @@ function setupNavigation() {
                 $('#project-name').value = AppState.currentProject.name;
                 $('#project-description').value = AppState.currentProject.description || '';
                 $('#modal-project-title').textContent = 'Editar Proyecto';
-                $('#modal-project').classList.add('active');
+                $('#modal-project').classList.add(CSS_CLASSES.ACTIVE);
             }
         });
     }
@@ -1176,7 +1177,7 @@ function setupNavigation() {
         
         // Add closing class for animation
         filtersSidebar.classList.add('closing');
-        filtersSidebar.classList.remove('active');
+        filtersSidebar.classList.remove(CSS_CLASSES.ACTIVE);
         
         // Update ARIA attributes
         filtersSidebar.setAttribute('aria-hidden', 'true');
@@ -1196,7 +1197,7 @@ function setupNavigation() {
         
         // Hide backdrop on mobile
         if (filtersBackdrop) {
-            filtersBackdrop.classList.remove('active');
+            filtersBackdrop.classList.remove(CSS_CLASSES.ACTIVE);
         }
         
         // Remove classes after animation completes
@@ -1221,7 +1222,7 @@ function setupNavigation() {
         
         // Remove collapsed state
         filtersSidebar.classList.remove('collapsed', 'closing');
-        filtersSidebar.classList.add('active');
+        filtersSidebar.classList.add(CSS_CLASSES.ACTIVE);
         
         // Update ARIA attributes
         filtersSidebar.setAttribute('aria-hidden', 'false');
@@ -1241,7 +1242,7 @@ function setupNavigation() {
         
         // Show backdrop on mobile
         if (filtersBackdrop && window.innerWidth <= 768) {
-            filtersBackdrop.classList.add('active');
+            filtersBackdrop.classList.add(CSS_CLASSES.ACTIVE);
         }
         
         // Move focus to panel for accessibility
@@ -1324,8 +1325,8 @@ function setupNavigation() {
     if (btnViewList) {
         btnViewList.addEventListener('click', () => {
             AppState.viewMode = 'list';
-            btnViewList.classList.add('active');
-            if (btnViewGrid) btnViewGrid.classList.remove('active');
+            btnViewList.classList.add(CSS_CLASSES.ACTIVE);
+            if (btnViewGrid) btnViewGrid.classList.remove(CSS_CLASSES.ACTIVE);
             renderIssues();
         });
     }
@@ -1333,25 +1334,25 @@ function setupNavigation() {
     if (btnViewGrid) {
         btnViewGrid.addEventListener('click', () => {
             AppState.viewMode = 'grid';
-            btnViewGrid.classList.add('active');
-            if (btnViewList) btnViewList.classList.remove('active');
+            btnViewGrid.classList.add(CSS_CLASSES.ACTIVE);
+            if (btnViewList) btnViewList.classList.remove(CSS_CLASSES.ACTIVE);
             renderIssues();
         });
     }
 }
 
 function navigateTo(pageId) {
-    $$('.page').forEach(p => p.classList.remove('active'));
+    $$('.page').forEach(p => p.classList.remove(CSS_CLASSES.ACTIVE));
 
     if (pageId === 'viewer') {
         const viewerPage = $cached('#viewer-page');
-        if (viewerPage) viewerPage.classList.add('active');
-        $cached('#dashboard-page')?.classList.remove('active');
-        $cached('#app')?.classList.remove('hidden');
+        if (viewerPage) viewerPage.classList.add(CSS_CLASSES.ACTIVE);
+        $cached('#dashboard-page')?.classList.remove(CSS_CLASSES.ACTIVE);
+        $cached('#app')?.classList.remove(CSS_CLASSES.HIDDEN);
     } else {
-        $cached('#dashboard-page')?.classList.add('active');
+        $cached('#dashboard-page')?.classList.add(CSS_CLASSES.ACTIVE);
         const viewerPage = $cached('#viewer-page');
-        if (viewerPage) viewerPage.classList.remove('active');
+        if (viewerPage) viewerPage.classList.remove(CSS_CLASSES.ACTIVE);
     }
 }
 
@@ -1365,11 +1366,11 @@ function toggleViewMode() {
     const btnViewGrid = $('#btn-view-grid');
     
     if (AppState.viewMode === 'list') {
-        if (btnViewList) btnViewList.classList.add('active');
-        if (btnViewGrid) btnViewGrid.classList.remove('active');
+        if (btnViewList) btnViewList.classList.add(CSS_CLASSES.ACTIVE);
+        if (btnViewGrid) btnViewGrid.classList.remove(CSS_CLASSES.ACTIVE);
     } else {
-        if (btnViewList) btnViewList.classList.remove('active');
-        if (btnViewGrid) btnViewGrid.classList.add('active');
+        if (btnViewList) btnViewList.classList.remove(CSS_CLASSES.ACTIVE);
+        if (btnViewGrid) btnViewGrid.classList.add(CSS_CLASSES.ACTIVE);
     }
     renderIssues();
 }
@@ -1417,7 +1418,7 @@ function setupFilters() {
     const btnFilterFavorites = $cached('#btn-filter-favorites');
     if (btnFilterFavorites) {
         btnFilterFavorites.addEventListener('click', () => {
-            btnFilterFavorites.classList.toggle('active');
+            btnFilterFavorites.classList.toggle(CSS_CLASSES.ACTIVE);
             immediateFilter();
         });
     }
@@ -1425,7 +1426,7 @@ function setupFilters() {
     // Filter chips - inmediatos (delegación de eventos - no cachear)
     document.addEventListener('click', (e) => {
         if (e.target.classList.contains('filter-chip')) {
-            e.target.classList.toggle('active');
+            e.target.classList.toggle(CSS_CLASSES.ACTIVE);
             immediateFilter();
         }
     });
@@ -1463,11 +1464,11 @@ function resetFilters() {
     });
     const sort = document.getElementById('sort-by');
     if (sort) sort.value = 'date-desc';
-    $$('#filter-status .filter-chip.active').forEach(c => c.classList.remove('active'));
-    $$('#filter-priority .filter-chip.active').forEach(c => c.classList.remove('active'));
-    $$('#filter-discipline .filter-chip.active').forEach(c => c.classList.remove('active'));
+    $$('#filter-status .filter-chip.active').forEach(c => c.classList.remove(CSS_CLASSES.ACTIVE));
+    $$('#filter-priority .filter-chip.active').forEach(c => c.classList.remove(CSS_CLASSES.ACTIVE));
+    $$('#filter-discipline .filter-chip.active').forEach(c => c.classList.remove(CSS_CLASSES.ACTIVE));
     const favBtn = $('#btn-filter-favorites');
-    if (favBtn) favBtn.classList.remove('active');
+    if (favBtn) favBtn.classList.remove(CSS_CLASSES.ACTIVE);
     clearColumnFilters();
     applyFiltersAndSort();
     renderAppIssues();
@@ -1501,8 +1502,8 @@ function setupTheme() {
         const iconSun = $('.icon-sun');
         const iconMoon = $('.icon-moon');
         
-        if (iconSun) iconSun.classList.toggle('hidden', isDark);
-        if (iconMoon) iconMoon.classList.toggle('hidden', !isDark);
+        if (iconSun) iconSun.classList.toggle(CSS_CLASSES.HIDDEN, isDark);
+        if (iconMoon) iconMoon.classList.toggle(CSS_CLASSES.HIDDEN, !isDark);
         
         Storage.saveSettings();
     };
@@ -1530,7 +1531,7 @@ function setupServer() {
     if (btnConnect) {
         btnConnect.addEventListener('click', () => {
             if (modalServer) {
-                modalServer.classList.add('active');
+                modalServer.classList.add(CSS_CLASSES.ACTIVE);
                 if (AppState.bcfServer.url) {
                     inputUrl.value = AppState.bcfServer.url;
                     inputToken.value = AppState.bcfServer.token || '';
@@ -1549,7 +1550,7 @@ function setupServer() {
                 return;
             }
 
-            statusDiv.classList.remove('hidden');
+            statusDiv.classList.remove(CSS_CLASSES.HIDDEN);
             statusDiv.innerHTML = '<div class="spinner spinner-sm"></div><span>Verificando conexión...</span>';
             statusDiv.className = 'server-status';
 
@@ -1589,7 +1590,7 @@ function setupServer() {
                 await Storage.saveSettings();
                 notify('Configuración del servidor guardada', 'success');
                 
-                if (modalServer) modalServer.classList.remove('active');
+                if (modalServer) modalServer.classList.remove(CSS_CLASSES.ACTIVE);
                 
                 // Intentar sincronizar
                 syncServerProjects();
@@ -1725,7 +1726,7 @@ window.handleStatClick = async (type) => {
         // Resetear inputs UI
         const inputs = document.querySelectorAll('#filter-bcf, #filter-author, #filter-date-from, #filter-date-to, #filter-search');
         inputs.forEach(i => i.value = '');
-        document.querySelectorAll('.filter-chip.active').forEach(c => c.classList.remove('active'));
+        document.querySelectorAll('.filter-chip.active').forEach(c => c.classList.remove(CSS_CLASSES.ACTIVE));
 
         // Actualizar URL
         const url = new URL(window.location);
@@ -1738,7 +1739,7 @@ window.handleStatClick = async (type) => {
                 AppState.filters.priorities = ['High'];
                 // Activar chip visualmente si existe
                 const highChip = document.querySelector('#filter-priority .filter-chip[data-value="High"]');
-                if (highChip) highChip.classList.add('active');
+                if (highChip) highChip.classList.add(CSS_CLASSES.ACTIVE);
                 break;
                 
             case 'due':

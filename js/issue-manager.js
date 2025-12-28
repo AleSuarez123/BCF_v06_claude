@@ -8,6 +8,7 @@ import { sanitizeBCFContent, escapeHTML } from './sanitizer.js';
 import { BCFParser } from './bcf-parser.js';
 import { updateBulkActionsBar } from './selection-utils.js';
 import { VirtualScroller, shouldUseVirtualScrolling } from './virtual-renderer.js';
+import { CSS_CLASSES, VIEW_MODES } from './constants.js';
 
 // Configuración de Iconos para cabeceras
 export const HEADER_ICONS = {
@@ -186,19 +187,19 @@ export function renderIssues(onIssueClick, onFavoriteClick) {
     if (AppState.filteredIssues.length === 0) {
         listContainer.innerHTML = '';
         gridContainer.innerHTML = '';
-        emptyState.classList.remove('hidden');
+        emptyState.classList.remove(CSS_CLASSES.HIDDEN);
         return;
     }
 
-    emptyState.classList.add('hidden');
+    emptyState.classList.add(CSS_CLASSES.HIDDEN);
 
     if (AppState.viewMode === 'list') {
-        listContainer.classList.remove('hidden');
-        gridContainer.classList.add('hidden');
+        listContainer.classList.remove(CSS_CLASSES.HIDDEN);
+        gridContainer.classList.add(CSS_CLASSES.HIDDEN);
         renderIssuesList(issueCb, favCb);
     } else {
-        listContainer.classList.add('hidden');
-        gridContainer.classList.remove('hidden');
+        listContainer.classList.add(CSS_CLASSES.HIDDEN);
+        gridContainer.classList.remove(CSS_CLASSES.HIDDEN);
         renderIssuesGrid(issueCb, favCb);
     }
 
@@ -1038,7 +1039,7 @@ function attachListeners(container, onIssueClick, onFavoriteClick) {
                     const img = $('#snapshot-image');
                     if (modal && img) {
                         img.src = url;
-                        modal.classList.add('active');
+                        modal.classList.add(CSS_CLASSES.ACTIVE);
                     }
                 }
             }
@@ -1070,10 +1071,10 @@ function attachListeners(container, onIssueClick, onFavoriteClick) {
                     document.body.removeChild(ta);
                 }
                 btnCopyGuid.title = 'GUID copiado';
-                btnCopyGuid.classList.add('active');
+                btnCopyGuid.classList.add(CSS_CLASSES.ACTIVE);
                 setTimeout(() => {
                     btnCopyGuid.title = 'Copiar GUID';
-                    btnCopyGuid.classList.remove('active');
+                    btnCopyGuid.classList.remove(CSS_CLASSES.ACTIVE);
                 }, 1500);
             } catch (err) {
                 console.warn('No se pudo copiar el GUID:', err);
@@ -1327,10 +1328,10 @@ function updateActiveFiltersBadge() {
     if (badge) {
         if (c > 0) {
             badge.textContent = c;
-            badge.classList.remove('hidden');
+            badge.classList.remove(CSS_CLASSES.HIDDEN);
         } else {
             badge.textContent = '0';
-            badge.classList.add('hidden');
+            badge.classList.add(CSS_CLASSES.HIDDEN);
         }
     }
     const btn = document.getElementById('btn-clear-filters-header');
@@ -1360,9 +1361,9 @@ function updateActiveFiltersBadge() {
             // Reset UI inputs
             const inputs = document.querySelectorAll('#filter-bcf, #filter-author, #filter-date-from, #filter-date-to, #filter-search');
             inputs.forEach(i => i.value = '');
-            document.querySelectorAll('.filter-chip.active').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.filter-chip.active').forEach(c => c.classList.remove(CSS_CLASSES.ACTIVE));
             const favBtn = document.getElementById('btn-filter-favorites');
-            if (favBtn) favBtn.classList.remove('active');
+            if (favBtn) favBtn.classList.remove(CSS_CLASSES.ACTIVE);
             const sortSelect = document.getElementById('sort-by');
             if (sortSelect) sortSelect.value = 'date-desc';
 
@@ -1494,12 +1495,12 @@ export function renderProjects() {
     });
 
     if (AppState.projects.length === 0) {
-        document.getElementById('empty-state').classList.remove('hidden');
+        document.getElementById('empty-state').classList.remove(CSS_CLASSES.HIDDEN);
         container.innerHTML = '';
         return;
     }
     
-    document.getElementById('empty-state').classList.add('hidden');
+    document.getElementById('empty-state').classList.add(CSS_CLASSES.HIDDEN);
     
     // Calculate pinned status
     const pinned = AppState.projects.filter(p => p.pinned);
@@ -1608,7 +1609,7 @@ export function renderProjects() {
             // Update modal title
             if (titleEl) titleEl.textContent = 'Editar Proyecto';
             
-            modal.classList.add('active');
+            modal.classList.add(CSS_CLASSES.ACTIVE);
         }
     };
     
@@ -1632,10 +1633,10 @@ export function renderProjects() {
                 renderProjects();
                 import('./ui-utils.js').then(m => m.updateGlobalStats());
             }
-            modal.classList.remove('active');
+            modal.classList.remove(CSS_CLASSES.ACTIVE);
         };
         
-        modal.classList.add('active');
+        modal.classList.add(CSS_CLASSES.ACTIVE);
         confirmBtn.focus();
     };
     
