@@ -16,6 +16,7 @@
  */
 
 import { logger } from './config.js';
+import { createError, STORAGE_ERRORS } from './error-codes.js';
 
 /**
  * Adapter para IndexedDB
@@ -89,7 +90,10 @@ class IndexedDBAdapter {
 
         const isAvailable = await this.checkAvailability();
         if (!isAvailable) {
-            throw new Error('IndexedDB no disponible');
+            throw createError(
+                STORAGE_ERRORS.IDB_NOT_AVAILABLE,
+                'IndexedDB no disponible'
+            );
         }
 
         return new Promise((resolve, reject) => {
@@ -300,7 +304,10 @@ class LocalStorageAdapter {
     async init() {
         const isAvailable = await this.checkAvailability();
         if (!isAvailable) {
-            throw new Error('localStorage no disponible');
+            throw createError(
+                STORAGE_ERRORS.LS_NOT_AVAILABLE,
+                'localStorage no disponible'
+            );
         }
         return true;
     }
@@ -311,7 +318,11 @@ class LocalStorageAdapter {
 
             const id = data.id || data.key;
             if (!id) {
-                throw new Error('Datos deben tener id o key');
+                throw createError(
+                    STORAGE_ERRORS.IDB_WRITE_FAILED,
+                    'Datos deben tener id o key',
+                    { storeName, data }
+                );
             }
 
             // Guardar el item individual
@@ -503,7 +514,11 @@ export class DBManager {
             return this.currentBackend;
         } catch (error) {
             logger.error('❌ No se pudo inicializar ningún backend de almacenamiento:', error);
-            throw new Error('Sin sistema de almacenamiento disponible');
+            throw createError(
+                STORAGE_ERRORS.IDB_NOT_AVAILABLE,
+                'Sin sistema de almacenamiento disponible',
+                { originalError: error.message }
+            );
         }
     }
 

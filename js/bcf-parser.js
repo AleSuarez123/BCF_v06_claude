@@ -4,6 +4,7 @@
  */
 
 import { createSafeObjectURL } from './ui-utils.js';
+import { createError, PARSE_ERRORS } from './error-codes.js';
 
 const STATUS_MAP = {
     'open': 'Open', 'abierto': 'Open', 'active': 'Open', 'new': 'Open',
@@ -309,14 +310,21 @@ async function findSnapshot(zip, folder, topicData) {
  */
 async function loadBCF(file) {
     if (typeof JSZip === 'undefined') {
-        throw new Error('JSZip no está cargado. Incluye la biblioteca JSZip.');
+        throw createError(
+            PARSE_ERRORS.BCF_ZIP_ERROR,
+            'JSZip no está cargado. Incluye la biblioteca JSZip.'
+        );
     }
 
     let zip;
     try {
         zip = await JSZip.loadAsync(await file.arrayBuffer());
     } catch (e) {
-        throw new Error(`Error al descomprimir BCF: ${e.message}`);
+        throw createError(
+            PARSE_ERRORS.BCF_ZIP_ERROR,
+            `Error al descomprimir BCF: ${e.message}`,
+            { originalError: e.message, filename: file.name }
+        );
     }
 
     const result = {
@@ -350,7 +358,11 @@ async function loadBCF(file) {
     });
 
     if (folders.size === 0) {
-        throw new Error('No se encontraron topics en el archivo BCF');
+        throw createError(
+            PARSE_ERRORS.BCF_MISSING_MARKUP,
+            'No se encontraron topics en el archivo BCF',
+            { filename: file.name }
+        );
     }
 
     // Procesar cada topic
@@ -381,7 +393,11 @@ async function loadBCF(file) {
 
     // Validar que hay al menos un topic válido
     if (result.topics.length === 0) {
-        throw new Error('El archivo BCF no contiene topics válidos');
+        throw createError(
+            PARSE_ERRORS.BCF_INVALID_FORMAT,
+            'El archivo BCF no contiene topics válidos',
+            { filename: file.name, topicsFolders: folders.size }
+        );
     }
 
     // Ordenar por fecha de creación (más recientes primero)

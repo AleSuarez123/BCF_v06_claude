@@ -3,6 +3,7 @@
  */
 
 import { withErrorHandling } from './ui-utils.js';
+import { createError, NETWORK_ERRORS } from './error-codes.js';
 
 export class BCFApiClient {
     constructor(baseUrl) {
@@ -26,9 +27,22 @@ export class BCFApiClient {
         }
 
         const response = await fetch(url, { ...options, headers });
-        
+
         if (!response.ok) {
-            throw new Error(`BCF API Error: ${response.status} ${response.statusText}`);
+            // Mapear código HTTP a error code estandarizado
+            let errorCode = NETWORK_ERRORS.BCF_API_INVALID_RESPONSE;
+
+            if (response.status === 401) errorCode = NETWORK_ERRORS.BCF_API_UNAUTHORIZED;
+            else if (response.status === 403) errorCode = NETWORK_ERRORS.HTTP_403;
+            else if (response.status === 404) errorCode = NETWORK_ERRORS.HTTP_404;
+            else if (response.status === 429) errorCode = NETWORK_ERRORS.BCF_API_RATE_LIMIT;
+            else if (response.status >= 500) errorCode = NETWORK_ERRORS.BCF_API_UNAVAILABLE;
+
+            throw createError(
+                errorCode,
+                `BCF API Error: ${response.status} ${response.statusText}`,
+                { status: response.status, statusText: response.statusText, url, endpoint }
+            );
         }
 
         if (response.status === 204) return null;

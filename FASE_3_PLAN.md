@@ -1,6 +1,6 @@
 # FASE 3 - MEDIUM PRIORITY: Code Quality & Arquitectura
 
-## 📊 Estado: 40% COMPLETADO (4/10 items al 100%) - ✅ SPRINT 1 + 1 ITEM SPRINT 2 COMPLETADOS
+## 📊 Estado: 50% COMPLETADO (5/10 items al 100%) - ✅ SPRINT 1 + 2 ITEMS SPRINT 2 COMPLETADOS
 
 ---
 
@@ -299,34 +299,73 @@ Mejorar la **calidad del código**, **mantenibilidad** y **accesibilidad** del p
 
 ---
 
-### **3.5 ⏳ Mejorar Error Handling Consistente**
+### **3.5 ✅ Mejorar Error Handling Consistente** (COMPLETADO)
 **Prioridad:** Alta
 **Esfuerzo:** 8-10 horas
 **ROI:** Alto
+**Progreso:** 100% - Sistema completo implementado
 
 **Problema:**
 - Mensajes de error genéricos
 - Sin diferenciación entre errores recuperables/fatales
 - Logging inconsistente (console.log vs logger)
-- Sin códigos de error
+- Sin códigos de error estandarizados
 
 **Archivos Afectados:**
 - `js/bcf-api.js`: Errores genéricos
-- `js/export-utils.js`: Mensajes poco informativos
-- `js/image-editor.js`: Sin try-catch blocks
+- `js/bcf-parser.js`: Mensajes poco informativos
+- `js/db-manager.js`: Sin códigos de error
+- `js/error-handler.js`: No soporta códigos estandarizados
 
-**Solución:**
-- Crear `js/error-codes.js`
-  - Definir `ERROR_CODES` con código + mensaje
-- Crear clase `AppError extends Error`
-  - Constructor con código de error
-  - Categorías: FATAL, RECOVERABLE, WARNING
-- Implementar error boundaries
+**Solución Implementada:**
+✅ Creado `js/error-codes.js` (~450 líneas)
+  - 8 categorías de errores: NETWORK, VALIDATION, STORAGE, PARSE, RENDER, PERMISSION, EXPORT, IMAGE, USER
+  - ~60+ códigos únicos con formato [CATEGORIA]-[SUBCATEGORIA]-[NUMERO]
+  - Función `createError(code, message, details)` para crear errores estandarizados
+  - Helper `isErrorCode(error, code)` para verificar códigos
+  - Helper `getErrorCategory(code)` para extraer categoría
+  - Helper `isRecoverableError(error)` para determinar recuperabilidad
+  - Map `ERROR_MESSAGES` con mensajes user-friendly en español
+  - Función `getErrorMessage(code)` para obtener mensajes amigables
+
+✅ Integrado en `js/error-handler.js`
+  - Import de `getErrorMessage`, `getErrorCategory`, `isRecoverableError`
+  - Modificado `_normalizeError()` para capturar `error.code` y `error.details`
+  - Modificado `_logError()` para incluir código en logs (`[CATEGORY] [CODE] message`)
+  - Modificado `_getUserFriendlyMessage()` para usar `getErrorMessage()` si hay código
+  - Ahora muestra detalles adicionales en logs para debugging
+
+✅ Actualizado `js/bcf-parser.js`
+  - 4 errores actualizados a usar `createError()` con códigos:
+    - `BCF_ZIP_ERROR` - Error al descomprimir BCF
+    - `BCF_MISSING_MARKUP` - No se encontraron topics
+    - `BCF_INVALID_FORMAT` - Topics sin contenido válido
+  - Todos incluyen detalles (filename, originalError)
+
+✅ Actualizado `js/bcf-api.js`
+  - Mapeo de códigos HTTP a error codes:
+    - 401 → `BCF_API_UNAUTHORIZED`
+    - 403 → `HTTP_403`
+    - 404 → `HTTP_404`
+    - 429 → `BCF_API_RATE_LIMIT`
+    - 500+ → `BCF_API_UNAVAILABLE`
+  - Incluye detalles (status, statusText, url, endpoint)
+
+✅ Actualizado `js/db-manager.js`
+  - 4 errores actualizados a usar códigos de STORAGE:
+    - `IDB_NOT_AVAILABLE` - IndexedDB no disponible
+    - `LS_NOT_AVAILABLE` - localStorage no disponible
+    - `IDB_WRITE_FAILED` - Datos sin id/key
+  - Incluye detalles contextuales en cada error
 
 **Impacto:**
-✅ Mejor UX con mensajes claros
-✅ Debugging más fácil
-✅ Logs estructurados
+✅ Mejor UX con mensajes claros y específicos
+✅ Debugging más fácil con códigos únicos identificables
+✅ Logs estructurados con categorías y códigos
+✅ Identificación rápida de errores en producción
+✅ Sistema extensible para nuevos códigos
+✅ Diferenciación automática de errores recuperables
+✅ Mensajes user-friendly en español centralizados
 
 ---
 

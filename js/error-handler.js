@@ -33,6 +33,7 @@
  */
 
 import { logger } from './config.js';
+import { getErrorMessage, getErrorCategory, isRecoverableError } from './error-codes.js';
 
 /**
  * Tipos de error para clasificación
@@ -239,6 +240,8 @@ class ErrorHandler {
                 type,
                 stack: error.stack,
                 name: error.name,
+                code: error.code || null,  // Capturar código de error si existe
+                details: error.details || {},  // Capturar detalles si existen
                 context,
                 timestamp
             };
@@ -251,6 +254,8 @@ class ErrorHandler {
                 type,
                 stack: null,
                 name: 'Error',
+                code: null,
+                details: {},
                 context,
                 timestamp
             };
@@ -263,6 +268,8 @@ class ErrorHandler {
                 type,
                 stack: error.stack || null,
                 name: error.name || 'Error',
+                code: error.code || null,  // Capturar código de error si existe
+                details: error.details || {},  // Capturar detalles si existen
                 context: { ...error, ...context },
                 timestamp
             };
@@ -274,6 +281,8 @@ class ErrorHandler {
             type,
             stack: null,
             name: 'UnknownError',
+            code: null,
+            details: {},
             context: { originalError: error, ...context },
             timestamp
         };
@@ -346,32 +355,36 @@ class ErrorHandler {
     _logError(errorObj) {
         if (!this.config.logToConsole) return;
 
-        const { severity, type, message, stack, context } = errorObj;
+        const { severity, type, message, stack, context, code, details } = errorObj;
 
         // Formatear para consola
         const prefix = `[${type.toUpperCase()}]`;
+        const codeStr = code ? ` [${code}]` : '';
         const contextStr = Object.keys(context).length > 0
             ? `\nContexto: ${JSON.stringify(context, null, 2)}`
+            : '';
+        const detailsStr = Object.keys(details).length > 0
+            ? `\nDetalles: ${JSON.stringify(details, null, 2)}`
             : '';
 
         // Loguear según severidad
         switch (severity) {
             case ErrorSeverity.CRITICAL:
-                logger.error(`🔴 CRÍTICO ${prefix} ${message}${contextStr}`);
+                logger.error(`🔴 CRÍTICO ${prefix}${codeStr} ${message}${detailsStr}${contextStr}`);
                 if (stack) logger.error(stack);
                 break;
 
             case ErrorSeverity.HIGH:
-                logger.error(`🟠 ALTO ${prefix} ${message}${contextStr}`);
+                logger.error(`🟠 ALTO ${prefix}${codeStr} ${message}${detailsStr}${contextStr}`);
                 if (stack) logger.debug(stack);
                 break;
 
             case ErrorSeverity.MEDIUM:
-                logger.warn(`🟡 MEDIO ${prefix} ${message}${contextStr}`);
+                logger.warn(`🟡 MEDIO ${prefix}${codeStr} ${message}${detailsStr}${contextStr}`);
                 break;
 
             case ErrorSeverity.LOW:
-                logger.debug(`🟢 BAJO ${prefix} ${message}${contextStr}`);
+                logger.debug(`🟢 BAJO ${prefix}${codeStr} ${message}${detailsStr}${contextStr}`);
                 break;
         }
     }
@@ -394,10 +407,10 @@ class ErrorHandler {
      * @private
      */
     _showUserNotification(errorObj) {
-        const { severity, type, message } = errorObj;
+        const { severity, type, message, code } = errorObj;
 
-        // Mensaje amigable según tipo
-        const userMessage = this._getUserFriendlyMessage(type, message);
+        // Mensaje amigable según tipo o código
+        const userMessage = this._getUserFriendlyMessage(type, message, code);
 
         // Determinar estilo de notificación
         let notificationClass = 'error-notification';
@@ -455,7 +468,13 @@ class ErrorHandler {
      * Convierte error técnico a mensaje amigable
      * @private
      */
-    _getUserFriendlyMessage(type, technicalMessage) {
+    _getUserFriendlyMessage(type, technicalMessage, code = null) {
+        // Si hay un código de error, usar el mensaje del sistema de error-codes
+        if (code) {
+            return getErrorMessage(code, technicalMessage);
+        }
+
+        // Fallback a mensajes por tipo
         const messages = {
             [ErrorTypes.NETWORK]: 'No se pudo conectar al servidor. Verifica tu conexión a internet.',
             [ErrorTypes.VALIDATION]: technicalMessage, // Mostrar el mensaje tal cual
