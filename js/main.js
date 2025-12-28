@@ -28,12 +28,16 @@ import { openEditSidebar } from './edit-panel.js';
 import { blobManager } from './blob-url-manager.js';
 import { errorHandler, ErrorTypes, ErrorSeverity } from './error-handler.js';
 import { eventBus, Events } from './event-bus.js';
+import { FormValidator } from './form-validation.js';
 
 // Inicializar API Client
 export const bcfApi = new BCFApiClient('');
 
 // Variable global para archivos pendientes de asignar
 let pendingFiles = [];
+
+// Validador del formulario de proyecto (inicializado en setupModals)
+let projectValidator = null;
 
 // Envolver renderIssues para inyectar dependencias
 const renderAppIssues = () => {
@@ -394,14 +398,48 @@ function setupModals() {
     // Modal Nuevo Proyecto
     const modalProject = $('#modal-project');
     const formProject = $('#form-project');
-    
+
+    // Inicializar validador del formulario de proyecto
     if (formProject) {
+        // Necesitamos agregar atributo name a los campos (actualmente solo tienen id)
+        const nameField = $('#project-name');
+        const descField = $('#project-description');
+        if (nameField && !nameField.hasAttribute('name')) nameField.setAttribute('name', 'project-name');
+        if (descField && !descField.hasAttribute('name')) descField.setAttribute('name', 'project-description');
+
+        projectValidator = new FormValidator('#form-project', {
+            'project-name': {
+                required: true,
+                minLength: 3,
+                maxLength: 100,
+                noSpecialChars: true,
+                message: 'El nombre debe tener entre 3 y 100 caracteres (sin símbolos especiales)'
+            },
+            'project-description': {
+                maxLength: 500
+            }
+        }, {
+            liveValidation: true,
+            sanitize: true,
+            showErrors: true,
+            scrollToError: true
+        });
+
         formProject.addEventListener('submit', async (e) => {
             e.preventDefault();
+
+            // Validar antes de procesar
+            if (!projectValidator.validate()) {
+                notify('Por favor corrige los errores en el formulario', 'error');
+                return;
+            }
+
+            // Obtener datos validados y sanitizados
+            const data = projectValidator.getData();
             const projectId = $('#project-id').value;
-            const name = $('#project-name').value;
-            const description = $('#project-description').value;
-            
+            const name = data['project-name'];
+            const description = data['project-description'] || '';
+
             if (projectId) {
                 // Modo edición
                 const project = AppState.projects.find(p => p.id === projectId);
@@ -421,21 +459,23 @@ function setupModals() {
                 await createNewProject(name, description, pendingFiles);
                 pendingFiles = []; // Limpiar pendientes
             }
-            
+
             modalProject.classList.remove('active');
+            projectValidator.reset();
         });
     }
 
     // Modal Selección de Target (para Drop)
     const modalTarget = $('#modal-select-project-target');
     const btnTargetNew = $('#btn-target-new');
-    
+
     if (btnTargetNew) {
         btnTargetNew.addEventListener('click', () => {
             modalTarget.classList.remove('active');
             // Abrir modal de nuevo proyecto
             $('#project-name').value = '';
             $('#project-description').value = '';
+            if (projectValidator) projectValidator.clearErrors();
             $('#modal-project').classList.add('active');
             $('#project-name').focus();
         });
@@ -1047,6 +1087,7 @@ function setupNavigation() {
             // Limpiar formulario y mostrar modal
             const form = $('#form-project');
             if (form) form.reset();
+            if (projectValidator) projectValidator.clearErrors();
             $('#modal-project-title').textContent = 'Nuevo Proyecto';
             $('#project-id').value = '';
             $('#modal-project').classList.add('active');
@@ -1061,6 +1102,7 @@ function setupNavigation() {
             const form = $('#form-project');
             if (form) {
                 form.reset();
+                if (projectValidator) projectValidator.clearErrors();
                 $('#project-id').value = AppState.currentProject.id;
                 $('#project-name').value = AppState.currentProject.name;
                 $('#project-description').value = AppState.currentProject.description || '';
