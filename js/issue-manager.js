@@ -215,17 +215,13 @@ function createIssueRowElement(issue, index, visibleColumns) {
     return row;
 }
 
-function renderIssuesList(onIssueClick, onFavoriteClick) {
-    const container = $('#issues-list');
-
-    // Filtrar columnas ocultas
-    const visibleColumns = columnConfig.filter(col => !col.hidden);
-
-    // Generar estilo de grid dinámico
-    const gridTemplate = visibleColumns.map(col => col.width).join(' ');
-    container.style.setProperty('--grid-columns', gridTemplate);
-
-    // Header dinámico
+/**
+ * Genera el HTML del header de la lista de issues
+ * @param {Array} visibleColumns - Columnas visibles de la tabla
+ * @returns {string} HTML del header
+ * @private
+ */
+function generateIssuesListHeader(visibleColumns) {
     const headerCols = visibleColumns.map((col, index) => {
         if (col.id === 'checkbox') {
             return `
@@ -237,10 +233,10 @@ function renderIssuesList(onIssueClick, onFavoriteClick) {
                 </div>`;
         }
         if (col.id === 'actions') {
-        return `<div class="col-actions">
-            <span class="col-header-label">ACCIONES</span>
-        </div>`;
-    }
+            return `<div class="col-actions">
+                <span class="col-header-label">ACCIONES</span>
+            </div>`;
+        }
 
         const isSorted = currentSort.colId === col.id;
         const sortIcon = isSorted
@@ -273,80 +269,98 @@ function renderIssuesList(onIssueClick, onFavoriteClick) {
         `;
     }).join('');
 
-    const headerHtml = `<div class="issues-list-header">${headerCols}</div>`;
+    return `<div class="issues-list-header">${headerCols}</div>`;
+}
 
-    // Aplicar ordenamiento si es necesario
-    let issuesToRender = [...AppState.filteredIssues];
-    if (currentSort.colId) {
-        issuesToRender.sort((a, b) => {
-            let valA, valB;
+/**
+ * Aplica ordenamiento a la lista de issues
+ * @param {Array} issues - Issues a ordenar
+ * @param {Object} sortConfig - Configuración de ordenamiento (colId, direction)
+ * @returns {Array} Issues ordenados
+ * @private
+ */
+function sortIssuesByColumn(issues, sortConfig) {
+    if (!sortConfig.colId) return [...issues];
 
-            // Obtener valores según columna
-            switch (currentSort.colId) {
-                case 'title': valA = a.title; valB = b.title; break;
-                case 'status': valA = a.topicStatus; valB = b.topicStatus; break;
-                case 'priority': valA = a.priority; valB = b.priority; break;
-                case 'type': valA = a.topicType; valB = b.topicType; break;
-                case 'assigned': valA = a.assignedTo || ''; valB = b.assignedTo || ''; break;
-                case 'date': valA = new Date(a.creationDate); valB = new Date(b.creationDate); break;
-                default: valA = ''; valB = '';
-            }
+    return [...issues].sort((a, b) => {
+        let valA, valB;
 
-            // Comparación
-            if (valA < valB) return currentSort.direction === 'asc' ? -1 : 1;
-            if (valA > valB) return currentSort.direction === 'asc' ? 1 : -1;
-            return 0;
-        });
-    }
-
-    // ============================================================================
-    // VIRTUAL SCROLLING para listas grandes (>100 items)
-    // ============================================================================
-    if (shouldUseVirtualScrolling(issuesToRender.length)) {
-        // Destruir instancia anterior si existe
-        if (virtualScrollerInstance) {
-            virtualScrollerInstance.destroy();
+        // Obtener valores según columna
+        switch (sortConfig.colId) {
+            case 'title': valA = a.title; valB = b.title; break;
+            case 'status': valA = a.topicStatus; valB = b.topicStatus; break;
+            case 'priority': valA = a.priority; valB = b.priority; break;
+            case 'type': valA = a.topicType; valB = b.topicType; break;
+            case 'assigned': valA = a.assignedTo || ''; valB = b.assignedTo || ''; break;
+            case 'date': valA = new Date(a.creationDate); valB = new Date(b.creationDate); break;
+            default: valA = ''; valB = '';
         }
 
-        // Limpiar y preparar container
-        container.innerHTML = headerHtml;
+        // Comparación
+        if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
+        if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
+        return 0;
+    });
+}
 
-        // Crear contenedor para virtual scroller
-        const virtualContainer = document.createElement('div');
-        virtualContainer.id = 'virtual-issues-container';
-        virtualContainer.style.flex = '1';
-        virtualContainer.style.overflow = 'auto';
-        container.appendChild(virtualContainer);
-
-        // Inicializar virtual scroller
-        virtualScrollerInstance = new VirtualScroller(virtualContainer, {
-            estimatedItemHeight: 60,
-            overscanCount: 5
-        });
-
-        // Configurar render callback
-        virtualScrollerInstance.setItems(issuesToRender, (issue, index) => {
-            return createIssueRowElement(issue, index, visibleColumns);
-        });
-
-        // Listeners (delegados en el container principal)
-        setupListListeners(container, onIssueClick, onFavoriteClick);
-        setupColumnInteractions(container);
-
-        return; // Salir, virtual scroller se encarga del resto
+/**
+ * Renderiza la lista con virtual scrolling para listas grandes
+ * @param {HTMLElement} container - Contenedor de la lista
+ * @param {string} headerHtml - HTML del header
+ * @param {Array} issues - Issues a renderizar
+ * @param {Array} visibleColumns - Columnas visibles
+ * @param {Object} callbacks - Callbacks {onIssueClick, onFavoriteClick}
+ * @private
+ */
+function renderIssuesListVirtual(container, headerHtml, issues, visibleColumns, callbacks) {
+    // Destruir instancia anterior si existe
+    if (virtualScrollerInstance) {
+        virtualScrollerInstance.destroy();
     }
 
-    // ============================================================================
-    // RENDERIZADO NORMAL para listas pequeñas (<100 items)
-    // ============================================================================
+    // Limpiar y preparar container
+    container.innerHTML = headerHtml;
 
+    // Crear contenedor para virtual scroller
+    const virtualContainer = document.createElement('div');
+    virtualContainer.id = 'virtual-issues-container';
+    virtualContainer.style.flex = '1';
+    virtualContainer.style.overflow = 'auto';
+    container.appendChild(virtualContainer);
+
+    // Inicializar virtual scroller
+    virtualScrollerInstance = new VirtualScroller(virtualContainer, {
+        estimatedItemHeight: 60,
+        overscanCount: 5
+    });
+
+    // Configurar render callback
+    virtualScrollerInstance.setItems(issues, (issue, index) => {
+        return createIssueRowElement(issue, index, visibleColumns);
+    });
+
+    // Listeners (delegados en el container principal)
+    setupListListeners(container, callbacks.onIssueClick, callbacks.onFavoriteClick);
+    setupColumnInteractions(container);
+}
+
+/**
+ * Renderiza la lista con renderizado normal para listas pequeñas
+ * @param {HTMLElement} container - Contenedor de la lista
+ * @param {string} headerHtml - HTML del header
+ * @param {Array} issues - Issues a renderizar
+ * @param {Array} visibleColumns - Columnas visibles
+ * @param {Object} callbacks - Callbacks {onIssueClick, onFavoriteClick}
+ * @private
+ */
+function renderIssuesListNormal(container, headerHtml, issues, visibleColumns, callbacks) {
     // Destruir virtual scroller si existía
     if (virtualScrollerInstance) {
         virtualScrollerInstance.destroy();
         virtualScrollerInstance = null;
     }
 
-    const rowsHtml = issuesToRender.map((issue, index) => {
+    const rowsHtml = issues.map((issue, index) => {
         const isSelected = AppState.selectedIssues.has(issue.guid);
         const isFocused = index === AppState.focusedIndex;
         const isFavorite = AppState.favorites.has(issue.guid);
@@ -367,8 +381,45 @@ function renderIssuesList(onIssueClick, onFavoriteClick) {
     container.innerHTML = headerHtml + rowsHtml;
 
     // Listeners
-    setupListListeners(container, onIssueClick, onFavoriteClick);
+    setupListListeners(container, callbacks.onIssueClick, callbacks.onFavoriteClick);
     setupColumnInteractions(container);
+}
+
+/**
+ * Renderiza la lista de issues en modo lista
+ *
+ * Esta función orquesta el renderizado delegando en funciones especializadas:
+ * - generateIssuesListHeader() - Genera el header dinámico
+ * - sortIssuesByColumn() - Aplica ordenamiento
+ * - renderIssuesListVirtual() - Renderizado con virtual scrolling (>100 items)
+ * - renderIssuesListNormal() - Renderizado normal (<100 items)
+ *
+ * @param {Function} onIssueClick - Callback al hacer click en una issue
+ * @param {Function} onFavoriteClick - Callback al hacer click en favorito
+ */
+function renderIssuesList(onIssueClick, onFavoriteClick) {
+    const container = $('#issues-list');
+    const visibleColumns = columnConfig.filter(col => !col.hidden);
+
+    // Generar estilo de grid dinámico
+    const gridTemplate = visibleColumns.map(col => col.width).join(' ');
+    container.style.setProperty('--grid-columns', gridTemplate);
+
+    // Generar header
+    const headerHtml = generateIssuesListHeader(visibleColumns);
+
+    // Ordenar issues
+    const issuesToRender = sortIssuesByColumn(AppState.filteredIssues, currentSort);
+
+    // Callbacks
+    const callbacks = { onIssueClick, onFavoriteClick };
+
+    // Renderizar con virtual scrolling o normal según cantidad
+    if (shouldUseVirtualScrolling(issuesToRender.length)) {
+        renderIssuesListVirtual(container, headerHtml, issuesToRender, visibleColumns, callbacks);
+    } else {
+        renderIssuesListNormal(container, headerHtml, issuesToRender, visibleColumns, callbacks);
+    }
 }
 
 // Helper para generar contenido de celda
