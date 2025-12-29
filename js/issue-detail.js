@@ -4,10 +4,10 @@
 
 import { AppState, STATUS_COLORS, STATUS_LABELS, PRIORITY_COLORS, PRIORITY_LABELS } from './state.js';
 import { $, $$, escapeHtml, notify } from './ui-utils.js';
-import { sanitizeURL } from './sanitizer.js';
+import { sanitizeURL } from './utils/sanitizer.js';
 import { BCFParser } from './bcf-parser.js';
 import { Storage } from './storage.js';
-import { getInitials, stringToColor } from './ui-helpers.js';
+import { getInitials, stringToColor } from './ui/helpers.js';
 
 /**
  * Abre el modal de detalle para una incidencia específica

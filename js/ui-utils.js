@@ -4,7 +4,7 @@
 
 // Registro global de URLs de Blobs para limpieza controlada
 import { AppState } from './state.js';
-import { TIMEOUTS, CSS_CLASSES, COLORS } from './constants.js';
+import { TIMEOUTS, CSS_CLASSES, COLORS } from './utils/constants.js';
 
 const blobRegistry = new Set();
 

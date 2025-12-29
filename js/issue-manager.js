@@ -4,12 +4,12 @@
 
 import { AppState, STATUS_COLORS, STATUS_LABELS, PRIORITY_COLORS, PRIORITY_LABELS } from './state.js';
 import { $, $$, escapeHtml } from './ui-utils.js';
-import { sanitizeBCFContent, escapeHTML } from './sanitizer.js';
+import { sanitizeBCFContent, escapeHTML } from './utils/sanitizer.js';
 import { BCFParser } from './bcf-parser.js';
 import { updateBulkActionsBar } from './selection-utils.js';
-import { VirtualScroller, shouldUseVirtualScrolling } from './virtual-renderer.js';
-import { CSS_CLASSES, VIEW_MODES } from './constants.js';
-import { getInitials, stringToColor, createAvatar, createUserBadge } from './ui-helpers.js';
+import { VirtualScroller, shouldUseVirtualScrolling } from './ui/virtual-renderer.js';
+import { CSS_CLASSES, VIEW_MODES } from './utils/constants.js';
+import { getInitials, stringToColor, createAvatar, createUserBadge } from './ui/helpers.js';
 
 // Configuración de Iconos para cabeceras
 export const HEADER_ICONS = {

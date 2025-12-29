@@ -25,13 +25,13 @@ import { initColumnCustomizer } from './column-customizer.js';
 import { openIssueDetail } from './issue-detail.js';
 import { applyBulkStatus, applyBulkUpdate, applyBulkDelete, deselectAllIssues, toggleIssueSelection, selectAllIssues } from './selection-utils.js';
 import { openEditSidebar } from './edit-panel.js';
-import { blobManager } from './blob-url-manager.js';
-import { errorHandler, ErrorTypes, ErrorSeverity } from './error-handler.js';
-import { eventBus, Events } from './event-bus.js';
-import { FormValidator } from './form-validation.js';
-import { TIMEOUTS, CSS_CLASSES, PAGES, VIEW_MODES, STORAGE_KEYS, CUSTOM_EVENTS } from './constants.js';
-import { setupAllNavigation } from './navigation-setup.js';
-import { initAccessibility } from './accessibility.js';
+import { blobManager } from './utils/blob-manager.js';
+import { errorHandler, ErrorTypes, ErrorSeverity } from './utils/error-handler.js';
+import { eventBus, Events } from './core/event-bus.js';
+import { FormValidator } from './utils/validation.js';
+import { TIMEOUTS, CSS_CLASSES, PAGES, VIEW_MODES, STORAGE_KEYS, CUSTOM_EVENTS } from './utils/constants.js';
+import { setupAllNavigation } from './core/navigation.js';
+import { initAccessibility } from './ui/accessibility.js';
 
 // Inicializar API Client
 export const bcfApi = new BCFApiClient('');

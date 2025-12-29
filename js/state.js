@@ -7,13 +7,13 @@
  * pero internamente usa AppStateManager (FASE 3.9).
  *
  * Para código nuevo, usar directamente:
- * import { stateManager } from './app-state-manager.js';
+ * import { stateManager } from './core/state-manager.js';
  *
  * El acceso directo a AppState.property seguirá funcionando pero es
  * recomendado migrar a stateManager.getProperty() / setProperty()
  */
 
-import { stateManager } from './app-state-manager.js';
+import { stateManager } from './core/state-manager.js';
 import { logger } from './config.js';
 
 /**
