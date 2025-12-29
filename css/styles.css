@@ -4618,3 +4618,78 @@ option {
     background: rgba(255, 255, 255, 0.03);
 }
 
+
+/* ============================================================================
+   ACCESIBILIDAD - WCAG 2.1 Level AA
+   ============================================================================ */
+
+/**
+ * Screen Reader Only - Oculta visualmente pero accesible a lectores de pantalla
+ * Útil para anuncios dinámicos y labels descriptivos
+ */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}
+
+/**
+ * Focus visible mejorado para navegación por teclado
+ */
+*:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+    border-radius: var(--border-radius-xs);
+}
+
+/**
+ * Skip to main content link (mejora de accesibilidad)
+ */
+.skip-to-main {
+    position: absolute;
+    top: -40px;
+    left: 0;
+    background: var(--color-primary);
+    color: white;
+    padding: 8px 16px;
+    text-decoration: none;
+    border-radius: 0 0 var(--border-radius-sm) 0;
+    z-index: 9999;
+}
+
+.skip-to-main:focus {
+    top: 0;
+}
+
+/**
+ * Reduce motion para usuarios con preferencias de accesibilidad
+ */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/**
+ * Contraste mejorado en modo alto contraste
+ */
+@media (prefers-contrast: high) {
+    * {
+        border-color: currentColor;
+    }
+
+    .btn:not(.btn-primary) {
+        border: 2px solid currentColor;
+    }
+}

@@ -31,6 +31,7 @@ import { eventBus, Events } from './event-bus.js';
 import { FormValidator } from './form-validation.js';
 import { TIMEOUTS, CSS_CLASSES, PAGES, VIEW_MODES, STORAGE_KEYS, CUSTOM_EVENTS } from './constants.js';
 import { setupAllNavigation } from './navigation-setup.js';
+import { initAccessibility } from './accessibility.js';
 
 // Inicializar API Client
 export const bcfApi = new BCFApiClient('');
@@ -208,7 +209,10 @@ const init = async () => {
         
         // Inicializar UI
         initUI();
-        
+
+        // Inicializar mejoras de accesibilidad (WCAG 2.1 Level AA)
+        initAccessibility();
+
         // Inicializar eventos globales
         initGlobalEvents();
         
