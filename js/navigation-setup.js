@@ -9,7 +9,7 @@
  */
 
 import { $, $cached, CSS_CLASSES } from './ui-utils.js';
-import {  AppState } from './app-state.js';
+import { AppState } from './state.js';
 import { notify } from './ui-utils.js';
 import { renderProjects, updateGlobalStats } from './projects.js';
 import { renderIssues } from './issue-manager.js';
