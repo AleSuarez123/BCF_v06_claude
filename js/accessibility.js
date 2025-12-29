@@ -10,6 +10,7 @@
 
 import { $ } from './ui-utils.js';
 import { logger } from './config.js';
+import { enableKeyboardNavigation, getKeyboardShortcuts, renderKeyboardShortcutsHelp } from './keyboard-nav-helpers.js';
 
 /**
  * Mapeo de botones icono a sus aria-labels
@@ -107,6 +108,7 @@ export function initAccessibility() {
     addLiveRegions();
     addFormAssociations();
     enhanceModalAccessibility();
+    enableKeyboardNavigation();
 
     logger.info('✅ Accesibilidad inicializada - WCAG 2.1 Level AA');
 }
@@ -373,3 +375,6 @@ export function trapFocusInModal(modal) {
         modal.removeEventListener('keydown', handleTab);
     };
 }
+
+// Re-exportar funciones de keyboard-nav-helpers para API pública
+export { getKeyboardShortcuts, renderKeyboardShortcutsHelp };
