@@ -8,11 +8,11 @@
  * Refactorizado desde setupNavigation() monolítica (FASE 3.6)
  */
 
-import { $, $cached, CSS_CLASSES } from '../ui-utils.js';
+import { $, $cached, notify, updateGlobalStats } from '../ui-utils.js';
 import { AppState } from '../state.js';
-import { notify, updateGlobalStats } from '../ui-utils.js';
 import { renderProjects, renderIssues } from '../issue-manager.js';
 import { openSpotlight } from '../ui-panels.js';
+import { CSS_CLASSES } from '../utils/constants.js';
 
 /**
  * Helper function: Navigate between pages
