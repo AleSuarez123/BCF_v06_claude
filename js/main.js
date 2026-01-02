@@ -1020,9 +1020,10 @@ const handleFileDrop = withErrorHandling(async (e) => {
 }, 'Error al procesar archivos');
 
 /**
- * Procesa archivos BCF subidos por el usuario
+ * Procesa archivos BCF subidos por el usuario con pre-validación y detección de duplicados
  *
- * Determina si crear nuevo proyecto o agregar a proyecto existente.
+ * MEJORA FASE 4: Implementa pre-validación, detección de duplicados y modal interactivo
+ * antes de importar. Determina si crear nuevo proyecto o agregar a proyecto existente.
  * Soporta drag & drop y selección de archivos.
  *
  * @param {FileList|File[]} files - Archivos a procesar
@@ -1041,12 +1042,11 @@ const handleFileDrop = withErrorHandling(async (e) => {
  */
 async function handleFiles(files) {
     if (files.length === 0) return;
-    
-    notify(`Procesando ${files.length} archivo(s)...`, 'info');
+
     pendingFiles = files;
     const modalTarget = $('#modal-select-project-target');
     const listContainer = $('#existing-projects-list');
-    
+
     if (modalTarget && listContainer) {
         // Renderizar lista de proyectos existentes
         if (AppState.projects.length === 0) {
@@ -1069,25 +1069,202 @@ async function handleFiles(files) {
                 </button>
             `).join('');
 
-            // Añadir listeners
+            // Añadir listeners con pre-validación
             listContainer.querySelectorAll('.existing-project-option').forEach(btn => {
                 btn.addEventListener('click', async () => {
                     const projectId = btn.dataset.id;
                     modalTarget.classList.remove(CSS_CLASSES.ACTIVE);
-                    
-                    // Cargar proyecto y añadir archivos
+
+                    // Cargar proyecto y mostrar pre-validación
                     await loadProject(projectId);
-                    await addFilesToProject(pendingFiles);
+                    await handleFilesWithValidation(pendingFiles);
                     pendingFiles = [];
                 });
             });
         }
-        
+
         modalTarget.classList.add(CSS_CLASSES.ACTIVE);
     } else {
         // Fallback si no hay modal (no debería pasar)
         await createNewProject(`Proyecto ${new Date().toLocaleDateString()}`, '', files);
     }
+}
+
+/**
+ * Maneja archivos con pre-validación y modal de resumen
+ *
+ * NUEVA FUNCIÓN FASE 4: Pre-valida archivos BCF, detecta duplicados,
+ * muestra modal interactivo y permite al usuario configurar la importación.
+ *
+ * @param {File[]} files - Archivos a procesar
+ * @returns {Promise<void>}
+ *
+ * @private
+ */
+async function handleFilesWithValidation(files) {
+    // Importar dinámicamente el módulo de importación mejorada
+    const { preValidateBCFFiles, showImportSummaryModal, importBCFWithProgress } = await import('./features/bcf-import.js');
+
+    // 1. Mostrar notificación de análisis
+    const loadingNotification = notify('Analizando archivos BCF...', 'info', 0);
+
+    try {
+        // 2. Pre-validar archivos
+        const validatedFiles = await preValidateBCFFiles(files);
+
+        // Cerrar notificación de carga
+        if (loadingNotification && typeof loadingNotification.dismiss === 'function') {
+            loadingNotification.dismiss();
+        }
+
+        // 3. Mostrar modal de resumen interactivo
+        const importConfig = await showImportSummaryModal(validatedFiles);
+
+        // 4. Si el usuario canceló, salir
+        if (!importConfig) {
+            notify('Importación cancelada', 'info');
+            return;
+        }
+
+        // 5. Importar con progreso granular
+        await importWithProgressBar(importConfig);
+
+    } catch (error) {
+        logger.error('Error en validación de archivos:', error);
+        notify(`Error al analizar archivos: ${error.message}`, 'error');
+    }
+}
+
+/**
+ * Importa archivos mostrando barra de progreso granular
+ *
+ * @param {Object} importConfig - Configuración de importación
+ * @returns {Promise<void>}
+ *
+ * @private
+ */
+async function importWithProgressBar(importConfig) {
+    const { importBCFWithProgress } = await import('./features/bcf-import.js');
+
+    // Crear modal de progreso
+    const progressModal = createProgressModal(importConfig.files.length);
+    document.body.appendChild(progressModal);
+
+    try {
+        // Importar con callback de progreso
+        const result = await importBCFWithProgress(importConfig, (current, total, fileName) => {
+            updateProgressModal(progressModal, current, total, fileName);
+        });
+
+        // Guardar cambios
+        await Storage.saveAll();
+
+        // Recargar proyecto
+        await loadProject(AppState.currentProject.id);
+
+        // Cerrar modal de progreso
+        progressModal.remove();
+
+        // Mostrar resultado
+        showImportResults(result);
+
+    } catch (error) {
+        progressModal.remove();
+        logger.error('Error durante importación:', error);
+        notify(`Error al importar: ${error.message}`, 'error');
+    }
+}
+
+/**
+ * Crea modal de progreso para importación
+ *
+ * @param {number} totalFiles - Número total de archivos
+ * @returns {HTMLElement} Modal de progreso
+ *
+ * @private
+ */
+function createProgressModal(totalFiles) {
+    const modal = document.createElement('div');
+    modal.className = 'modal progress-modal active';
+    modal.style.zIndex = '5000';
+
+    modal.innerHTML = `
+        <div class="modal-backdrop"></div>
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3>📦 Importando archivos BCF</h3>
+            </div>
+            <div class="modal-body">
+                <div class="progress-info">
+                    <div class="progress-file-name">Preparando...</div>
+                    <div class="progress-stats">
+                        <span class="progress-current">0</span> /
+                        <span class="progress-total">${totalFiles}</span> archivos
+                    </div>
+                </div>
+                <div class="progress-bar-container">
+                    <div class="progress-bar" style="width: 0%"></div>
+                </div>
+                <div class="progress-percentage">0%</div>
+            </div>
+        </div>
+    `;
+
+    return modal;
+}
+
+/**
+ * Actualiza el modal de progreso
+ *
+ * @param {HTMLElement} modal - Modal de progreso
+ * @param {number} current - Archivo actual
+ * @param {number} total - Total de archivos
+ * @param {string} fileName - Nombre del archivo actual
+ *
+ * @private
+ */
+function updateProgressModal(modal, current, total, fileName) {
+    const percentage = Math.round((current / total) * 100);
+
+    const fileNameEl = modal.querySelector('.progress-file-name');
+    if (fileNameEl) fileNameEl.textContent = `Importando: ${fileName}`;
+
+    const currentEl = modal.querySelector('.progress-current');
+    if (currentEl) currentEl.textContent = current;
+
+    const progressBar = modal.querySelector('.progress-bar');
+    if (progressBar) progressBar.style.width = `${percentage}%`;
+
+    const percentageEl = modal.querySelector('.progress-percentage');
+    if (percentageEl) percentageEl.textContent = `${percentage}%`;
+}
+
+/**
+ * Muestra resultados de la importación
+ *
+ * @param {Object} result - Resultado de la importación
+ *
+ * @private
+ */
+function showImportResults(result) {
+    const { totalImported, totalSkipped, totalUpdated, errors } = result;
+
+    let message = `✅ Importación completada\n`;
+    message += `• ${totalImported} incidencias importadas\n`;
+
+    if (totalSkipped > 0) {
+        message += `• ${totalSkipped} duplicados omitidos\n`;
+    }
+
+    if (totalUpdated > 0) {
+        message += `• ${totalUpdated} incidencias actualizadas\n`;
+    }
+
+    if (errors.length > 0) {
+        message += `\n⚠️ ${errors.length} archivos con errores`;
+    }
+
+    notify(message, errors.length > 0 ? 'warning' : 'success', 6000);
 }
 
 /**
