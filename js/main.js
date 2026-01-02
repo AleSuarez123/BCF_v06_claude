@@ -525,8 +525,7 @@ function setupModals() {
                 required: true,
                 minLength: 3,
                 maxLength: 100,
-                noSpecialChars: true,
-                message: 'El nombre debe tener entre 3 y 100 caracteres (sin símbolos especiales)'
+                noSpecialChars: true
             },
             'project-description': {
                 maxLength: 500
@@ -540,9 +539,11 @@ function setupModals() {
 
         formProject.addEventListener('submit', async (e) => {
             e.preventDefault();
+            console.log('🔵 [DEBUG] Form submit triggered');
 
             // Validar antes de procesar
             if (!projectValidator.validate()) {
+                console.log('❌ [DEBUG] Validation failed');
                 notify('Por favor corrige los errores en el formulario', 'error');
                 return;
             }
@@ -553,8 +554,11 @@ function setupModals() {
             const name = data['project-name'];
             const description = data['project-description'] || '';
 
+            console.log('🔵 [DEBUG] Form data:', { projectId, name, description, pendingFiles: pendingFiles.length });
+
             if (projectId) {
                 // Modo edición
+                console.log('🔵 [DEBUG] Modo edición');
                 const project = AppState.projects.find(p => p.id === projectId);
                 if (project) {
                     project.name = name;
@@ -569,9 +573,16 @@ function setupModals() {
                 }
             } else if (name) {
                 // Modo creación
-                await createNewProject(name, description, pendingFiles);
-                pendingFiles = []; // Limpiar pendientes
-                notify('Proyecto creado correctamente', 'success');
+                console.log('🔵 [DEBUG] Modo creación - Llamando createNewProject');
+                try {
+                    await createNewProject(name, description, pendingFiles);
+                    console.log('✅ [DEBUG] createNewProject completado');
+                    pendingFiles = []; // Limpiar pendientes
+                    notify('Proyecto creado correctamente', 'success');
+                } catch (error) {
+                    console.error('❌ [DEBUG] Error en createNewProject:', error);
+                    notify('Error al crear proyecto: ' + error.message, 'error');
+                }
             }
 
             modalProject.classList.remove(CSS_CLASSES.ACTIVE);
@@ -1044,13 +1055,18 @@ const handleFileDrop = withErrorHandling(async (e) => {
 async function handleFiles(files) {
     if (files.length === 0) return;
 
+    console.log('🟡 [handleFiles] Iniciando con', files.length, 'archivos');
+    console.log('🟡 [handleFiles] AppState.currentProject:', AppState.currentProject);
+
     // Si ya estamos dentro de un proyecto, importar directamente a ese proyecto
     if (AppState.currentProject) {
+        console.log('🟡 [handleFiles] Ya hay proyecto activo, importando directamente');
         await handleFilesWithValidation(files);
         return;
     }
 
     // Si no hay proyecto activo, mostrar modal de selección
+    console.log('🟡 [handleFiles] No hay proyecto activo, mostrando modal de selección');
     pendingFiles = files;
     const modalTarget = $('#modal-select-project-target');
     const listContainer = $('#existing-projects-list');
@@ -1110,6 +1126,8 @@ async function handleFiles(files) {
  * @private
  */
 async function handleFilesWithValidation(files) {
+    console.log('🟣 [handleFilesWithValidation] Iniciando validación de', files.length, 'archivos');
+
     // Importar dinámicamente el módulo de importación mejorada
     const { preValidateBCFFiles, showImportSummaryModal, importBCFWithProgress } = await import('./features/bcf-import.js');
 
@@ -1118,7 +1136,9 @@ async function handleFilesWithValidation(files) {
 
     try {
         // 2. Pre-validar archivos
+        console.log('🟣 [handleFilesWithValidation] Pre-validando archivos...');
         const validatedFiles = await preValidateBCFFiles(files);
+        console.log('🟣 [handleFilesWithValidation] Archivos validados:', validatedFiles.length);
 
         // Cerrar notificación de carga
         if (loadingNotification && typeof loadingNotification.dismiss === 'function') {
@@ -1126,18 +1146,24 @@ async function handleFilesWithValidation(files) {
         }
 
         // 3. Mostrar modal de resumen interactivo
+        console.log('🟣 [handleFilesWithValidation] Mostrando modal de resumen...');
         const importConfig = await showImportSummaryModal(validatedFiles);
+        console.log('🟣 [handleFilesWithValidation] Config de importación:', importConfig);
 
         // 4. Si el usuario canceló, salir
         if (!importConfig) {
+            console.log('🟣 [handleFilesWithValidation] Usuario canceló importación');
             notify('Importación cancelada', 'info');
             return;
         }
 
         // 5. Importar con progreso granular
+        console.log('🟣 [handleFilesWithValidation] Iniciando importación...');
         await importWithProgressBar(importConfig);
+        console.log('🟣 [handleFilesWithValidation] Importación completada');
 
     } catch (error) {
+        console.error('❌ [handleFilesWithValidation] Error:', error);
         logger.error('Error en validación de archivos:', error);
         notify(`Error al analizar archivos: ${error.message}`, 'error');
     }
@@ -1152,6 +1178,7 @@ async function handleFilesWithValidation(files) {
  * @private
  */
 async function importWithProgressBar(importConfig) {
+    console.log('🟠 [importWithProgressBar] Iniciando importación con progreso');
     const { importBCFWithProgress } = await import('./features/bcf-import.js');
 
     // Crear modal de progreso
@@ -1160,14 +1187,18 @@ async function importWithProgressBar(importConfig) {
 
     try {
         // Importar con callback de progreso
+        console.log('🟠 [importWithProgressBar] Llamando importBCFWithProgress...');
         const result = await importBCFWithProgress(importConfig, (current, total, fileName) => {
             updateProgressModal(progressModal, current, total, fileName);
         });
+        console.log('🟠 [importWithProgressBar] Resultado:', result);
 
         // Guardar cambios
+        console.log('🟠 [importWithProgressBar] Guardando en Storage...');
         await Storage.saveAll();
 
         // Recargar proyecto
+        console.log('🟠 [importWithProgressBar] Recargando proyecto:', AppState.currentProject?.id);
         await loadProject(AppState.currentProject.id);
 
         // Cerrar modal de progreso
@@ -1175,9 +1206,11 @@ async function importWithProgressBar(importConfig) {
 
         // Mostrar resultado
         showImportResults(result);
+        console.log('🟠 [importWithProgressBar] Importación finalizada correctamente');
 
     } catch (error) {
         progressModal.remove();
+        console.error('❌ [importWithProgressBar] Error:', error);
         logger.error('Error durante importación:', error);
         notify(`Error al importar: ${error.message}`, 'error');
     }
@@ -1277,6 +1310,8 @@ function showImportResults(result) {
  * @throws {Error} Si el nombre es inválido o falla el guardado
  */
 async function createNewProject(name, description, files = []) {
+    console.log('🟢 [createNewProject] Iniciando con:', { name, description, filesCount: files.length });
+
     const newProject = {
         id: crypto.randomUUID(),
         name: name,
@@ -1285,19 +1320,30 @@ async function createNewProject(name, description, files = []) {
         bcfFiles: []
     };
 
+    console.log('🟢 [createNewProject] Proyecto creado:', newProject);
+
     AppState.projects.push(newProject);
+    console.log('🟢 [createNewProject] Total proyectos en AppState:', AppState.projects.length);
+
     await Storage.saveAll();
+    console.log('🟢 [createNewProject] Storage.saveAll completado');
 
     renderProjects();
+    console.log('🟢 [createNewProject] renderProjects llamado');
+
     updateGlobalStats();
+    console.log('🟢 [createNewProject] updateGlobalStats llamado');
 
     // Solo cargar el proyecto si tiene archivos para importar
     // Si no, quedarse en el dashboard para que el usuario vea el proyecto creado
     if (files.length > 0) {
+        console.log('🟢 [createNewProject] Importando archivos...');
         AppState.currentProject = newProject;
         await addFilesToProject(files);
         // Cargar el proyecto con archivos
         await loadProject(newProject.id);
+    } else {
+        console.log('🟢 [createNewProject] Sin archivos, permaneciendo en dashboard');
     }
 }
 

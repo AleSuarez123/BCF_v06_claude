@@ -1681,13 +1681,22 @@ export function renderProjects() {
     };
     
     window.deleteProject = async (id) => {
+        console.log('🔴 [deleteProject] Iniciando para ID:', id);
+
         const modal = document.getElementById('modal-confirm');
         const msgEl = document.getElementById('confirm-message');
         const confirmBtn = document.getElementById('btn-confirm-action');
         const cancelBtn = modal?.querySelector('[data-close-modal]');
 
+        console.log('🔴 [deleteProject] Elementos encontrados:', {
+            modal: !!modal,
+            msgEl: !!msgEl,
+            confirmBtn: !!confirmBtn,
+            cancelBtn: !!cancelBtn
+        });
+
         if (!modal || !msgEl || !confirmBtn) {
-            console.error('[deleteProject] Modal elements not found');
+            console.error('❌ [deleteProject] Modal elements not found');
             import('./ui-utils.js').then(m => m.notify('Error: No se pudo abrir el modal de confirmación', 'error'));
             return;
         }
@@ -1697,31 +1706,41 @@ export function renderProjects() {
 
         // Función para cerrar modal y limpiar handlers
         const closeModal = () => {
+            console.log('🔴 [deleteProject] Cerrando modal');
             modal.classList.remove(CSS_CLASSES.ACTIVE);
         };
 
         // Crear nuevo handler para evitar múltiples listeners
         const handleConfirm = async () => {
+            console.log('🔴 [deleteProject] handleConfirm ejecutado');
             try {
                 const idx = AppState.projects.findIndex(p => p.id === id);
+                console.log('🔴 [deleteProject] Índice encontrado:', idx);
+
                 if (idx !== -1) {
                     const projectName = AppState.projects[idx].name;
+                    console.log('🔴 [deleteProject] Eliminando proyecto:', projectName);
+
                     AppState.projects.splice(idx, 1);
+                    console.log('🔴 [deleteProject] Total proyectos restantes:', AppState.projects.length);
 
                     const { Storage } = await import('./storage.js');
                     await Storage.saveAll();
+                    console.log('🔴 [deleteProject] Storage.saveAll completado');
 
                     renderProjects();
+                    console.log('🔴 [deleteProject] renderProjects llamado');
 
                     const { updateGlobalStats, notify } = await import('./ui-utils.js');
                     updateGlobalStats();
                     notify(`Proyecto "${projectName}" eliminado correctamente`, 'success');
                 } else {
+                    console.error('❌ [deleteProject] Proyecto no encontrado en AppState');
                     const { notify } = await import('./ui-utils.js');
                     notify('Proyecto no encontrado', 'error');
                 }
             } catch (error) {
-                console.error('[deleteProject] Error al eliminar:', error);
+                console.error('❌ [deleteProject] Error al eliminar:', error);
                 const { notify } = await import('./ui-utils.js');
                 notify('Error al eliminar el proyecto', 'error');
             } finally {
@@ -1737,6 +1756,7 @@ export function renderProjects() {
         const oldConfirmBtn = confirmBtn;
         const newConfirmBtn = confirmBtn.cloneNode(true);
         oldConfirmBtn.replaceWith(newConfirmBtn);
+        console.log('🔴 [deleteProject] Botón confirmar clonado');
 
         // Clonar botón de cancelar también
         let newCancelBtn = cancelBtn;
@@ -1745,13 +1765,16 @@ export function renderProjects() {
             newCancelBtn = cancelBtn.cloneNode(true);
             oldCancelBtn.replaceWith(newCancelBtn);
             newCancelBtn.addEventListener('click', closeModal);
+            console.log('🔴 [deleteProject] Botón cancelar clonado');
         }
 
         // Agregar nuevo listener
         newConfirmBtn.addEventListener('click', handleConfirm);
+        console.log('🔴 [deleteProject] Listener agregado a botón confirmar');
 
         modal.classList.add(CSS_CLASSES.ACTIVE);
         newConfirmBtn.focus();
+        console.log('🔴 [deleteProject] Modal abierto');
     };
     
     requestAnimationFrame(() => {
