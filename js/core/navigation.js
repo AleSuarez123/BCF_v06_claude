@@ -10,11 +10,25 @@
 
 import { $, $cached, CSS_CLASSES } from '../ui-utils.js';
 import { AppState } from '../state.js';
-import { notify } from '../ui-utils.js';
-import { renderProjects, updateGlobalStats } from '../projects.js';
-import { renderIssues } from '../issue-manager.js';
-import { openSpotlight } from '../spotlight.js';
-import { navigateTo } from '../router.js';
+import { notify, updateGlobalStats } from '../ui-utils.js';
+import { renderProjects, renderIssues } from '../issue-manager.js';
+import { openSpotlight } from '../ui-panels.js';
+
+/**
+ * Helper function: Navigate between pages
+ */
+function navigateTo(pageId) {
+    const $$ = (selector) => document.querySelectorAll(selector);
+    $$('.page').forEach(p => p.classList.remove(CSS_CLASSES.ACTIVE));
+
+    if (pageId === 'viewer') {
+        $cached('#viewer-page')?.classList.add(CSS_CLASSES.ACTIVE);
+        $cached('#dashboard-page')?.classList.remove(CSS_CLASSES.ACTIVE);
+    } else {
+        $cached('#dashboard-page')?.classList.add(CSS_CLASSES.ACTIVE);
+        $cached('#viewer-page')?.classList.remove(CSS_CLASSES.ACTIVE);
+    }
+}
 
 /**
  * Configura los botones de gestión de proyectos (Nuevo y Editar)
