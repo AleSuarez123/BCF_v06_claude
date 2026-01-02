@@ -155,10 +155,12 @@ let listCallbacks = {
  * renderIssues();
  */
 export function renderIssues(onIssueClick, onFavoriteClick) {
+    console.log('💜 [renderIssues] Iniciando - filteredIssues:', AppState.filteredIssues.length, 'viewMode:', AppState.viewMode);
+
     // Actualizar callbacks si se proporcionan
     if (onIssueClick) listCallbacks.onIssueClick = onIssueClick;
     if (onFavoriteClick) listCallbacks.onFavoriteClick = onFavoriteClick;
-    
+
     // Usar callbacks almacenados si no se proporcionan
     const issueCb = onIssueClick || listCallbacks.onIssueClick;
     const favCb = onFavoriteClick || listCallbacks.onFavoriteClick;
@@ -167,15 +169,27 @@ export function renderIssues(onIssueClick, onFavoriteClick) {
     const gridContainer = $('#issues-grid');
     const emptyState = $('#viewer-empty-state');
 
-    if (!listContainer || !gridContainer || !emptyState) return;
+    console.log('💜 [renderIssues] Containers encontrados:', {
+        list: !!listContainer,
+        grid: !!gridContainer,
+        empty: !!emptyState
+    });
+
+    if (!listContainer || !gridContainer || !emptyState) {
+        console.error('❌ [renderIssues] Faltan contenedores!');
+        return;
+    }
 
     if (AppState.filteredIssues.length === 0) {
+        console.log('💜 [renderIssues] No hay issues filtrados, mostrando empty state');
+        console.log('💜 [renderIssues] currentIssues total:', AppState.currentIssues.length);
         listContainer.innerHTML = '';
         gridContainer.innerHTML = '';
         emptyState.classList.remove(CSS_CLASSES.HIDDEN);
         return;
     }
 
+    console.log('💜 [renderIssues] Renderizando', AppState.filteredIssues.length, 'issues en modo', AppState.viewMode);
     emptyState.classList.add(CSS_CLASSES.HIDDEN);
 
     if (AppState.viewMode === 'list') {
@@ -189,6 +203,7 @@ export function renderIssues(onIssueClick, onFavoriteClick) {
     }
 
     updateNavIndicator();
+    console.log('💜 [renderIssues] Renderizado completado');
 }
 
 /**
@@ -1551,9 +1566,16 @@ export function updateNavIndicatorUI() {
  * renderProjects();
  */
 export function renderProjects() {
+    console.log('🟢 [renderProjects] Iniciando - Total proyectos:', AppState.projects.length);
+
     const container = document.getElementById('projects-grid');
-    if (!container) return;
-    
+    console.log('🟢 [renderProjects] Container encontrado:', !!container);
+
+    if (!container) {
+        console.error('❌ [renderProjects] Container #projects-grid no encontrado!');
+        return;
+    }
+
     // Capture old positions
     const oldPositions = new Map();
     container.querySelectorAll('.project-card').forEach(card => {
@@ -1562,11 +1584,13 @@ export function renderProjects() {
     });
 
     if (AppState.projects.length === 0) {
+        console.log('🟢 [renderProjects] No hay proyectos, mostrando empty state');
         document.getElementById('empty-state').classList.remove(CSS_CLASSES.HIDDEN);
         container.innerHTML = '';
         return;
     }
-    
+
+    console.log('🟢 [renderProjects] Renderizando', AppState.projects.length, 'proyectos');
     document.getElementById('empty-state').classList.add(CSS_CLASSES.HIDDEN);
     
     // Calculate pinned status
@@ -1776,7 +1800,8 @@ export function renderProjects() {
         newConfirmBtn.focus();
         console.log('🔴 [deleteProject] Modal abierto');
     };
-    
+
+    console.log('🟢 [renderProjects] HTML generado, aplicando animaciones...');
     requestAnimationFrame(() => {
         container.querySelectorAll('.project-card').forEach(card => {
             const id = card.dataset.id;

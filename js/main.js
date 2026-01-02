@@ -542,7 +542,10 @@ function setupModals() {
             console.log('🔵 [DEBUG] Form submit triggered');
 
             // Validar antes de procesar
-            if (!projectValidator.validate()) {
+            const isValid = projectValidator.validate();
+            console.log('🔵 [DEBUG] Validation result:', isValid);
+
+            if (!isValid) {
                 console.log('❌ [DEBUG] Validation failed');
                 notify('Por favor corrige los errores en el formulario', 'error');
                 return;
@@ -550,11 +553,20 @@ function setupModals() {
 
             // Obtener datos validados y sanitizados
             const data = projectValidator.getData();
+            console.log('🔵 [DEBUG] Raw data from validator:', data);
+
             const projectId = $('#project-id').value;
             const name = data['project-name'];
             const description = data['project-description'] || '';
 
-            console.log('🔵 [DEBUG] Form data:', { projectId, name, description, pendingFiles: pendingFiles.length });
+            console.log('🔵 [DEBUG] Parsed values:', {
+                projectId: projectId,
+                name: name,
+                nameType: typeof name,
+                nameLength: name ? name.length : 0,
+                description: description,
+                pendingFilesLength: pendingFiles.length
+            });
 
             if (projectId) {
                 // Modo edición
@@ -583,6 +595,8 @@ function setupModals() {
                     console.error('❌ [DEBUG] Error en createNewProject:', error);
                     notify('Error al crear proyecto: ' + error.message, 'error');
                 }
+            } else {
+                console.error('❌ [DEBUG] NO entra en ninguna condición - projectId:', projectId, 'name:', name);
             }
 
             modalProject.classList.remove(CSS_CLASSES.ACTIVE);
@@ -1499,6 +1513,8 @@ export async function loadProject(projectId) {
             logger.debug(`Limpiadas URLs del proyecto anterior: ${oldContext}`);
         }
 
+        console.log('🔵 [loadProject] Proyecto encontrado:', project.name, '- bcfFiles:', project.bcfFiles?.length);
+
         AppState.currentProject = project;
         AppState.currentIssues = [];
 
@@ -1515,8 +1531,11 @@ export async function loadProject(projectId) {
             return false;
         }
 
+        console.log('🔵 [loadProject] Procesando archivos BCF...');
+
         // Process issues and generate blob URLs for current session
         project.bcfFiles.forEach(bcf => {
+            console.log('🔵 [loadProject] Procesando BCF:', bcf.fileName, '- topics:', bcf.topics?.length);
             bcf.topics?.forEach(topic => {
                 // Generate temporary URL for snapshot if it's a Blob
                 let snapshotUrl = null;
@@ -1538,14 +1557,21 @@ export async function loadProject(projectId) {
             });
         });
 
+        console.log('🔵 [loadProject] Total issues cargados en AppState.currentIssues:', AppState.currentIssues.length);
+
         // Update project name in UI (usar $cached - se accede frecuentemente)
         const currentNameEl = $cached('#current-project-name');
         if (currentNameEl) currentNameEl.textContent = project.name;
 
+        console.log('🔵 [loadProject] Aplicando filtros...');
         updateFilterOptions();
         applyFiltersAndSort();
+        console.log('🔵 [loadProject] Filtered issues:', AppState.filteredIssues.length);
+
+        console.log('🔵 [loadProject] Renderizando issues...');
         renderIssues();
 
+        console.log('🔵 [loadProject] Navegando a viewer...');
         navigateTo('viewer');
 
         // Emitir evento de proyecto cargado
