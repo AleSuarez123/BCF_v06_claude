@@ -1680,31 +1680,58 @@ export function renderProjects() {
         }
     };
     
-    window.deleteProject = (id) => {
+    window.deleteProject = async (id) => {
         const modal = document.getElementById('modal-confirm');
         const msgEl = document.getElementById('confirm-message');
         const confirmBtn = document.getElementById('btn-confirm-action');
-        
+
         if (!modal || !msgEl || !confirmBtn) {
-            console.error('Modal elements not found');
+            console.error('[deleteProject] Modal elements not found');
+            import('./ui-utils.js').then(m => m.notify('Error: No se pudo abrir el modal de confirmación', 'error'));
             return;
         }
-        
-        msgEl.textContent = '¿Está seguro que desea eliminar este proyecto?';
-        
-        confirmBtn.onclick = () => {
-            const idx = AppState.projects.findIndex(p => p.id === id);
-            if(idx !== -1) {
-                AppState.projects.splice(idx, 1);
-                import('./storage.js').then(m => m.Storage.saveAll());
-                renderProjects();
-                import('./ui-utils.js').then(m => m.updateGlobalStats());
+
+        // Actualizar mensaje
+        msgEl.textContent = '¿Está seguro que desea eliminar este proyecto y todos sus archivos BCF?';
+
+        // Crear nuevo handler para evitar múltiples listeners
+        const handleConfirm = async () => {
+            try {
+                const idx = AppState.projects.findIndex(p => p.id === id);
+                if (idx !== -1) {
+                    const projectName = AppState.projects[idx].name;
+                    AppState.projects.splice(idx, 1);
+
+                    const { Storage } = await import('./storage.js');
+                    await Storage.saveAll();
+
+                    renderProjects();
+
+                    const { updateGlobalStats, notify } = await import('./ui-utils.js');
+                    updateGlobalStats();
+                    notify(`Proyecto "${projectName}" eliminado correctamente`, 'success');
+                } else {
+                    const { notify } = await import('./ui-utils.js');
+                    notify('Proyecto no encontrado', 'error');
+                }
+            } catch (error) {
+                console.error('[deleteProject] Error al eliminar:', error);
+                const { notify } = await import('./ui-utils.js');
+                notify('Error al eliminar el proyecto', 'error');
+            } finally {
+                modal.classList.remove(CSS_CLASSES.ACTIVE);
+                // Limpiar el handler
+                confirmBtn.removeEventListener('click', handleConfirm);
             }
-            modal.classList.remove(CSS_CLASSES.ACTIVE);
         };
-        
+
+        // Remover listeners anteriores y agregar el nuevo
+        confirmBtn.replaceWith(confirmBtn.cloneNode(true));
+        const newConfirmBtn = document.getElementById('btn-confirm-action');
+        newConfirmBtn.addEventListener('click', handleConfirm);
+
         modal.classList.add(CSS_CLASSES.ACTIVE);
-        confirmBtn.focus();
+        newConfirmBtn.focus();
     };
     
     requestAnimationFrame(() => {

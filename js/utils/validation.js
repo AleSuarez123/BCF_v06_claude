@@ -309,10 +309,8 @@ export class FormValidator {
                     }, 300);
                 }
 
-                // Sanitizar en tiempo real si está habilitado
-                if (this.options.sanitize && field.type === 'text') {
-                    field.value = sanitizeHTML(field.value);
-                }
+                // NOTA: No sanitizar en tiempo real durante input
+                // La sanitización se hace en getData() al obtener los valores finales
             });
         });
     }

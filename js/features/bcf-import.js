@@ -211,50 +211,100 @@ export function showImportSummaryModal(validatedFiles) {
 
         modal.innerHTML = `
             <div class="modal-backdrop"></div>
-            <div class="modal-content" style="max-width: 700px; max-height: 80vh; overflow-y: auto;">
+            <div class="modal-content" style="max-width: 750px; max-height: 85vh; overflow-y: auto;">
                 <div class="modal-header">
-                    <h3>📦 Resumen de Importación BCF</h3>
+                    <h3>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 8px;">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="17 8 12 3 7 8"/>
+                            <line x1="12" y1="3" x2="12" y2="15"/>
+                        </svg>
+                        Resumen de Importación BCF
+                    </h3>
                     <button class="modal-close" aria-label="Cerrar">×</button>
                 </div>
 
                 <div class="modal-body">
-                    <!-- Estadísticas generales -->
+                    <!-- Estadísticas generales MEJORADAS -->
                     <div class="import-summary-stats">
                         <div class="stat-card">
-                            <div class="stat-icon">📄</div>
-                            <div class="stat-value">${validatedFiles.length}</div>
-                            <div class="stat-label">Archivo${validatedFiles.length !== 1 ? 's' : ''}</div>
+                            <div class="stat-icon-wrapper">
+                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/>
+                                    <polyline points="13 2 13 9 20 9"/>
+                                </svg>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-value">${validatedFiles.length}</div>
+                                <div class="stat-label">Archivo${validatedFiles.length !== 1 ? 's' : ''}</div>
+                            </div>
                         </div>
                         <div class="stat-card">
-                            <div class="stat-icon">🏷️</div>
-                            <div class="stat-value">${totalTopics}</div>
-                            <div class="stat-label">Incidencias totales</div>
+                            <div class="stat-icon-wrapper stat-icon-primary">
+                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <line x1="12" y1="8" x2="12" y2="12"/>
+                                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                                </svg>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-value">${totalTopics}</div>
+                                <div class="stat-label">Incidencias totales</div>
+                            </div>
                         </div>
                         ${totalDuplicates > 0 ? `
-                            <div class="stat-card warning">
-                                <div class="stat-icon">⚠️</div>
-                                <div class="stat-value">${totalDuplicates}</div>
-                                <div class="stat-label">Duplicados detectados</div>
+                            <div class="stat-card stat-warning">
+                                <div class="stat-icon-wrapper stat-icon-warning">
+                                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                                        <line x1="12" y1="9" x2="12" y2="13"/>
+                                        <line x1="12" y1="17" x2="12.01" y2="17"/>
+                                    </svg>
+                                </div>
+                                <div class="stat-content">
+                                    <div class="stat-value">${totalDuplicates}</div>
+                                    <div class="stat-label">Duplicados detectados</div>
+                                </div>
                             </div>
                         ` : ''}
                         ${hasErrors ? `
-                            <div class="stat-card error">
-                                <div class="stat-icon">❌</div>
-                                <div class="stat-value">${validatedFiles.filter(v => !v.valid).length}</div>
-                                <div class="stat-label">Archivos con errores</div>
+                            <div class="stat-card stat-error">
+                                <div class="stat-icon-wrapper stat-icon-error">
+                                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <circle cx="12" cy="12" r="10"/>
+                                        <line x1="15" y1="9" x2="9" y2="15"/>
+                                        <line x1="9" y1="9" x2="15" y2="15"/>
+                                    </svg>
+                                </div>
+                                <div class="stat-content">
+                                    <div class="stat-value">${validatedFiles.filter(v => !v.valid).length}</div>
+                                    <div class="stat-label">Archivos con errores</div>
+                                </div>
                             </div>
                         ` : ''}
                     </div>
 
                     <!-- Lista de archivos -->
                     <div class="import-files-list">
+                        <h4 class="section-title">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+                            </svg>
+                            Archivos a importar
+                        </h4>
                         ${validatedFiles.map((v, index) => renderFileItem(v, index)).join('')}
                     </div>
 
                     ${totalDuplicates > 0 ? `
                         <div class="import-duplicate-config">
-                            <h4>⚙️ Configuración de Duplicados</h4>
-                            <p class="text-muted">¿Qué hacer con las ${totalDuplicates} incidencias que ya existen?</p>
+                            <h4>
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="3"/>
+                                    <path d="M12 1v6M12 17v6M4.22 4.22l4.24 4.24M15.54 15.54l4.24 4.24M1 12h6M17 12h6M4.22 19.78l4.24-4.24M15.54 8.46l4.24-4.24"/>
+                                </svg>
+                                Configuración de Duplicados
+                            </h4>
+                            <p class="text-muted">¿Qué hacer con las ${totalDuplicates} incidencias que ya existen en el proyecto?</p>
                             <div class="duplicate-options">
                                 <label class="radio-option">
                                     <input type="radio" name="duplicate-action" value="skip" checked>
@@ -267,14 +317,14 @@ export function showImportSummaryModal(validatedFiles) {
                                     <input type="radio" name="duplicate-action" value="update">
                                     <div class="option-content">
                                         <strong>Actualizar existentes</strong>
-                                        <p>Sobrescribir con los datos del archivo nuevo</p>
+                                        <p>Sobrescribir incidencias existentes con los datos nuevos</p>
                                     </div>
                                 </label>
                                 <label class="radio-option">
                                     <input type="radio" name="duplicate-action" value="create">
                                     <div class="option-content">
                                         <strong>Crear duplicados</strong>
-                                        <p>Importar como incidencias nuevas (generará GUIDs nuevos)</p>
+                                        <p>Importar como incidencias nuevas (se generarán GUIDs únicos)</p>
                                     </div>
                                 </label>
                             </div>
@@ -285,6 +335,11 @@ export function showImportSummaryModal(validatedFiles) {
                 <div class="modal-footer">
                     <button class="btn btn-ghost btn-cancel">Cancelar</button>
                     <button class="btn btn-primary btn-import" ${hasErrors ? 'disabled' : ''}>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 6px;">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="17 8 12 3 7 8"/>
+                            <line x1="12" y1="3" x2="12" y2="15"/>
+                        </svg>
                         ${hasErrors ? 'Hay errores que corregir' : `Importar ${totalTopics - (totalDuplicates || 0)} incidencias`}
                     </button>
                 </div>
@@ -344,16 +399,27 @@ export function showImportSummaryModal(validatedFiles) {
  * @private
  */
 function renderFileItem(validatedFile, index) {
-    const { fileName, fileSize, stats, duplicates, valid, error } = validatedFile;
+    const { fileName, fileSize, stats, duplicates, valid, error, data } = validatedFile;
 
     if (!valid) {
         return `
-            <div class="file-item error">
+            <div class="file-item file-item-error">
                 <div class="file-item-header">
-                    <div class="file-icon">❌</div>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="file-icon-error">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="15" y1="9" x2="9" y2="15"/>
+                        <line x1="9" y1="9" x2="15" y2="15"/>
+                    </svg>
                     <div class="file-info">
                         <div class="file-name">${escapeHtml(fileName)}</div>
-                        <div class="file-error">Error: ${escapeHtml(error)}</div>
+                        <div class="file-error">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <line x1="12" y1="8" x2="12" y2="12"/>
+                                <line x1="12" y1="16" x2="12.01" y2="16"/>
+                            </svg>
+                            ${escapeHtml(error)}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -366,52 +432,150 @@ function renderFileItem(validatedFile, index) {
         .map(([status, count]) => `${count} ${status}`)
         .join(' · ');
 
+    // Obtener primeras 3 incidencias para previsualización
+    const previewTopics = (data.topics || []).slice(0, 3);
+
     return `
         <div class="file-item ${duplicates.length > 0 ? 'has-warning' : ''}">
             <div class="file-item-header">
-                <span class="expand-icon">▶</span>
-                <div class="file-icon">📄</div>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="expand-icon">
+                    <polyline points="9 18 15 12 9 6"/>
+                </svg>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="file-icon-bcf">
+                    <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/>
+                    <polyline points="13 2 13 9 20 9"/>
+                </svg>
                 <div class="file-info">
                     <div class="file-name">${escapeHtml(fileName)}</div>
                     <div class="file-meta">
-                        ${stats.total} incidencias · ${(fileSize / 1024).toFixed(1)} KB
-                        ${duplicates.length > 0 ? `· <span class="warning-text">⚠️ ${duplicates.length} duplicados</span>` : ''}
+                        <span class="meta-item">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <line x1="12" y1="8" x2="12" y2="12"/>
+                                <line x1="12" y1="16" x2="12.01" y2="16"/>
+                            </svg>
+                            ${stats.total} incidencias
+                        </span>
+                        <span class="meta-item">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                            </svg>
+                            ${(fileSize / 1024).toFixed(1)} KB
+                        </span>
+                        ${duplicates.length > 0 ? `
+                            <span class="meta-item meta-warning">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                                    <line x1="12" y1="9" x2="12" y2="13"/>
+                                    <line x1="12" y1="17" x2="12.01" y2="17"/>
+                                </svg>
+                                ${duplicates.length} duplicados
+                            </span>
+                        ` : ''}
                     </div>
                 </div>
             </div>
             <div class="file-item-details">
+                <!-- Resumen de estadísticas -->
                 <div class="file-stats-grid">
                     <div class="stat-item">
-                        <div class="stat-label">Estados:</div>
-                        <div class="stat-value">${statusSummary}</div>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path d="M12 6v6l4 2"/>
+                        </svg>
+                        <div>
+                            <div class="stat-label">Estados:</div>
+                            <div class="stat-value">${statusSummary}</div>
+                        </div>
                     </div>
                     ${Object.keys(stats.byPriority).length > 0 ? `
                         <div class="stat-item">
-                            <div class="stat-label">Alta prioridad:</div>
-                            <div class="stat-value">${stats.byPriority.High || stats.byPriority.high || 0}</div>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                            </svg>
+                            <div>
+                                <div class="stat-label">Alta prioridad:</div>
+                                <div class="stat-value">${stats.byPriority.High || stats.byPriority.high || 0}</div>
+                            </div>
                         </div>
                     ` : ''}
                     <div class="stat-item">
-                        <div class="stat-label">Con snapshots:</div>
-                        <div class="stat-value">${stats.withSnapshots}</div>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="18" height="18" rx="2"/>
+                            <circle cx="8.5" cy="8.5" r="1.5"/>
+                            <polyline points="21 15 16 10 5 21"/>
+                        </svg>
+                        <div>
+                            <div class="stat-label">Con snapshots:</div>
+                            <div class="stat-value">${stats.withSnapshots}</div>
+                        </div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-label">Con comentarios:</div>
-                        <div class="stat-value">${stats.withComments}</div>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                        </svg>
+                        <div>
+                            <div class="stat-label">Con comentarios:</div>
+                            <div class="stat-value">${stats.withComments}</div>
+                        </div>
                     </div>
                 </div>
 
+                <!-- PREVISUALIZACIÓN DE INCIDENCIAS -->
+                ${previewTopics.length > 0 ? `
+                    <div class="issues-preview">
+                        <h5>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <line x1="12" y1="8" x2="12" y2="12"/>
+                                <line x1="12" y1="16" x2="12.01" y2="16"/>
+                            </svg>
+                            Previsualización de incidencias
+                        </h5>
+                        <div class="preview-list">
+                            ${previewTopics.map(topic => `
+                                <div class="preview-item">
+                                    <div class="preview-status status-${(topic.topicStatus || 'Open').toLowerCase().replace(' ', '-')}">
+                                        ${topic.topicStatus || 'Open'}
+                                    </div>
+                                    <div class="preview-content">
+                                        <div class="preview-title">${escapeHtml(topic.title || 'Sin título')}</div>
+                                        ${topic.description ? `<div class="preview-desc">${escapeHtml(topic.description.substring(0, 80))}${topic.description.length > 80 ? '...' : ''}</div>` : ''}
+                                    </div>
+                                    ${topic.priority ? `
+                                        <div class="preview-priority priority-${topic.priority.toLowerCase()}">
+                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                                            </svg>
+                                            ${topic.priority}
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            `).join('')}
+                            ${stats.total > 3 ? `<div class="preview-more">...y ${stats.total - 3} incidencias más</div>` : ''}
+                        </div>
+                    </div>
+                ` : ''}
+
                 ${duplicates.length > 0 ? `
                     <div class="duplicates-list">
-                        <h5>Duplicados encontrados:</h5>
+                        <h5>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                            </svg>
+                            Duplicados encontrados
+                        </h5>
                         <ul>
-                            ${duplicates.slice(0, 3).map(d => `
+                            ${duplicates.slice(0, 5).map(d => `
                                 <li>
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="20 6 9 17 4 12"/>
+                                    </svg>
                                     ${escapeHtml(d.title)}
-                                    ${d.isDifferent ? '<span class="badge">Modificada</span>' : '<span class="badge-subtle">Sin cambios</span>'}
+                                    ${d.isDifferent ? '<span class="badge badge-modified">Modificada</span>' : '<span class="badge badge-same">Sin cambios</span>'}
                                 </li>
                             `).join('')}
-                            ${duplicates.length > 3 ? `<li class="text-muted">... y ${duplicates.length - 3} más</li>` : ''}
+                            ${duplicates.length > 5 ? `<li class="text-muted">... y ${duplicates.length - 5} más</li>` : ''}
                         </ul>
                     </div>
                 ` : ''}
@@ -480,18 +644,25 @@ export async function importBCFWithProgress(config, onProgress = null) {
  * @private
  */
 async function importSingleBCF(validFile, duplicateAction) {
-    const { data, duplicates } = validFile;
+    const { data, duplicates, fileName } = validFile;
     const duplicateGUIDs = new Set(duplicates.map(d => d.guid));
 
     let imported = 0;
     let skipped = 0;
     let updated = 0;
 
-    // Crear copia del BCF para importar
+    // Crear copia del BCF para importar con metadatos necesarios
     const bcfToImport = {
         ...data,
+        fileName: fileName || data.fileName || 'Archivo BCF',
         topics: []
     };
+
+    // Si no hay topics, retornar sin importar
+    if (!data.topics || data.topics.length === 0) {
+        logger.warning(`Archivo ${fileName} no contiene topics`);
+        return { imported: 0, skipped: 0, updated: 0 };
+    }
 
     // Procesar cada topic según la configuración
     for (const topic of data.topics) {
@@ -507,21 +678,29 @@ async function importSingleBCF(validFile, duplicateAction) {
                 updated++;
                 continue;
             } else if (duplicateAction === 'create') {
-                // Crear como nuevo (generar nuevo GUID)
-                const newTopic = { ...topic, guid: crypto.randomUUID() };
+                // Crear como nuevo (generar nuevo GUID y mantener todos los demás datos)
+                const newTopic = {
+                    ...topic,
+                    guid: crypto.randomUUID(),
+                    // Marcar como duplicado en título para referencia
+                    title: `${topic.title} (copia)`
+                };
                 bcfToImport.topics.push(newTopic);
                 imported++;
             }
         } else {
-            // No es duplicado, importar normalmente
-            bcfToImport.topics.push(topic);
+            // No es duplicado, importar normalmente (copia profunda del topic)
+            bcfToImport.topics.push({ ...topic });
             imported++;
         }
     }
 
-    // Agregar archivo al proyecto si tiene topics
+    // Agregar archivo al proyecto solo si tiene topics después del procesamiento
     if (bcfToImport.topics.length > 0) {
+        logger.info(`Importando archivo ${fileName} con ${bcfToImport.topics.length} topics`);
         AppState.currentProject.bcfFiles.push(bcfToImport);
+    } else {
+        logger.warning(`Archivo ${fileName} no tiene topics para importar después del filtrado`);
     }
 
     return { imported, skipped, updated };
