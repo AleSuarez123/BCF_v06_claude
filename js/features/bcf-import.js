@@ -242,9 +242,12 @@ export function showImportSummaryModal(validatedFiles) {
                         <div class="stat-card">
                             <div class="stat-icon-wrapper stat-icon-primary">
                                 <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <circle cx="12" cy="12" r="10"/>
-                                    <line x1="12" y1="8" x2="12" y2="12"/>
-                                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                                    <line x1="8" y1="6" x2="21" y2="6"/>
+                                    <line x1="8" y1="12" x2="21" y2="12"/>
+                                    <line x1="8" y1="18" x2="21" y2="18"/>
+                                    <line x1="3" y1="6" x2="3.01" y2="6"/>
+                                    <line x1="3" y1="12" x2="3.01" y2="12"/>
+                                    <line x1="3" y1="18" x2="3.01" y2="18"/>
                                 </svg>
                             </div>
                             <div class="stat-content">
@@ -432,9 +435,6 @@ function renderFileItem(validatedFile, index) {
         .map(([status, count]) => `${count} ${status}`)
         .join(' · ');
 
-    // Obtener primeras 3 incidencias para previsualización
-    const previewTopics = (data.topics || []).slice(0, 3);
-
     return `
         <div class="file-item ${duplicates.length > 0 ? 'has-warning' : ''}">
             <div class="file-item-header">
@@ -520,42 +520,6 @@ function renderFileItem(validatedFile, index) {
                         </div>
                     </div>
                 </div>
-
-                <!-- PREVISUALIZACIÓN DE INCIDENCIAS -->
-                ${previewTopics.length > 0 ? `
-                    <div class="issues-preview">
-                        <h5>
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <circle cx="12" cy="12" r="10"/>
-                                <line x1="12" y1="8" x2="12" y2="12"/>
-                                <line x1="12" y1="16" x2="12.01" y2="16"/>
-                            </svg>
-                            Previsualización de incidencias
-                        </h5>
-                        <div class="preview-list">
-                            ${previewTopics.map(topic => `
-                                <div class="preview-item">
-                                    <div class="preview-status status-${(topic.topicStatus || 'Open').toLowerCase().replace(' ', '-')}">
-                                        ${topic.topicStatus || 'Open'}
-                                    </div>
-                                    <div class="preview-content">
-                                        <div class="preview-title">${escapeHtml(topic.title || 'Sin título')}</div>
-                                        ${topic.description ? `<div class="preview-desc">${escapeHtml(topic.description.substring(0, 80))}${topic.description.length > 80 ? '...' : ''}</div>` : ''}
-                                    </div>
-                                    ${topic.priority ? `
-                                        <div class="preview-priority priority-${topic.priority.toLowerCase()}">
-                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-                                            </svg>
-                                            ${topic.priority}
-                                        </div>
-                                    ` : ''}
-                                </div>
-                            `).join('')}
-                            ${stats.total > 3 ? `<div class="preview-more">...y ${stats.total - 3} incidencias más</div>` : ''}
-                        </div>
-                    </div>
-                ` : ''}
 
                 ${duplicates.length > 0 ? `
                     <div class="duplicates-list">

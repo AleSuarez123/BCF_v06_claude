@@ -571,6 +571,7 @@ function setupModals() {
                 // Modo creación
                 await createNewProject(name, description, pendingFiles);
                 pendingFiles = []; // Limpiar pendientes
+                notify('Proyecto creado correctamente', 'success');
             }
 
             modalProject.classList.remove(CSS_CLASSES.ACTIVE);
@@ -1043,6 +1044,13 @@ const handleFileDrop = withErrorHandling(async (e) => {
 async function handleFiles(files) {
     if (files.length === 0) return;
 
+    // Si ya estamos dentro de un proyecto, importar directamente a ese proyecto
+    if (AppState.currentProject) {
+        await handleFilesWithValidation(files);
+        return;
+    }
+
+    // Si no hay proyecto activo, mostrar modal de selección
     pendingFiles = files;
     const modalTarget = $('#modal-select-project-target');
     const listContainer = $('#existing-projects-list');
@@ -1247,24 +1255,8 @@ function updateProgressModal(modal, current, total, fileName) {
  * @private
  */
 function showImportResults(result) {
-    const { totalImported, totalSkipped, totalUpdated, errors } = result;
-
-    let message = `✅ Importación completada\n`;
-    message += `• ${totalImported} incidencias importadas\n`;
-
-    if (totalSkipped > 0) {
-        message += `• ${totalSkipped} duplicados omitidos\n`;
-    }
-
-    if (totalUpdated > 0) {
-        message += `• ${totalUpdated} incidencias actualizadas\n`;
-    }
-
-    if (errors.length > 0) {
-        message += `\n⚠️ ${errors.length} archivos con errores`;
-    }
-
-    notify(message, errors.length > 0 ? 'warning' : 'success', 6000);
+    const { errors } = result;
+    notify('Importación completada', errors.length > 0 ? 'warning' : 'success', 3000);
 }
 
 /**
@@ -1292,21 +1284,21 @@ async function createNewProject(name, description, files = []) {
         createdAt: new Date().toISOString(),
         bcfFiles: []
     };
-    
+
     AppState.projects.push(newProject);
     await Storage.saveAll();
-    
-    AppState.currentProject = newProject;
-    
-    if (files.length > 0) {
-        await addFilesToProject(files);
-    }
-    
+
     renderProjects();
     updateGlobalStats();
-    
-    // Cargar el proyecto recién creado
-    await loadProject(newProject.id);
+
+    // Solo cargar el proyecto si tiene archivos para importar
+    // Si no, quedarse en el dashboard para que el usuario vea el proyecto creado
+    if (files.length > 0) {
+        AppState.currentProject = newProject;
+        await addFilesToProject(files);
+        // Cargar el proyecto con archivos
+        await loadProject(newProject.id);
+    }
 }
 
 /**

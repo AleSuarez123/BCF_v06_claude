@@ -1684,6 +1684,7 @@ export function renderProjects() {
         const modal = document.getElementById('modal-confirm');
         const msgEl = document.getElementById('confirm-message');
         const confirmBtn = document.getElementById('btn-confirm-action');
+        const cancelBtn = modal?.querySelector('[data-close-modal]');
 
         if (!modal || !msgEl || !confirmBtn) {
             console.error('[deleteProject] Modal elements not found');
@@ -1693,6 +1694,11 @@ export function renderProjects() {
 
         // Actualizar mensaje
         msgEl.textContent = '¿Está seguro que desea eliminar este proyecto y todos sus archivos BCF?';
+
+        // Función para cerrar modal y limpiar handlers
+        const closeModal = () => {
+            modal.classList.remove(CSS_CLASSES.ACTIVE);
+        };
 
         // Crear nuevo handler para evitar múltiples listeners
         const handleConfirm = async () => {
@@ -1719,15 +1725,29 @@ export function renderProjects() {
                 const { notify } = await import('./ui-utils.js');
                 notify('Error al eliminar el proyecto', 'error');
             } finally {
-                modal.classList.remove(CSS_CLASSES.ACTIVE);
-                // Limpiar el handler
-                confirmBtn.removeEventListener('click', handleConfirm);
+                closeModal();
+                newConfirmBtn.removeEventListener('click', handleConfirm);
+                if (cancelBtn) {
+                    newCancelBtn.removeEventListener('click', closeModal);
+                }
             }
         };
 
-        // Remover listeners anteriores y agregar el nuevo
-        confirmBtn.replaceWith(confirmBtn.cloneNode(true));
-        const newConfirmBtn = document.getElementById('btn-confirm-action');
+        // Remover listeners anteriores clonando los botones
+        const oldConfirmBtn = confirmBtn;
+        const newConfirmBtn = confirmBtn.cloneNode(true);
+        oldConfirmBtn.replaceWith(newConfirmBtn);
+
+        // Clonar botón de cancelar también
+        let newCancelBtn = cancelBtn;
+        if (cancelBtn) {
+            const oldCancelBtn = cancelBtn;
+            newCancelBtn = cancelBtn.cloneNode(true);
+            oldCancelBtn.replaceWith(newCancelBtn);
+            newCancelBtn.addEventListener('click', closeModal);
+        }
+
+        // Agregar nuevo listener
         newConfirmBtn.addEventListener('click', handleConfirm);
 
         modal.classList.add(CSS_CLASSES.ACTIVE);
