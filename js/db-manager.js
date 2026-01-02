@@ -40,7 +40,7 @@ class IndexedDBAdapter {
         try {
             // Verificar que indexedDB existe
             if (!window.indexedDB) {
-                logger.warn('IndexedDB no está disponible en este navegador');
+                logger.warning('IndexedDB no está disponible en este navegador');
                 this.available = false;
                 return false;
             }
@@ -76,7 +76,7 @@ class IndexedDBAdapter {
             return true;
 
         } catch (error) {
-            logger.warn('IndexedDB no disponible:', error.message);
+            logger.warning('IndexedDB no disponible:', error.message);
             this.available = false;
             return false;
         }
@@ -135,7 +135,7 @@ class IndexedDBAdapter {
             };
 
             request.onblocked = () => {
-                logger.warn('IndexedDB bloqueado por otra pestaña');
+                logger.warning('IndexedDB bloqueado por otra pestaña');
                 reject(new Error('IndexedDB bloqueado'));
             };
         });
@@ -276,7 +276,7 @@ class LocalStorageAdapter {
             // (localStorage no soporta Blobs directamente)
             const serialized = JSON.stringify(data, (key, value) => {
                 if (value instanceof Blob) {
-                    logger.warn(`Blob encontrado en ${key}, no se puede guardar en localStorage`);
+                    logger.warning(`Blob encontrado en ${key}, no se puede guardar en localStorage`);
                     return null; // Los blobs no se pueden guardar en localStorage
                 }
                 return value;
@@ -331,7 +331,7 @@ class LocalStorageAdapter {
 
             // Verificar tamaño
             if (compressed.length > 5 * 1024 * 1024) { // 5MB
-                logger.warn(`Datos muy grandes para localStorage: ${compressed.length} bytes`);
+                logger.warning(`Datos muy grandes para localStorage: ${compressed.length} bytes`);
             }
 
             localStorage.setItem(key, compressed);
@@ -464,7 +464,7 @@ class LocalStorageAdapter {
         // Limpiar solo datos BCF, no tocar otras keys
         const keys = Object.keys(localStorage).filter(k => k.startsWith(this.prefix));
 
-        logger.warn(`Limpiando ${keys.length} items de localStorage...`);
+        logger.warning(`Limpiando ${keys.length} items de localStorage...`);
 
         // Por ahora, simplemente loguear
         // En producción, aquí iríamos por antigüedad, etc.
@@ -502,7 +502,7 @@ export class DBManager {
                 return this.currentBackend;
             }
         } catch (error) {
-            logger.warn('No se pudo inicializar IndexedDB:', error.message);
+            logger.warning('No se pudo inicializar IndexedDB:', error.message);
         }
 
         // Fallback a localStorage
@@ -580,7 +580,7 @@ export class DBManager {
      * Reintenta operación con el backend alternativo
      */
     async _retryWithFallback(method, args, originalError) {
-        logger.warn(`Operación ${method} falló, intentando con fallback...`);
+        logger.warning(`Operación ${method} falló, intentando con fallback...`);
 
         const fallbackBackend = this.currentBackend === this.indexedDB
             ? this.localStorage

@@ -1487,7 +1487,7 @@ export async function loadProject(projectId) {
                     snapshotUrl = blobManager.create(topic.snapshot, topic.guid, projectContext);
                 } else if (typeof topic.snapshot === 'string' && topic.snapshot.startsWith('blob:')) {
                     // Warning: Old stale blob URL, cannot recover if Blob is lost
-                    logger.warn(`URL de blob obsoleta detectada para ${topic.guid}`);
+                    logger.warning(`URL de blob obsoleta detectada para ${topic.guid}`);
                     snapshotUrl = null;
                 }
 
@@ -2231,7 +2231,7 @@ async function loadIssueFromAnyProject(issueId) {
     logger.info('🔍 Buscando incidencia en todos los proyectos:', issueId);
     
     if (!validators.guid(issueId)) {
-        logger.warning('GUID inválido:', issueId);
+        logger.warninging('GUID inválido:', issueId);
         notify('ID de incidencia inválido', 'error');
         return;
     }
@@ -2267,7 +2267,7 @@ async function loadIssueFromAnyProject(issueId) {
                     
                     notify(`Incidencia encontrada en: ${project.name}`, 'success');
                 } else {
-                    logger.warning('Elemento DOM no encontrado después de renderizar');
+                    logger.warninging('Elemento DOM no encontrado después de renderizar');
                     notify('Incidencia encontrada pero error al mostrar', 'warning');
                 }
             }, 100);
@@ -2276,7 +2276,7 @@ async function loadIssueFromAnyProject(issueId) {
         }
     }
     
-    logger.warning('Incidencia no encontrada en ningún proyecto:', issueId);
+    logger.warninging('Incidencia no encontrada en ningún proyecto:', issueId);
     notify('Incidencia no encontrada en ningún proyecto', 'warning');
 }
 

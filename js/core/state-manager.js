@@ -129,7 +129,7 @@ class AppStateManager {
      */
     addProject(project) {
         if (!project || !project.id) {
-            logger.warn('Intento de agregar proyecto inválido');
+            logger.warning('Intento de agregar proyecto inválido');
             return;
         }
         const projects = [...this.#state.projects, project];
@@ -203,7 +203,7 @@ class AppStateManager {
      */
     addIssue(issue) {
         if (!issue || !issue.guid) {
-            logger.warn('Intento de agregar incidencia inválida');
+            logger.warning('Intento de agregar incidencia inválida');
             return;
         }
         const issues = [...this.#state.currentIssues, issue];
@@ -366,7 +366,7 @@ class AppStateManager {
      */
     setViewMode(mode) {
         if (mode !== 'list' && mode !== 'grid') {
-            logger.warn(`Modo de vista inválido: ${mode}`);
+            logger.warning(`Modo de vista inválido: ${mode}`);
             return;
         }
         this.#setState('viewMode', mode);
@@ -390,7 +390,7 @@ class AppStateManager {
      */
     setTheme(theme) {
         if (theme !== 'light' && theme !== 'dark') {
-            logger.warn(`Tema inválido: ${theme}`);
+            logger.warning(`Tema inválido: ${theme}`);
             return;
         }
         this.#setState('theme', theme);
@@ -461,7 +461,7 @@ class AppStateManager {
      */
     setLoadingState(key, value) {
         if (!this.#state.loading.hasOwnProperty(key)) {
-            logger.warn(`Estado de carga inválido: ${key}`);
+            logger.warning(`Estado de carga inválido: ${key}`);
             return;
         }
         this.#setState('loading', { ...this.#state.loading, [key]: value });

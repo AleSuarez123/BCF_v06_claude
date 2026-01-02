@@ -70,7 +70,7 @@ export const AppState = new Proxy({}, {
                 return snapshot[property];
 
             default:
-                logger.warn(`AppState: Propiedad no reconocida: ${String(property)}`);
+                logger.warning(`AppState: Propiedad no reconocida: ${String(property)}`);
                 return undefined;
         }
     },
@@ -100,7 +100,7 @@ export const AppState = new Proxy({}, {
                     stateManager.clearSelection();
                     value.forEach(id => stateManager.selectIssue(id));
                 } else {
-                    logger.warn('AppState.selectedIssues debe ser un Set');
+                    logger.warning('AppState.selectedIssues debe ser un Set');
                 }
                 return true;
             case 'focusedIndex':
@@ -143,12 +143,12 @@ export const AppState = new Proxy({}, {
             case 'bcfServer':
             case 'loading':
             case 'abortControllers':
-                logger.warn(`AppState.${String(property)} = ... no está completamente migrado al stateManager`);
+                logger.warning(`AppState.${String(property)} = ... no está completamente migrado al stateManager`);
                 // Por ahora, permitir pero loguear
                 return true;
 
             default:
-                logger.warn(`AppState: Intento de escribir propiedad no reconocida: ${String(property)}`);
+                logger.warning(`AppState: Intento de escribir propiedad no reconocida: ${String(property)}`);
                 return false;
         }
     },

@@ -93,7 +93,7 @@ class EventBus {
         const count = this.eventCounts.get(eventName) || 0;
 
         if (count >= this.config.maxEventsPerWindow) {
-            logger.warn(`EventBus: Rate limit alcanzado para evento "${eventName}"`);
+            logger.warning(`EventBus: Rate limit alcanzado para evento "${eventName}"`);
             return true;
         }
 
