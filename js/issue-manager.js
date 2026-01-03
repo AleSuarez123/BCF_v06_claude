@@ -1173,7 +1173,7 @@ function attachListeners(container, onIssueClick, onFavoriteClick) {
             }
             return;
         }
-    });
+    };
 
     // === DELEGATION: Change events (checkboxes) ===
     container.addEventListener('change', (e) => {
@@ -1239,7 +1239,7 @@ function attachListeners(container, onIssueClick, onFavoriteClick) {
 
             input.addEventListener('blur', () => commit());
         }
-    };
+    });
 
     container.addEventListener('click', clickHandler);
     container._clickHandler = clickHandler;
