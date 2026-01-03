@@ -2157,8 +2157,25 @@ window.openSnapshot = (src) => {
  * // Resetea filtros, aplica prioridad High, navega a viewer
  */
 window.handleStatClick = async (type) => {
+    console.log('🔵 [handleStatClick] Iniciando con tipo:', type);
+    console.log('🔵 [handleStatClick] Total proyectos:', AppState.projects?.length);
+    console.log('🔵 [handleStatClick] Proyecto actual:', AppState.currentProject?.name);
     if (!type) return;
-    
+
+    // Si no hay proyecto cargado, cargar el primero que tenga incidencias
+    if (!AppState.currentProject && AppState.projects?.length > 0) {
+        console.log('🔵 [handleStatClick] No hay proyecto actual, cargando primero con incidencias...');
+        const projectWithIssues = AppState.projects.find(p => p.bcfFiles?.some(bcf => bcf.topics?.length > 0));
+        if (projectWithIssues) {
+            console.log('🔵 [handleStatClick] Proyecto encontrado:', projectWithIssues.name);
+            await loadProject(projectWithIssues.id);
+        } else {
+            console.warn('🔵 [handleStatClick] No hay proyectos con incidencias');
+            notify('No hay proyectos con incidencias para filtrar', 'warning');
+            return;
+        }
+    }
+
     // Mostrar indicador de carga
     const loadingScreen = document.getElementById('loading-screen');
     if (loadingScreen) {

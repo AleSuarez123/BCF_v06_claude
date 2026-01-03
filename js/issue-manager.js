@@ -41,18 +41,19 @@ export const PRIORITY_ICONS = {
 // Configuración de Columnas (Estado local)
 let columnConfig = [
     { id: 'checkbox', width: '48px', fixed: true, label: '' },
-    { id: 'index', width: '60px', label: '#', fixed: true },
+    { id: 'index', width: '60px', label: '#', fixed: true, align: 'center' },
     { id: 'title', width: 'minmax(250px, 3fr)', label: 'TÍTULO', icon: HEADER_ICONS.title, resize: true, sortable: true },
-    { id: 'status', width: 'minmax(120px, 1fr)', label: 'ESTADO', icon: HEADER_ICONS.status, resize: true, sortable: true },
+    { id: 'status', width: 'minmax(120px, 1fr)', label: 'ESTADO', icon: HEADER_ICONS.status, resize: true, sortable: true, align: 'center' },
     { id: 'priority', width: 'minmax(110px, 1fr)', label: 'PRIORIDAD', icon: HEADER_ICONS.priority, resize: true, sortable: true, align: 'center' },
     { id: 'type', width: 'minmax(110px, 1fr)', label: 'TIPO', icon: HEADER_ICONS.type, resize: true, sortable: true, align: 'center' },
-    { id: 'assigned', width: 'minmax(160px, 1.5fr)', label: 'ASIGNADO A', icon: HEADER_ICONS.assigned, resize: true, sortable: true },
-    { id: 'created_by', width: 'minmax(160px, 1.5fr)', label: 'CREADO POR', icon: HEADER_ICONS.assigned, resize: true, sortable: true },
-    { id: 'date', width: 'minmax(110px, 1fr)', label: 'VENCIMIENTO', icon: HEADER_ICONS.date, resize: true, sortable: true },
-    { id: 'labels', width: '150px', label: 'ETIQUETAS', icon: HEADER_ICONS.tag, resize: true, sortable: false, hidden: true },
-    { id: 'comments', width: 'minmax(80px, 0.5fr)', label: 'COMENTARIOS', icon: HEADER_ICONS.comments, resize: true, sortable: false, fixed: true },
-    { id: 'guid', width: '48px', label: 'GUID', icon: HEADER_ICONS.guid, resize: true, sortable: false, fixed: true },
-    { id: 'actions', width: '80px', fixed: true, label: '' }
+    { id: 'creation', width: 'minmax(160px, 1.5fr)', label: 'CREACIÓN', icon: HEADER_ICONS.assigned, resize: true, sortable: true, align: 'center' },
+    { id: 'modification', width: 'minmax(160px, 1.5fr)', label: 'MODIFICACIÓN', icon: HEADER_ICONS.assigned, resize: true, sortable: true, align: 'center' },
+    { id: 'assignment', width: 'minmax(160px, 1.5fr)', label: 'ASIGNACIÓN', icon: HEADER_ICONS.assigned, resize: true, sortable: true, align: 'center' },
+    { id: 'due_date', width: 'minmax(110px, 1fr)', label: 'VENCIMIENTO', icon: HEADER_ICONS.date, resize: true, sortable: true, align: 'center' },
+    { id: 'labels', width: '150px', label: 'ETIQUETAS', icon: HEADER_ICONS.tag, resize: true, sortable: false, hidden: true, align: 'center' },
+    { id: 'comments', width: 'minmax(80px, 0.5fr)', label: 'COMENTARIOS', icon: HEADER_ICONS.comments, resize: true, sortable: false, fixed: true, align: 'center' },
+    { id: 'guid', width: '48px', label: 'GUID', icon: HEADER_ICONS.guid, resize: true, sortable: false, fixed: true, align: 'center' },
+    { id: 'actions', width: '80px', fixed: true, label: '', align: 'center' }
 ];
 
 /**
@@ -63,18 +64,19 @@ export function updateColumnConfig(newConfigIds) {
     // Definición maestra de todas las columnas posibles (para reconstruir config)
     const ALL_COLUMNS_DEF = {
         checkbox: { id: 'checkbox', width: '48px', fixed: true, label: '' },
-        index: { id: 'index', width: '60px', label: '#', fixed: true },
+        index: { id: 'index', width: '60px', label: '#', fixed: true, align: 'center' },
         title: { id: 'title', width: 'minmax(250px, 3fr)', label: 'TÍTULO', icon: HEADER_ICONS.title, resize: true, sortable: true },
-        status: { id: 'status', width: 'minmax(120px, 1fr)', label: 'ESTADO', icon: HEADER_ICONS.status, resize: true, sortable: true },
-        priority: { id: 'priority', width: 'minmax(110px, 1fr)', label: 'PRIORIDAD', icon: HEADER_ICONS.priority, resize: true, sortable: true },
+        status: { id: 'status', width: 'minmax(120px, 1fr)', label: 'ESTADO', icon: HEADER_ICONS.status, resize: true, sortable: true, align: 'center' },
+        priority: { id: 'priority', width: 'minmax(110px, 1fr)', label: 'PRIORIDAD', icon: HEADER_ICONS.priority, resize: true, sortable: true, align: 'center' },
         type: { id: 'type', width: 'minmax(110px, 1fr)', label: 'TIPO', icon: HEADER_ICONS.type, resize: true, sortable: true, align: 'center' },
-        assigned: { id: 'assigned', width: 'minmax(160px, 1.5fr)', label: 'ASIGNADO A', icon: HEADER_ICONS.assigned, resize: true, sortable: true },
-        created_by: { id: 'created_by', width: 'minmax(160px, 1.5fr)', label: 'CREADO POR', icon: HEADER_ICONS.assigned, resize: true, sortable: true },
-        labels: { id: 'labels', width: '150px', label: 'ETIQUETAS', icon: HEADER_ICONS.tag, resize: true, sortable: false },
-        date: { id: 'date', width: 'minmax(110px, 1fr)', label: 'VENCIMIENTO', icon: HEADER_ICONS.date, resize: true, sortable: true },
-        guid: { id: 'guid', width: '48px', label: 'GUID', icon: HEADER_ICONS.guid, resize: true, sortable: false, fixed: true },
-        comments: { id: 'comments', width: 'minmax(80px, 0.5fr)', label: 'COMENTARIOS', icon: HEADER_ICONS.comments, resize: true, sortable: false, fixed: true },
-        actions: { id: 'actions', width: '80px', fixed: true, label: '' }
+        creation: { id: 'creation', width: 'minmax(160px, 1.5fr)', label: 'CREACIÓN', icon: HEADER_ICONS.assigned, resize: true, sortable: true, align: 'center' },
+        modification: { id: 'modification', width: 'minmax(160px, 1.5fr)', label: 'MODIFICACIÓN', icon: HEADER_ICONS.assigned, resize: true, sortable: true, align: 'center' },
+        assignment: { id: 'assignment', width: 'minmax(160px, 1.5fr)', label: 'ASIGNACIÓN', icon: HEADER_ICONS.assigned, resize: true, sortable: true, align: 'center' },
+        labels: { id: 'labels', width: '150px', label: 'ETIQUETAS', icon: HEADER_ICONS.tag, resize: true, sortable: false, align: 'center' },
+        due_date: { id: 'due_date', width: 'minmax(110px, 1fr)', label: 'VENCIMIENTO', icon: HEADER_ICONS.date, resize: true, sortable: true, align: 'center' },
+        guid: { id: 'guid', width: '48px', label: 'GUID', icon: HEADER_ICONS.guid, resize: true, sortable: false, fixed: true, align: 'center' },
+        comments: { id: 'comments', width: 'minmax(80px, 0.5fr)', label: 'COMENTARIOS', icon: HEADER_ICONS.comments, resize: true, sortable: false, fixed: true, align: 'center' },
+        actions: { id: 'actions', width: '80px', fixed: true, label: '', align: 'center' }
     };
 
     // Reconstruir columnConfig basado en los IDs proporcionados
@@ -308,9 +310,10 @@ function sortIssuesByColumn(issues, sortConfig) {
             case 'status': valA = a.topicStatus; valB = b.topicStatus; break;
             case 'priority': valA = a.priority; valB = b.priority; break;
             case 'type': valA = a.topicType; valB = b.topicType; break;
-            case 'assigned': valA = a.assignedTo || ''; valB = b.assignedTo || ''; break;
-            case 'created_by': valA = a.creationAuthor || ''; valB = b.creationAuthor || ''; break;
-            case 'date': valA = new Date(a.dueDate || '9999-12-31'); valB = new Date(b.dueDate || '9999-12-31'); break;
+            case 'creation': valA = new Date(a.creationDate || '1900-01-01'); valB = new Date(b.creationDate || '1900-01-01'); break;
+            case 'modification': valA = new Date(a.modifiedDate || '1900-01-01'); valB = new Date(b.modifiedDate || '1900-01-01'); break;
+            case 'assignment': valA = a.assignedTo || ''; valB = b.assignedTo || ''; break;
+            case 'due_date': valA = new Date(a.dueDate || '9999-12-31'); valB = new Date(b.dueDate || '9999-12-31'); break;
             default: valA = ''; valB = '';
         }
 
@@ -477,22 +480,7 @@ function getCellContent(col, issue, isFavorite, index) {
                 </div>`;
         case 'type':
             return `<div class="col-type" style="text-align: center; justify-content: center;">${escapeHtml(issue.topicType)}</div>`;
-        case 'assigned':
-            const assignedName = issue.assignedTo || '';
-            const hasAssigned = assignedName.length > 0;
-            const initials = hasAssigned ? getInitials(assignedName) : '-';
-            const color = hasAssigned ? stringToColor(assignedName) : '#cbd5e1';
-
-            return `
-                <div class="col-assigned">
-                    ${hasAssigned ? `
-                    <div class="user-badge" title="${escapeHtml(assignedName)}">
-                        <div class="user-avatar" style="background-color: ${color}">${initials}</div>
-                        <span class="user-name">${escapeHtml(assignedName)}</span>
-                    </div>
-                    ` : '<span class="text-muted">-</span>'}
-                </div>`;
-        case 'created_by':
+        case 'creation':
             const creatorName = issue.creationAuthor || '';
             const hasCreator = creatorName.length > 0;
             const creatorInitials = hasCreator ? getInitials(creatorName) : '-';
@@ -500,14 +488,48 @@ function getCellContent(col, issue, isFavorite, index) {
             const creationDate = issue.creationDateFormatted?.split(' ')[0] || '-';
 
             return `
-                <div class="col-created-by">
+                <div class="col-creation" style="text-align: center; justify-content: center;">
                     ${hasCreator ? `
-                    <div class="user-badge" title="${escapeHtml(creatorName)} - ${creationDate}">
+                    <div class="user-badge" title="${escapeHtml(creatorName)} - ${creationDate}" style="flex-direction: column; align-items: center;">
                         <div class="user-avatar" style="background-color: ${creatorColor}">${creatorInitials}</div>
-                        <div class="user-info">
-                            <span class="user-name">${escapeHtml(creatorName)}</span>
-                            <span class="user-date">${creationDate}</span>
+                        <div class="user-info" style="text-align: center;">
+                            <span class="user-name" style="display: block;">${escapeHtml(creatorName)}</span>
+                            <span class="user-date" style="display: block; font-size: 0.85em; color: var(--text-muted);">${creationDate}</span>
                         </div>
+                    </div>
+                    ` : '<span class="text-muted">-</span>'}
+                </div>`;
+        case 'modification':
+            const modifierName = issue.modifiedAuthor || '';
+            const hasModifier = modifierName.length > 0;
+            const modifierInitials = hasModifier ? getInitials(modifierName) : '-';
+            const modifierColor = hasModifier ? stringToColor(modifierName) : '#cbd5e1';
+            const modificationDate = issue.modifiedDateFormatted?.split(' ')[0] || '-';
+
+            return `
+                <div class="col-modification" style="text-align: center; justify-content: center;">
+                    ${hasModifier ? `
+                    <div class="user-badge" title="${escapeHtml(modifierName)} - ${modificationDate}" style="flex-direction: column; align-items: center;">
+                        <div class="user-avatar" style="background-color: ${modifierColor}">${modifierInitials}</div>
+                        <div class="user-info" style="text-align: center;">
+                            <span class="user-name" style="display: block;">${escapeHtml(modifierName)}</span>
+                            <span class="user-date" style="display: block; font-size: 0.85em; color: var(--text-muted);">${modificationDate}</span>
+                        </div>
+                    </div>
+                    ` : '<span class="text-muted">-</span>'}
+                </div>`;
+        case 'assignment':
+            const assignedName = issue.assignedTo || '';
+            const hasAssigned = assignedName.length > 0;
+            const assignedInitials = hasAssigned ? getInitials(assignedName) : '-';
+            const assignedColor = hasAssigned ? stringToColor(assignedName) : '#cbd5e1';
+
+            return `
+                <div class="col-assignment" style="text-align: center; justify-content: center;">
+                    ${hasAssigned ? `
+                    <div class="user-badge" title="${escapeHtml(assignedName)}" style="flex-direction: column; align-items: center;">
+                        <div class="user-avatar" style="background-color: ${assignedColor}">${assignedInitials}</div>
+                        <span class="user-name" style="display: block; text-align: center;">${escapeHtml(assignedName)}</span>
                     </div>
                     ` : '<span class="text-muted">-</span>'}
                 </div>`;
@@ -526,9 +548,9 @@ function getCellContent(col, issue, isFavorite, index) {
                 ">${escapeHtml(l)}</span>`;
             }).join('');
             return `<div class="col-labels" style="padding-left: 8px; text-align: center;">${labelChips}</div>`;
-        case 'date':
+        case 'due_date':
             const dueDate = issue.dueDate ? new Date(issue.dueDate).toLocaleDateString('es-ES') : '-';
-            return `<div class="col-date">${dueDate}</div>`;
+            return `<div class="col-due-date" style="text-align: center; justify-content: center;">${dueDate}</div>`;
         case 'guid':
             return `
                 <div class="col-guid">
@@ -1332,9 +1354,10 @@ export function filterIssuesByColumns(issues, columnFilters) {
                 case 'status': value = issue.topicStatus; break;
                 case 'priority': value = issue.priority; break;
                 case 'type': value = issue.topicType; break;
-                case 'assigned': value = issue.assignedTo || ''; break;
-                case 'created_by': value = issue.creationAuthor || ''; break;
-                case 'date': value = issue.dueDate; break;
+                case 'creation': value = issue.creationDate; break;
+                case 'modification': value = issue.modifiedDate; break;
+                case 'assignment': value = issue.assignedTo || ''; break;
+                case 'due_date': value = issue.dueDate; break;
                 default: return true;
             }
 
