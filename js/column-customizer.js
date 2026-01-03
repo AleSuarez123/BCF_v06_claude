@@ -22,6 +22,9 @@ const ALL_COLUMNS = [
     { id: 'type', label: 'Tipo', default: true, icon: HEADER_ICONS.type },
     { id: 'labels', label: 'Etiquetas', default: false, icon: HEADER_ICONS.tag },
     { id: 'assigned', label: 'Asignado a', default: true, icon: HEADER_ICONS.assigned },
+    { id: 'creation', label: 'Creación', default: false, icon: HEADER_ICONS.date },
+    { id: 'modification', label: 'Modificación', default: false, icon: HEADER_ICONS.date },
+    { id: 'dueDate', label: 'Vencimiento', default: false, icon: HEADER_ICONS.date },
     { id: 'date', label: 'Fecha', default: true, icon: HEADER_ICONS.date },
     { id: 'guid', label: 'GUID', mandatory: true, icon: ICONS.copy },
     { id: 'comments', label: 'Comentarios', mandatory: true, icon: HEADER_ICONS.comments },
@@ -122,7 +125,7 @@ function openCustomizerModal() {
     console.log('Modal no existe, creando...');
 
     const EXCLUDED_IDS = ['actions'];
-    const MASTER_ORDER = ['checkbox','index','title','status','priority','type','assigned','date','comments','guid'];
+    const MASTER_ORDER = ['checkbox','index','title','status','priority','type','assigned','creation','modification','dueDate','date','comments','guid'];
     const PERMITTED = ALL_COLUMNS.filter(c => !EXCLUDED_IDS.includes(c.id) && !c.mandatory);
 
     function sortByMasterOrder(cols) {
