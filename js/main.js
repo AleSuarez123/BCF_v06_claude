@@ -1522,7 +1522,6 @@ export async function loadProject(projectId) {
         console.log('🔵 [loadProject] Proyecto encontrado:', project.name, '- bcfFiles:', project.bcfFiles?.length);
 
         AppState.currentProject = project;
-        AppState.currentIssues = [];
 
         // Context para este proyecto
         const projectContext = `project-${projectId}`;
@@ -1539,6 +1538,9 @@ export async function loadProject(projectId) {
 
         console.log('🔵 [loadProject] Procesando archivos BCF...');
 
+        // IMPORTANTE: Crear array temporal para acumular issues
+        const issuesArray = [];
+
         // Process issues and generate blob URLs for current session
         project.bcfFiles.forEach(bcf => {
             console.log('🔵 [loadProject] Procesando BCF:', bcf.fileName, '- topics:', bcf.topics?.length);
@@ -1554,7 +1556,7 @@ export async function loadProject(projectId) {
                     snapshotUrl = null;
                 }
 
-                AppState.currentIssues.push({
+                issuesArray.push({
                     ...topic,
                     bcfFile: bcf.fileName,
                     bcfVersion: bcf.version,
@@ -1562,6 +1564,9 @@ export async function loadProject(projectId) {
                 });
             });
         });
+
+        // IMPORTANTE: Reasignar para activar el setter del Proxy
+        AppState.currentIssues = issuesArray;
 
         console.log('🔵 [loadProject] Total issues cargados en AppState.currentIssues:', AppState.currentIssues.length);
 
