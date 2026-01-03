@@ -47,7 +47,8 @@ let columnConfig = [
     { id: 'priority', width: 'minmax(110px, 1fr)', label: 'PRIORIDAD', icon: HEADER_ICONS.priority, resize: true, sortable: true, align: 'center' },
     { id: 'type', width: 'minmax(110px, 1fr)', label: 'TIPO', icon: HEADER_ICONS.type, resize: true, sortable: true, align: 'center' },
     { id: 'assigned', width: 'minmax(160px, 1.5fr)', label: 'ASIGNADO A', icon: HEADER_ICONS.assigned, resize: true, sortable: true },
-    { id: 'date', width: 'minmax(110px, 1fr)', label: 'FECHA', icon: HEADER_ICONS.date, resize: true, sortable: true },
+    { id: 'created_by', width: 'minmax(160px, 1.5fr)', label: 'CREADO POR', icon: HEADER_ICONS.assigned, resize: true, sortable: true },
+    { id: 'date', width: 'minmax(110px, 1fr)', label: 'VENCIMIENTO', icon: HEADER_ICONS.date, resize: true, sortable: true },
     { id: 'labels', width: '150px', label: 'ETIQUETAS', icon: HEADER_ICONS.tag, resize: true, sortable: false, hidden: true },
     { id: 'comments', width: 'minmax(80px, 0.5fr)', label: 'COMENTARIOS', icon: HEADER_ICONS.comments, resize: true, sortable: false, fixed: true },
     { id: 'guid', width: '48px', label: 'GUID', icon: HEADER_ICONS.guid, resize: true, sortable: false, fixed: true },
@@ -68,8 +69,9 @@ export function updateColumnConfig(newConfigIds) {
         priority: { id: 'priority', width: 'minmax(110px, 1fr)', label: 'PRIORIDAD', icon: HEADER_ICONS.priority, resize: true, sortable: true },
         type: { id: 'type', width: 'minmax(110px, 1fr)', label: 'TIPO', icon: HEADER_ICONS.type, resize: true, sortable: true, align: 'center' },
         assigned: { id: 'assigned', width: 'minmax(160px, 1.5fr)', label: 'ASIGNADO A', icon: HEADER_ICONS.assigned, resize: true, sortable: true },
+        created_by: { id: 'created_by', width: 'minmax(160px, 1.5fr)', label: 'CREADO POR', icon: HEADER_ICONS.assigned, resize: true, sortable: true },
         labels: { id: 'labels', width: '150px', label: 'ETIQUETAS', icon: HEADER_ICONS.tag, resize: true, sortable: false },
-        date: { id: 'date', width: 'minmax(110px, 1fr)', label: 'FECHA', icon: HEADER_ICONS.date, resize: true, sortable: true },
+        date: { id: 'date', width: 'minmax(110px, 1fr)', label: 'VENCIMIENTO', icon: HEADER_ICONS.date, resize: true, sortable: true },
         guid: { id: 'guid', width: '48px', label: 'GUID', icon: HEADER_ICONS.guid, resize: true, sortable: false, fixed: true },
         comments: { id: 'comments', width: 'minmax(80px, 0.5fr)', label: 'COMENTARIOS', icon: HEADER_ICONS.comments, resize: true, sortable: false, fixed: true },
         actions: { id: 'actions', width: '80px', fixed: true, label: '' }
@@ -307,7 +309,8 @@ function sortIssuesByColumn(issues, sortConfig) {
             case 'priority': valA = a.priority; valB = b.priority; break;
             case 'type': valA = a.topicType; valB = b.topicType; break;
             case 'assigned': valA = a.assignedTo || ''; valB = b.assignedTo || ''; break;
-            case 'date': valA = new Date(a.creationDate); valB = new Date(b.creationDate); break;
+            case 'created_by': valA = a.creationAuthor || ''; valB = b.creationAuthor || ''; break;
+            case 'date': valA = new Date(a.dueDate || '9999-12-31'); valB = new Date(b.dueDate || '9999-12-31'); break;
             default: valA = ''; valB = '';
         }
 
@@ -479,13 +482,32 @@ function getCellContent(col, issue, isFavorite, index) {
             const hasAssigned = assignedName.length > 0;
             const initials = hasAssigned ? getInitials(assignedName) : '-';
             const color = hasAssigned ? stringToColor(assignedName) : '#cbd5e1';
-            
+
             return `
                 <div class="col-assigned">
                     ${hasAssigned ? `
                     <div class="user-badge" title="${escapeHtml(assignedName)}">
                         <div class="user-avatar" style="background-color: ${color}">${initials}</div>
                         <span class="user-name">${escapeHtml(assignedName)}</span>
+                    </div>
+                    ` : '<span class="text-muted">-</span>'}
+                </div>`;
+        case 'created_by':
+            const creatorName = issue.creationAuthor || '';
+            const hasCreator = creatorName.length > 0;
+            const creatorInitials = hasCreator ? getInitials(creatorName) : '-';
+            const creatorColor = hasCreator ? stringToColor(creatorName) : '#cbd5e1';
+            const creationDate = issue.creationDateFormatted?.split(' ')[0] || '-';
+
+            return `
+                <div class="col-created-by">
+                    ${hasCreator ? `
+                    <div class="user-badge" title="${escapeHtml(creatorName)} - ${creationDate}">
+                        <div class="user-avatar" style="background-color: ${creatorColor}">${creatorInitials}</div>
+                        <div class="user-info">
+                            <span class="user-name">${escapeHtml(creatorName)}</span>
+                            <span class="user-date">${creationDate}</span>
+                        </div>
                     </div>
                     ` : '<span class="text-muted">-</span>'}
                 </div>`;
@@ -505,7 +527,8 @@ function getCellContent(col, issue, isFavorite, index) {
             }).join('');
             return `<div class="col-labels" style="padding-left: 8px; text-align: center;">${labelChips}</div>`;
         case 'date':
-            return `<div class="col-date">${issue.creationDateFormatted?.split(' ')[0] || '-'}</div>`;
+            const dueDate = issue.dueDate ? new Date(issue.dueDate).toLocaleDateString('es-ES') : '-';
+            return `<div class="col-date">${dueDate}</div>`;
         case 'guid':
             return `
                 <div class="col-guid">
@@ -1060,17 +1083,23 @@ function renderIssuesGrid(onIssueClick, onFavoriteClick) {
  * Mejora: De 500+ listeners a 1 solo (con 100 issues)
  */
 function attachListeners(container, onIssueClick, onFavoriteClick) {
-    // Remover listeners previos si existen
-    if (container._delegatedListenersAttached) return;
+    // Remover listener previo si existe para actualizar callbacks
+    if (container._clickHandler) {
+        container.removeEventListener('click', container._clickHandler);
+    }
 
     // === DELEGATION: Click events ===
-    container.addEventListener('click', async (e) => {
+    const clickHandler = async (e) => {
         // 1. Favoritos
         const btnFavorite = e.target.closest('.btn-favorite');
         if (btnFavorite) {
+            console.log('🔷 [attachListeners] Botón favorito clickeado:', btnFavorite.dataset.id);
             e.stopPropagation();
             if (typeof onFavoriteClick === 'function') {
+                console.log('🔷 [attachListeners] Llamando onFavoriteClick');
                 onFavoriteClick(btnFavorite.dataset.id);
+            } else {
+                console.warn('🔷 [attachListeners] onFavoriteClick NO es función:', typeof onFavoriteClick);
             }
             return;
         }
@@ -1210,10 +1239,10 @@ function attachListeners(container, onIssueClick, onFavoriteClick) {
 
             input.addEventListener('blur', () => commit());
         }
-    });
+    };
 
-    // Marcar que listeners están attachados
-    container._delegatedListenersAttached = true;
+    container.addEventListener('click', clickHandler);
+    container._clickHandler = clickHandler;
 }
 
 /**
@@ -1304,7 +1333,8 @@ export function filterIssuesByColumns(issues, columnFilters) {
                 case 'priority': value = issue.priority; break;
                 case 'type': value = issue.topicType; break;
                 case 'assigned': value = issue.assignedTo || ''; break;
-                case 'date': value = issue.creationDate; break;
+                case 'created_by': value = issue.creationAuthor || ''; break;
+                case 'date': value = issue.dueDate; break;
                 default: return true;
             }
 
@@ -1449,7 +1479,11 @@ function updateActiveFiltersBadge() {
  * Abre el modal de creación/edición de incidencia
  */
 export function openEditIssueModal(guid = null) {
-    import('./edit-panel.js').then(m => m.openEditSidebar(guid));
+    console.log('🟡 [openEditIssueModal] Ejecutado con guid:', guid);
+    import('./edit-panel.js').then(m => {
+        console.log('🟡 [openEditIssueModal] Módulo cargado, llamando openEditSidebar');
+        m.openEditSidebar(guid);
+    });
 }
 
 /**

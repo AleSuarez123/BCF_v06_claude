@@ -297,8 +297,11 @@ export function setupBackButton() {
  */
 export function setupNewIssueButton() {
     const btnNewIssue = $('#btn-new-issue');
+    console.log('🟡 [setupNewIssueButton] Botón encontrado:', !!btnNewIssue);
     if (btnNewIssue) {
         btnNewIssue.addEventListener('click', () => {
+            console.log('🟡 [setupNewIssueButton] Click detectado en botón Nueva Incidencia');
+            console.log('🟡 [setupNewIssueButton] Llamando openEditIssueModal');
             openEditIssueModal();
         });
     }

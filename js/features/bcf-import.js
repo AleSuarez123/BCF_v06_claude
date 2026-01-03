@@ -203,6 +203,8 @@ export function showImportSummaryModal(validatedFiles) {
     return new Promise((resolve) => {
         const totalTopics = validatedFiles.reduce((sum, v) => sum + (v.stats?.total || 0), 0);
         const totalDuplicates = validatedFiles.reduce((sum, v) => sum + v.duplicates.length, 0);
+        const totalModified = validatedFiles.reduce((sum, v) =>
+            sum + v.duplicates.filter(d => d.isDifferent).length, 0);
         const hasErrors = validatedFiles.some(v => !v.valid);
 
         const modal = document.createElement('div');
@@ -384,11 +386,15 @@ export function showImportSummaryModal(validatedFiles) {
                 if (duplicateAction === 'skip') {
                     // Skip: only import new issues (total - duplicates)
                     count = totalTopics - totalDuplicates;
+                } else if (duplicateAction === 'update') {
+                    // Update: only import modified duplicates
+                    count = totalModified;
                 } else {
-                    // Update or Create: import all issues
+                    // Create: import all issues (creates duplicates with new GUIDs)
                     count = totalTopics;
                 }
 
+                console.log(`🔵 [updateButtonText] Action: ${duplicateAction}, Count: ${count}, Total: ${totalTopics}, Duplicates: ${totalDuplicates}, Modified: ${totalModified}`);
                 btnTextSpan.textContent = `Importar ${count} incidencias`;
             };
 
