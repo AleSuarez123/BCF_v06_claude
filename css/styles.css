@@ -1819,6 +1819,51 @@ option {
     color: var(--text-primary);
 }
 
+/* Estilos para columnas de creación y modificación */
+.col-creation,
+.col-modification {
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+}
+
+.user-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.user-name-small {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.date-small {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+/* Estilos para columna de vencimiento */
+.col-due-date {
+    display: flex;
+    align-items: center;
+}
+
+.col-due-date.overdue {
+    background: rgba(239, 68, 68, 0.1);
+    border-left: 3px solid #ef4444;
+}
+
+.due-date-text {
+    font-size: 0.875rem;
+    white-space: nowrap;
+}
+
 .col-actions {
     display: flex;
     justify-content: flex-end;

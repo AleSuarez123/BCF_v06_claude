@@ -43,6 +43,9 @@ let columnConfig = [
     { id: 'priority', width: 'minmax(110px, 1fr)', label: 'PRIORIDAD', icon: HEADER_ICONS.priority, resize: true, sortable: true, align: 'center' },
     { id: 'type', width: 'minmax(110px, 1fr)', label: 'TIPO', icon: HEADER_ICONS.type, resize: true, sortable: true, align: 'center' },
     { id: 'assigned', width: 'minmax(160px, 1.5fr)', label: 'ASIGNADO A', icon: HEADER_ICONS.assigned, resize: true, sortable: true },
+    { id: 'creation', width: 'minmax(160px, 1.5fr)', label: 'CREACIÓN', icon: HEADER_ICONS.date, resize: true, sortable: true, hidden: true },
+    { id: 'modification', width: 'minmax(160px, 1.5fr)', label: 'MODIFICACIÓN', icon: HEADER_ICONS.date, resize: true, sortable: true, hidden: true },
+    { id: 'dueDate', width: 'minmax(120px, 1fr)', label: 'VENCIMIENTO', icon: HEADER_ICONS.date, resize: true, sortable: true, hidden: true },
     { id: 'date', width: 'minmax(110px, 1fr)', label: 'FECHA', icon: HEADER_ICONS.date, resize: true, sortable: true },
     { id: 'labels', width: '150px', label: 'ETIQUETAS', icon: HEADER_ICONS.tag, resize: true, sortable: false, hidden: true },
     { id: 'comments', width: 'minmax(80px, 0.5fr)', label: 'COMENTARIOS', icon: HEADER_ICONS.comments, resize: true, sortable: false, fixed: true },
@@ -64,6 +67,9 @@ export function updateColumnConfig(newConfigIds) {
         priority: { id: 'priority', width: 'minmax(110px, 1fr)', label: 'PRIORIDAD', icon: HEADER_ICONS.priority, resize: true, sortable: true },
         type: { id: 'type', width: 'minmax(110px, 1fr)', label: 'TIPO', icon: HEADER_ICONS.type, resize: true, sortable: true, align: 'center' },
         assigned: { id: 'assigned', width: 'minmax(160px, 1.5fr)', label: 'ASIGNADO A', icon: HEADER_ICONS.assigned, resize: true, sortable: true },
+        creation: { id: 'creation', width: 'minmax(160px, 1.5fr)', label: 'CREACIÓN', icon: HEADER_ICONS.date, resize: true, sortable: true },
+        modification: { id: 'modification', width: 'minmax(160px, 1.5fr)', label: 'MODIFICACIÓN', icon: HEADER_ICONS.date, resize: true, sortable: true },
+        dueDate: { id: 'dueDate', width: 'minmax(120px, 1fr)', label: 'VENCIMIENTO', icon: HEADER_ICONS.date, resize: true, sortable: true },
         labels: { id: 'labels', width: '150px', label: 'ETIQUETAS', icon: HEADER_ICONS.tag, resize: true, sortable: false },
         date: { id: 'date', width: 'minmax(110px, 1fr)', label: 'FECHA', icon: HEADER_ICONS.date, resize: true, sortable: true },
         guid: { id: 'guid', width: '48px', label: 'GUID', icon: HEADER_ICONS.guid, resize: true, sortable: false, fixed: true },
@@ -131,7 +137,7 @@ function stringToColor(str) {
 
 function getInitials(name) {
     if (!name) return '-';
-    
+
     // Si parece un email, usar las 2 primeras letras del usuario (antes del @)
     if (name.includes('@')) {
         const localPart = name.split('@')[0];
@@ -140,7 +146,7 @@ function getInitials(name) {
         }
         return localPart.substring(0, 1).toUpperCase();
     }
-    
+
     // Si no es email, intentar usar iniciales de Nombre Apellido
     return name
         .split(/[\s.@]+/) // Split by space, dot, or @
@@ -148,6 +154,35 @@ function getInitials(name) {
         .slice(0, 2)
         .join('')
         .toUpperCase();
+}
+
+/**
+ * Formatea una fecha ISO al formato DD/MM/AAAA HH:mm o DD/MM/AAAA
+ * @param {string} dateString - Fecha en formato ISO
+ * @param {boolean} includeTime - Si incluir la hora (por defecto true)
+ * @returns {string} Fecha formateada
+ */
+function formatDateDDMMYYYY(dateString, includeTime = true) {
+    if (!dateString || dateString === '-') return '-';
+
+    try {
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return '-';
+
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+
+        if (includeTime) {
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            return `${day}/${month}/${year} ${hours}:${minutes}`;
+        }
+
+        return `${day}/${month}/${year}`;
+    } catch (e) {
+        return '-';
+    }
 }
 
 // Callbacks almacenados para re-renderizado
@@ -273,6 +308,9 @@ function renderIssuesList(onIssueClick, onFavoriteClick) {
                 case 'priority': valA = a.priority; valB = b.priority; break;
                 case 'type': valA = a.topicType; valB = b.topicType; break;
                 case 'assigned': valA = a.assignedTo || ''; valB = b.assignedTo || ''; break;
+                case 'creation': valA = new Date(a.creationDate || 0); valB = new Date(b.creationDate || 0); break;
+                case 'modification': valA = new Date(a.modifiedDate || a.modificationDate || 0); valB = new Date(b.modifiedDate || b.modificationDate || 0); break;
+                case 'dueDate': valA = new Date(a.dueDate || '9999-12-31'); valB = new Date(b.dueDate || '9999-12-31'); break;
                 case 'date': valA = new Date(a.creationDate); valB = new Date(b.creationDate); break;
                 default: valA = ''; valB = '';
             }
@@ -365,17 +403,51 @@ function getCellContent(col, issue, isFavorite, index) {
             const labelChips = (issue.labels || []).map(l => {
                 const color = stringToColor(l);
                 return `<span class="label-chip" style="
-                    display: inline-block; 
-                    padding: 2px 6px; 
-                    border-radius: 12px; 
-                    background-color: ${color}20; 
-                    color: ${color}; 
+                    display: inline-block;
+                    padding: 2px 6px;
+                    border-radius: 12px;
+                    background-color: ${color}20;
+                    color: ${color};
                     border: 1px solid ${color}40;
                     font-size: 0.8em;
                     margin-right: 4px;
                 ">${escapeHtml(l)}</span>`;
             }).join('');
             return `<div class="col-labels" style="padding-left: 8px; text-align: center;">${labelChips}</div>`;
+        case 'creation':
+            const creationAuthor = issue.creationAuthor || 'Desconocido';
+            const creationDate = issue.creationDateFormatted || issue.creationDate || '-';
+            // Formato: DD/MM/AAAA HH:mm
+            const creationFormatted = formatDateDDMMYYYY(issue.creationDate);
+            return `<div class="col-creation">
+                <div class="user-info">
+                    <span class="user-name-small">${escapeHtml(creationAuthor)}</span>
+                    <span class="date-small">${creationFormatted}</span>
+                </div>
+            </div>`;
+        case 'modification':
+            const modAuthor = issue.modifiedAuthor || issue.modifiedBy || '-';
+            const modDate = issue.modifiedDate || issue.modificationDate || '-';
+            // Formato: DD/MM/AAAA HH:mm
+            const modFormatted = formatDateDDMMYYYY(modDate);
+            return `<div class="col-modification">
+                <div class="user-info">
+                    <span class="user-name-small">${escapeHtml(modAuthor)}</span>
+                    <span class="date-small">${modFormatted}</span>
+                </div>
+            </div>`;
+        case 'dueDate':
+            const dueDate = issue.dueDate;
+            if (!dueDate) {
+                return `<div class="col-due-date"><span class="text-muted">-</span></div>`;
+            }
+            // Formato: DD/MM/AAAA
+            const dueDateFormatted = formatDateDDMMYYYY(dueDate, false);
+            // Verificar si está vencido
+            const isOverdue = new Date(dueDate) < new Date();
+            return `<div class="col-due-date ${isOverdue ? 'overdue' : ''}">
+                <span class="due-date-text" style="${isOverdue ? 'color: #ef4444; font-weight: 600;' : ''}">${dueDateFormatted}</span>
+            </div>`;
         case 'date':
             return `<div class="col-date">${issue.creationDateFormatted?.split(' ')[0] || '-'}</div>`;
         case 'guid':

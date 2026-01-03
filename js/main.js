@@ -44,13 +44,36 @@ const renderAppIssues = () => {
 };
 
 function toggleFavorite(guid) {
-    if (AppState.favorites.has(guid)) {
+    const isFavorite = AppState.favorites.has(guid);
+
+    if (isFavorite) {
         AppState.favorites.delete(guid);
     } else {
         AppState.favorites.add(guid);
     }
     Storage.saveAll();
-    renderAppIssues();
+
+    // Optimización: solo actualizar los botones de favoritos en el DOM
+    // en lugar de re-renderizar toda la lista
+    const newState = !isFavorite;
+    document.querySelectorAll(`.btn-favorite[data-id="${guid}"]`).forEach(btn => {
+        if (newState) {
+            btn.classList.add('active');
+            btn.querySelector('svg').setAttribute('fill', 'currentColor');
+        } else {
+            btn.classList.remove('active');
+            btn.querySelector('svg').setAttribute('fill', 'none');
+        }
+    });
+
+    // También actualizar la clase de la fila/card si existe
+    document.querySelectorAll(`.issue-row[data-id="${guid}"], .issue-card[data-id="${guid}"]`).forEach(el => {
+        if (newState) {
+            el.classList.add('favorite');
+        } else {
+            el.classList.remove('favorite');
+        }
+    });
 }
 
 // Inicialización principal
