@@ -1336,7 +1336,10 @@ async function createNewProject(name, description, files = []) {
 
     console.log('🟢 [createNewProject] Proyecto creado:', newProject);
 
-    AppState.projects.push(newProject);
+    // IMPORTANTE: Obtener, modificar, y reasignar para activar el setter del Proxy
+    const projects = AppState.projects;
+    projects.push(newProject);
+    AppState.projects = projects;
     console.log('🟢 [createNewProject] Total proyectos en AppState:', AppState.projects.length);
 
     await Storage.saveAll();
@@ -1377,16 +1380,19 @@ async function createNewProject(name, description, files = []) {
  * @throws {Error} Si falla el parsing o guardado
  */
 async function addFilesToProject(files) {
+    const project = AppState.currentProject; // Obtener referencia al proyecto
+
     for (const file of files) {
         try {
             const bcfData = await BCFParser.loadBCF(file);
-            AppState.currentProject.bcfFiles.push(bcfData);
+            project.bcfFiles.push(bcfData);
         } catch (error) {
             logger.error('Error parseando archivo BCF:', error);
             notify(`Error en ${file.name}`, 'error');
         }
     }
-    
+
+    AppState.currentProject = project; // Reasignar para activar el setter
     await Storage.saveAll();
     await loadProject(AppState.currentProject.id);
     notify('Archivos cargados correctamente', 'success');
@@ -2067,10 +2073,12 @@ const syncServerProjects = withErrorHandling(async () => {
     if (!serverProjects || !Array.isArray(serverProjects)) return;
 
     let newProjectsCount = 0;
+    const projects = AppState.projects; // Obtener el array una vez
+
     for (const sProject of serverProjects) {
-        const exists = AppState.projects.some(p => p.id === sProject.guid || p.serverGuid === sProject.guid);
+        const exists = projects.some(p => p.id === sProject.guid || p.serverGuid === sProject.guid);
         if (!exists) {
-            AppState.projects.push({
+            projects.push({
                 id: sProject.guid,
                 serverGuid: sProject.guid,
                 name: sProject.name,
@@ -2084,6 +2092,7 @@ const syncServerProjects = withErrorHandling(async () => {
     }
 
     if (newProjectsCount > 0) {
+        AppState.projects = projects; // Reasignar para activar el setter del Proxy
         await Storage.saveAll();
         renderProjects();
         updateGlobalStats();

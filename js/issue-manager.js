@@ -1745,7 +1745,11 @@ export function renderProjects() {
                     const projectName = AppState.projects[idx].name;
                     console.log('🔴 [deleteProject] Eliminando proyecto:', projectName);
 
-                    AppState.projects.splice(idx, 1);
+                    // IMPORTANTE: Obtener el array, modificarlo, y volver a asignarlo
+                    // porque AppState.projects devuelve una copia del stateManager
+                    const projects = AppState.projects;
+                    projects.splice(idx, 1);
+                    AppState.projects = projects; // Esto activa el setter del Proxy
                     console.log('🔴 [deleteProject] Total proyectos restantes:', AppState.projects.length);
 
                     const { Storage } = await import('./storage.js');

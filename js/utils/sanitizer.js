@@ -155,6 +155,11 @@ export function sanitizeHTML(html, options = {}) {
         return '';
     }
 
+    // Si es un DocumentFragment (resultado de etiqueta no permitida), obtener textContent
+    if (cleanedBody instanceof DocumentFragment) {
+        return cleanedBody.textContent || '';
+    }
+
     return cleanedBody.innerHTML || '';
 }
 

@@ -569,6 +569,9 @@ export async function importBCFWithProgress(config, onProgress = null) {
     let totalUpdated = 0;
     const errors = [];
 
+    // Obtener el proyecto una vez al inicio
+    const project = AppState.currentProject;
+
     for (let i = 0; i < validFiles.length; i++) {
         const validFile = validFiles[i];
 
@@ -577,7 +580,7 @@ export async function importBCFWithProgress(config, onProgress = null) {
         }
 
         try {
-            const result = await importSingleBCF(validFile, duplicateAction);
+            const result = await importSingleBCF(validFile, duplicateAction, project);
             totalImported += result.imported;
             totalSkipped += result.skipped;
             totalUpdated += result.updated;
@@ -589,6 +592,9 @@ export async function importBCFWithProgress(config, onProgress = null) {
             });
         }
     }
+
+    // Reasignar el proyecto para activar el setter del Proxy
+    AppState.currentProject = project;
 
     return {
         totalImported,
@@ -603,11 +609,12 @@ export async function importBCFWithProgress(config, onProgress = null) {
  *
  * @param {Object} validFile - Archivo validado
  * @param {string} duplicateAction - 'skip', 'update' o 'create'
+ * @param {Object} project - Proyecto al que importar (pasado por referencia)
  * @returns {Promise<Object>} Resultado de la importación
  *
  * @private
  */
-async function importSingleBCF(validFile, duplicateAction) {
+async function importSingleBCF(validFile, duplicateAction, project) {
     const { data, duplicates, fileName } = validFile;
     const duplicateGUIDs = new Set(duplicates.map(d => d.guid));
 
@@ -638,7 +645,7 @@ async function importSingleBCF(validFile, duplicateAction) {
                 continue;
             } else if (duplicateAction === 'update') {
                 // Actualizar topic existente
-                updateExistingTopic(topic);
+                updateExistingTopic(topic, project);
                 updated++;
                 continue;
             } else if (duplicateAction === 'create') {
@@ -662,7 +669,7 @@ async function importSingleBCF(validFile, duplicateAction) {
     // Agregar archivo al proyecto solo si tiene topics después del procesamiento
     if (bcfToImport.topics.length > 0) {
         logger.info(`Importando archivo ${fileName} con ${bcfToImport.topics.length} topics`);
-        AppState.currentProject.bcfFiles.push(bcfToImport);
+        project.bcfFiles.push(bcfToImport);
     } else {
         logger.warning(`Archivo ${fileName} no tiene topics para importar después del filtrado`);
     }
@@ -674,12 +681,13 @@ async function importSingleBCF(validFile, duplicateAction) {
  * Actualiza un topic existente con nuevos datos
  *
  * @param {Object} newTopic - Topic con nuevos datos
+ * @param {Object} project - Proyecto donde buscar el topic
  *
  * @private
  */
-function updateExistingTopic(newTopic) {
+function updateExistingTopic(newTopic, project) {
     // Buscar y actualizar el topic existente
-    for (const bcfFile of AppState.currentProject.bcfFiles) {
+    for (const bcfFile of project.bcfFiles) {
         const existingTopicIndex = bcfFile.topics.findIndex(t => t.guid === newTopic.guid);
         if (existingTopicIndex !== -1) {
             // Actualizar manteniendo comentarios existentes
