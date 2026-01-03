@@ -1155,8 +1155,8 @@ async function handleFilesWithValidation(files) {
         console.log('🟣 [handleFilesWithValidation] Archivos validados:', validatedFiles.length);
 
         // Cerrar notificación de carga
-        if (loadingNotification && typeof loadingNotification.dismiss === 'function') {
-            loadingNotification.dismiss();
+        if (loadingNotification && typeof loadingNotification.remove === 'function') {
+            loadingNotification.remove();
         }
 
         // 3. Mostrar modal de resumen interactivo
@@ -1580,7 +1580,7 @@ export async function loadProject(projectId) {
         console.log('🔵 [loadProject] Filtered issues:', AppState.filteredIssues.length);
 
         console.log('🔵 [loadProject] Renderizando issues...');
-        renderIssues();
+        renderAppIssues();
 
         console.log('🔵 [loadProject] Navegando a viewer...');
         navigateTo('viewer');
@@ -1685,7 +1685,7 @@ function toggleViewMode() {
     AppState.viewMode = AppState.viewMode === 'list' ? 'grid' : 'list';
     const btnViewList = $('#btn-view-list');
     const btnViewGrid = $('#btn-view-grid');
-    
+
     if (AppState.viewMode === 'list') {
         if (btnViewList) btnViewList.classList.add(CSS_CLASSES.ACTIVE);
         if (btnViewGrid) btnViewGrid.classList.remove(CSS_CLASSES.ACTIVE);
@@ -1693,7 +1693,7 @@ function toggleViewMode() {
         if (btnViewList) btnViewList.classList.remove(CSS_CLASSES.ACTIVE);
         if (btnViewGrid) btnViewGrid.classList.add(CSS_CLASSES.ACTIVE);
     }
-    renderIssues();
+    renderAppIssues();
 }
 
 /**
@@ -1785,7 +1785,7 @@ function setupFilters() {
             } else {
                 AppState.selectedIssues.clear();
             }
-            renderIssues();
+            renderAppIssues();
         });
     }
 
@@ -2332,10 +2332,10 @@ async function loadIssueFromAnyProject(issueId) {
         
         if (issue) {
             logger.info('✅ Incidencia encontrada en proyecto:', project.name);
-            
+
             AppState.viewMode = 'list';
-            renderIssues();
-            
+            renderAppIssues();
+
             setTimeout(() => {
                 const el = $(`[data-id="${issueId}"]`);
                 if (el) {

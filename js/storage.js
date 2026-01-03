@@ -11,6 +11,9 @@ export const Storage = {
      * Guarda el estado actual en IndexedDB
      */
     saveAll: withErrorHandling(async () => {
+        // Limpiar proyectos existentes para evitar que proyectos borrados reaparezcan
+        await dbManager.clear('projects');
+
         // Guardar proyectos uno a uno para eficiencia
         for (const project of AppState.projects) {
             await dbManager.put('projects', project);

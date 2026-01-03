@@ -10,7 +10,7 @@
 
 import { $, $cached, notify, updateGlobalStats } from '../ui-utils.js';
 import { AppState } from '../state.js';
-import { renderProjects, renderIssues } from '../issue-manager.js';
+import { renderProjects, renderIssues, openEditIssueModal } from '../issue-manager.js';
 import { openSpotlight } from '../ui-panels.js';
 import { CSS_CLASSES } from '../utils/constants.js';
 
@@ -299,9 +299,7 @@ export function setupNewIssueButton() {
     const btnNewIssue = $('#btn-new-issue');
     if (btnNewIssue) {
         btnNewIssue.addEventListener('click', () => {
-            if (window.openEditIssueModal) {
-                window.openEditIssueModal();
-            }
+            openEditIssueModal();
         });
     }
 }

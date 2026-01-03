@@ -343,7 +343,7 @@ export function showImportSummaryModal(validatedFiles) {
                             <polyline points="17 8 12 3 7 8"/>
                             <line x1="12" y1="3" x2="12" y2="15"/>
                         </svg>
-                        ${hasErrors ? 'Hay errores que corregir' : `Importar ${totalTopics - (totalDuplicates || 0)} incidencias`}
+                        <span class="import-btn-text">${hasErrors ? 'Hay errores que corregir' : `Importar ${totalTopics - (totalDuplicates || 0)} incidencias`}</span>
                     </button>
                 </div>
             </div>
@@ -374,6 +374,28 @@ export function showImportSummaryModal(validatedFiles) {
                     duplicateAction
                 });
             };
+
+            // Update button text when duplicate action changes
+            const updateButtonText = () => {
+                const duplicateAction = modal.querySelector('input[name="duplicate-action"]:checked')?.value || 'skip';
+                const btnTextSpan = modal.querySelector('.import-btn-text');
+
+                let count;
+                if (duplicateAction === 'skip') {
+                    // Skip: only import new issues (total - duplicates)
+                    count = totalTopics - totalDuplicates;
+                } else {
+                    // Update or Create: import all issues
+                    count = totalTopics;
+                }
+
+                btnTextSpan.textContent = `Importar ${count} incidencias`;
+            };
+
+            // Add event listeners to radio buttons
+            modal.querySelectorAll('input[name="duplicate-action"]').forEach(radio => {
+                radio.addEventListener('change', updateButtonText);
+            });
         }
 
         // Toggle detalles de archivo
@@ -436,11 +458,8 @@ function renderFileItem(validatedFile, index) {
         .join(' · ');
 
     return `
-        <div class="file-item ${duplicates.length > 0 ? 'has-warning' : ''}">
+        <div class="file-item">
             <div class="file-item-header">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="expand-icon">
-                    <polyline points="9 18 15 12 9 6"/>
-                </svg>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="file-icon-bcf">
                     <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/>
                     <polyline points="13 2 13 9 20 9"/>
@@ -450,99 +469,12 @@ function renderFileItem(validatedFile, index) {
                     <div class="file-meta">
                         <span class="meta-item">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <circle cx="12" cy="12" r="10"/>
-                                <line x1="12" y1="8" x2="12" y2="12"/>
-                                <line x1="12" y1="16" x2="12.01" y2="16"/>
-                            </svg>
-                            ${stats.total} incidencias
-                        </span>
-                        <span class="meta-item">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
                             </svg>
                             ${(fileSize / 1024).toFixed(1)} KB
                         </span>
-                        ${duplicates.length > 0 ? `
-                            <span class="meta-item meta-warning">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-                                    <line x1="12" y1="9" x2="12" y2="13"/>
-                                    <line x1="12" y1="17" x2="12.01" y2="17"/>
-                                </svg>
-                                ${duplicates.length} duplicados
-                            </span>
-                        ` : ''}
                     </div>
                 </div>
-            </div>
-            <div class="file-item-details">
-                <!-- Resumen de estadísticas -->
-                <div class="file-stats-grid">
-                    <div class="stat-item">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="12" cy="12" r="10"/>
-                            <path d="M12 6v6l4 2"/>
-                        </svg>
-                        <div>
-                            <div class="stat-label">Estados:</div>
-                            <div class="stat-value">${statusSummary}</div>
-                        </div>
-                    </div>
-                    ${Object.keys(stats.byPriority).length > 0 ? `
-                        <div class="stat-item">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-                            </svg>
-                            <div>
-                                <div class="stat-label">Alta prioridad:</div>
-                                <div class="stat-value">${stats.byPriority.High || stats.byPriority.high || 0}</div>
-                            </div>
-                        </div>
-                    ` : ''}
-                    <div class="stat-item">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <rect x="3" y="3" width="18" height="18" rx="2"/>
-                            <circle cx="8.5" cy="8.5" r="1.5"/>
-                            <polyline points="21 15 16 10 5 21"/>
-                        </svg>
-                        <div>
-                            <div class="stat-label">Con snapshots:</div>
-                            <div class="stat-value">${stats.withSnapshots}</div>
-                        </div>
-                    </div>
-                    <div class="stat-item">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-                        </svg>
-                        <div>
-                            <div class="stat-label">Con comentarios:</div>
-                            <div class="stat-value">${stats.withComments}</div>
-                        </div>
-                    </div>
-                </div>
-
-                ${duplicates.length > 0 ? `
-                    <div class="duplicates-list">
-                        <h5>
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-                            </svg>
-                            Duplicados encontrados
-                        </h5>
-                        <ul>
-                            ${duplicates.slice(0, 5).map(d => `
-                                <li>
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <polyline points="20 6 9 17 4 12"/>
-                                    </svg>
-                                    ${escapeHtml(d.title)}
-                                    ${d.isDifferent ? '<span class="badge badge-modified">Modificada</span>' : '<span class="badge badge-same">Sin cambios</span>'}
-                                </li>
-                            `).join('')}
-                            ${duplicates.length > 5 ? `<li class="text-muted">... y ${duplicates.length - 5} más</li>` : ''}
-                        </ul>
-                    </div>
-                ` : ''}
             </div>
         </div>
     `;

@@ -533,16 +533,20 @@ export const notify = (message, type = 'info', duration = TIMEOUTS.NOTIFICATION_
     container.appendChild(notification);
 
     const closeBtn = notification.querySelector('.notification-close');
-    closeBtn.onclick = () => notification.remove();
+    const remove = () => {
+        if (notification.parentElement) {
+            notification.classList.add('notification-fade-out');
+            setTimeout(() => notification.remove(), 300);
+        }
+    };
+    closeBtn.onclick = remove;
 
     if (duration > 0) {
-        setTimeout(() => {
-            if (notification.parentElement) {
-                notification.classList.add('notification-fade-out');
-                setTimeout(() => notification.remove(), 300);
-            }
-        }, duration);
+        setTimeout(remove, duration);
     }
+
+    // Retornar objeto con método remove para poder cerrar manualmente
+    return { remove };
 };
 
 function createNotificationsContainer() {
