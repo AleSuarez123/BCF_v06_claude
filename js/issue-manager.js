@@ -417,13 +417,11 @@ function getCellContent(col, issue, isFavorite, index) {
             const creationColor = stringToColor(creationAuthor);
             const creationFormatted = formatDateDDMMYYYY(issue.creationDate);
             return `<div class="col-creation">
-                <div class="user-badge" title="${escapeHtml(creationAuthor)}">
+                <div class="user-badge-inline" title="${escapeHtml(creationAuthor)}">
                     <div class="user-avatar" style="background-color: ${creationColor}">${creationInitials}</div>
-                    <div class="user-info-inline">
-                        <span class="user-name">${escapeHtml(creationAuthor)}</span>
-                        <span class="date-small">${creationFormatted}</span>
-                    </div>
+                    <span class="user-name">${escapeHtml(creationAuthor)}</span>
                 </div>
+                <span class="date-small">${creationFormatted}</span>
             </div>`;
         case 'modification':
             const modAuthor = issue.modifiedAuthor || issue.modifiedBy || '-';
@@ -431,13 +429,11 @@ function getCellContent(col, issue, isFavorite, index) {
             const modColor = stringToColor(modAuthor);
             const modFormatted = formatDateDDMMYYYY(issue.modifiedDate || issue.modificationDate);
             return `<div class="col-modification">
-                <div class="user-badge" title="${escapeHtml(modAuthor)}">
+                <div class="user-badge-inline" title="${escapeHtml(modAuthor)}">
                     <div class="user-avatar" style="background-color: ${modColor}">${modInitials}</div>
-                    <div class="user-info-inline">
-                        <span class="user-name">${escapeHtml(modAuthor)}</span>
-                        <span class="date-small">${modFormatted}</span>
-                    </div>
+                    <span class="user-name">${escapeHtml(modAuthor)}</span>
                 </div>
+                <span class="date-small">${modFormatted}</span>
             </div>`;
         case 'dueDate':
             const dueDate = issue.dueDate;
@@ -477,20 +473,24 @@ function getCellContent(col, issue, isFavorite, index) {
                     </div>`;
             }
 
-            // Si todos están leídos: mostrar solo el número en texto normal
+            // Si todos están leídos: mostrar icono con el número
             if (commentCount > 0) {
                 return `
                     <div class="col-comments">
-                        <span class="comment-count" title="${commentCount} comentarios (todos leídos)">
-                            ${commentCount}
+                        <span class="comment-badge" title="${commentCount} comentarios (todos leídos)">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                            <span class="comment-count-text">${commentCount}</span>
                         </span>
                     </div>`;
             }
 
-            // Sin comentarios
+            // Sin comentarios: mostrar icono con guión
             return `
                 <div class="col-comments">
-                    <span class="comment-count text-muted">-</span>
+                    <span class="comment-badge text-muted">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                        <span class="comment-count-text">-</span>
+                    </span>
                 </div>`;
         case 'actions':
             return `
