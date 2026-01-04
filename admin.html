@@ -405,6 +405,7 @@
             <button class="tab active" onclick="switchTab('requests')">Solicitudes de Acceso</button>
             <button class="tab" onclick="switchTab('users')">Usuarios</button>
             <button class="tab" onclick="switchTab('domains')">Dominios Permitidos</button>
+            <button class="tab" onclick="switchTab('invitations')">Invitaciones</button>
             <button class="tab" onclick="switchTab('sessions')">Sesiones</button>
         </div>
 
@@ -434,6 +435,24 @@
                 <div style="margin-top: 20px;">
                     <button class="btn btn-primary" onclick="showAddDomainModal()">Añadir Dominio</button>
                 </div>
+            </div>
+        </div>
+
+        <!-- Tab: Invitaciones -->
+        <div id="tab-invitations" class="tab-content">
+            <div class="section">
+                <h2 class="section-title">Gestión de Invitaciones</h2>
+                <p style="margin-bottom: 16px; color: #718096;">Genera links de invitación de un solo uso para permitir acceso sin aprobación manual.</p>
+                <div style="margin-bottom: 20px;">
+                    <button class="btn btn-primary" onclick="showCreateInvitationModal()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 6px;">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                        Generar Nueva Invitación
+                    </button>
+                </div>
+                <div id="invitations-container"></div>
             </div>
         </div>
 
@@ -493,11 +512,64 @@
         </div>
     </div>
 
+    <!-- Modal: Crear Invitación -->
+    <div id="create-invitation-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">Generar Link de Invitación</div>
+            <div class="form-group">
+                <label class="form-label">Días de validez</label>
+                <select id="invitation-expiry" class="form-input">
+                    <option value="1">1 día</option>
+                    <option value="3">3 días</option>
+                    <option value="7" selected>7 días (recomendado)</option>
+                    <option value="14">14 días</option>
+                    <option value="30">30 días</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Máximo de usos</label>
+                <select id="invitation-max-uses" class="form-input">
+                    <option value="1" selected>1 uso (recomendado)</option>
+                    <option value="3">3 usos</option>
+                    <option value="5">5 usos</option>
+                    <option value="10">10 usos</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Restringir a dominio (opcional)</label>
+                <input type="text" id="invitation-domain" class="form-input" placeholder="ejemplo.com (dejar vacío para cualquier dominio)">
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('create-invitation-modal')">Cancelar</button>
+                <button class="btn btn-primary" onclick="confirmCreateInvitation()">Generar Link</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Ver Link de Invitación -->
+    <div id="invitation-link-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">Link de Invitación Generado</div>
+            <p style="margin-bottom: 16px; color: #718096;">Comparte este link con la persona que quieres invitar. Es de un solo uso y expirará automáticamente.</p>
+            <div class="form-group">
+                <label class="form-label">Link de Invitación</label>
+                <div style="display: flex; gap: 8px;">
+                    <input type="text" id="invitation-link-input" class="form-input" readonly style="flex: 1;">
+                    <button class="btn btn-primary" onclick="copyInvitationLink()">Copiar</button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="closeModal('invitation-link-modal')">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
     <script type="module">
         import { AuthMgr } from './js/auth-manager.js';
         import { UserDB } from './js/user-db.js';
         import { SessionDB } from './js/session-db.js';
         import { AccessRequestDB } from './js/access-request-db.js';
+        import { InvitationMgr } from './js/invitation-manager.js';
 
         // Verificar autenticación y permisos de administrador
         if (!AuthMgr.isAuthenticated()) {
@@ -658,19 +730,60 @@
 
         function loadDomains() {
             const domains = UserDB.getAllowedDomains();
+            const allUsers = UserDB.getAllUsers();
             const container = document.getElementById('domains-container');
 
+            // Contar usuarios por dominio
+            const usersByDomain = {};
+            allUsers.forEach(user => {
+                const domain = user.domain;
+                usersByDomain[domain] = (usersByDomain[domain] || 0) + 1;
+            });
+
+            const defaultDomains = ['gocsa.es', 'proyeco.es'];
+
             const html = `
-                <div class="domain-list">
-                    ${domains.map(d => `
-                        <div class="domain-chip">
-                            <span>@${d}</span>
-                            ${!['gocsa.es', 'proyeco.es'].includes(d) ? `
-                                <button onclick="removeDomain('${d}')" title="Eliminar">×</button>
-                            ` : ''}
-                        </div>
-                    `).join('')}
-                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Dominio</th>
+                            <th>Usuarios</th>
+                            <th>Tipo</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${domains.map(d => {
+                            const isDefault = defaultDomains.includes(d);
+                            const userCount = usersByDomain[d] || 0;
+
+                            return `
+                                <tr>
+                                    <td>
+                                        <strong>@${d}</strong>
+                                    </td>
+                                    <td>
+                                        <span class="badge ${userCount > 0 ? 'badge-info' : 'badge-secondary'}">
+                                            ${userCount} usuario${userCount !== 1 ? 's' : ''}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge ${isDefault ? 'badge-success' : 'badge-warning'}">
+                                            ${isDefault ? 'Por defecto' : 'Personalizado'}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        ${!isDefault ? `
+                                            <button class="btn btn-danger btn-sm" onclick="removeDomain('${d}')">
+                                                Eliminar
+                                            </button>
+                                        ` : '<span class="badge badge-info">Protegido</span>'}
+                                    </td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
             `;
 
             container.innerHTML = html;
