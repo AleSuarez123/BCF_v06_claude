@@ -1123,8 +1123,37 @@ function toSnapshotUrl(issue) {
  * Abre el panel en modo edición individual
  */
 function openSingle(guid) {
-  const issue = AppState?.currentIssues?.find(i => i.guid === guid);
-  if (!issue) return;
+  console.log('🟢 [openSingle] guid recibido:', guid);
+
+  let issue;
+  let isNewIssue = false;
+
+  if (guid === null || guid === undefined) {
+    // Crear nueva incidencia
+    console.log('🟢 [openSingle] Creando nueva incidencia');
+    isNewIssue = true;
+    issue = {
+      guid: null,
+      title: '',
+      description: '',
+      topicStatus: 'Open',
+      priority: 'Medium',
+      topicType: 'Error',
+      assignedTo: '',
+      labels: [],
+      dueDate: ''
+    };
+  } else {
+    // Editar incidencia existente
+    issue = AppState?.currentIssues?.find(i => i.guid === guid);
+    if (!issue) {
+      console.warn('🟢 [openSingle] Incidencia no encontrada:', guid);
+      return;
+    }
+  }
+
+  console.log('🟢 [openSingle] Incidencia:', isNewIssue ? 'NUEVA' : issue.title);
+
   const form = {
     title: issue.title || '',
     description: issue.description || '',
@@ -1135,7 +1164,9 @@ function openSingle(guid) {
     labels: (issue.labels || []).join(', '),
     dueDate: issue.dueDate || ''
   };
-  const snapshots = [toSnapshotUrl(issue)].filter(Boolean);
+  const snapshots = isNewIssue ? [] : [toSnapshotUrl(issue)].filter(Boolean);
+
+  console.log('🟢 [openSingle] Dispatching OPEN_SINGLE con form:', form);
   store.dispatch({ type: 'OPEN_SINGLE', payload: { guid, form, snapshots } });
 }
 
