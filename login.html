@@ -113,7 +113,7 @@
 
         .login-button {
             padding: 14px 24px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: var(--gradient-primary, linear-gradient(135deg, #667eea 0%, #764ba2 100%));
             color: white;
             border: none;
             border-radius: 8px;
@@ -126,7 +126,7 @@
 
         .login-button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 10px 25px rgba(var(--color-primary), 0.4);
         }
 
         .login-button:active {
@@ -392,6 +392,21 @@
 
     <script type="module">
         import { AuthMgr } from './js/auth-manager.js';
+        import { AppConfig, getLogoHTML, getFooterHTML, applyBrandingColors } from './js/app-config.js';
+
+        // Aplicar branding
+        applyBrandingColors();
+
+        // Actualizar logo dinámicamente
+        const logoContainer = document.querySelector('.login-logo');
+        logoContainer.outerHTML = getLogoHTML('medium');
+
+        // Actualizar títulos con configuración
+        document.querySelector('.login-title').textContent = AppConfig.branding.appName;
+        document.querySelector('.login-subtitle').textContent = AppConfig.branding.tagline;
+
+        // Actualizar footer
+        document.querySelector('.login-footer').innerHTML = getFooterHTML();
 
         const form = document.getElementById('login-form');
         const nameInput = document.getElementById('name');
@@ -402,7 +417,7 @@
         const emailValidation = document.getElementById('email-validation');
         const emailSuggestion = document.getElementById('email-suggestion');
 
-        const ALLOWED_DOMAINS = ['gocsa.es', 'proyeco.es'];
+        const ALLOWED_DOMAINS = AppConfig.allowedDomains;
 
         // Verificar si ya está autenticado
         if (AuthMgr.isAuthenticated()) {
