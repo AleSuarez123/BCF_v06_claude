@@ -6,8 +6,10 @@ import { UserDB } from './user-db.js';
 import { SessionDB } from './session-db.js';
 import { AccessRequestDB } from './access-request-db.js';
 import { NotificationDB } from './notification-db.js';
+import { SessionTokenMgr } from './session-token-manager.js';
 
 const CURRENT_USER_KEY = 'bcf_current_user';
+const LAST_EMAIL_KEY = 'bcf_last_email';
 
 class AuthManager {
     constructor() {
@@ -19,7 +21,27 @@ class AuthManager {
      * Inicializar AuthManager
      */
     async initialize() {
-        // Cargar usuario actual si existe sesión
+        // Intentar restaurar sesión con refresh token
+        if (SessionTokenMgr.hasValidToken()) {
+            const token = SessionTokenMgr.getRefreshToken();
+            const user = UserDB.getUserByEmail(token.email);
+
+            if (user && user.status === 'active') {
+                this.currentUser = user;
+                localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+
+                // Renovar token
+                SessionTokenMgr.renewToken();
+
+                console.log('✅ Sesión restaurada automáticamente');
+                return this.currentUser;
+            } else {
+                // Usuario no existe o está bloqueado, limpiar token
+                SessionTokenMgr.clearRefreshToken();
+            }
+        }
+
+        // Cargar usuario actual si existe sesión normal
         const userData = localStorage.getItem(CURRENT_USER_KEY);
         if (userData) {
             this.currentUser = JSON.parse(userData);
@@ -70,7 +92,7 @@ class AuthManager {
      * Intentar login
      * Retorna: { success: boolean, user?: object, message: string, action: 'login' | 'request_created' | 'error' }
      */
-    async login(name, email) {
+    async login(name, email, rememberMe = false) {
         try {
             // Validar inputs
             if (!name || name.trim().length === 0) {
@@ -92,6 +114,9 @@ class AuthManager {
             email = email.toLowerCase().trim();
             name = name.trim();
 
+            // Guardar último email usado
+            localStorage.setItem(LAST_EMAIL_KEY, email);
+
             // Verificar si el usuario ya existe
             let user = UserDB.getUserByEmail(email);
 
@@ -111,6 +136,12 @@ class AuthManager {
 
                 this.currentUser = user;
                 localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+
+                // Si "recordarme" está activado, crear refresh token
+                if (rememberMe) {
+                    const refreshToken = SessionTokenMgr.generateRefreshToken(user.id, user.email);
+                    SessionTokenMgr.saveRefreshToken(refreshToken);
+                }
 
                 // Crear notificación de bienvenida
                 NotificationDB.createNotification({
@@ -138,6 +169,12 @@ class AuthManager {
 
                 this.currentUser = user;
                 localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+
+                // Si "recordarme" está activado, crear refresh token
+                if (rememberMe) {
+                    const refreshToken = SessionTokenMgr.generateRefreshToken(user.id, user.email);
+                    SessionTokenMgr.saveRefreshToken(refreshToken);
+                }
 
                 // Crear notificación de bienvenida
                 NotificationDB.createNotification({
@@ -194,10 +231,18 @@ class AuthManager {
      */
     logout() {
         SessionDB.endSession();
+        SessionTokenMgr.clearRefreshToken(); // Limpiar token de "recordarme"
         this.currentUser = null;
         localStorage.removeItem(CURRENT_USER_KEY);
 
         return true;
+    }
+
+    /**
+     * Obtener último email usado
+     */
+    getLastEmail() {
+        return localStorage.getItem(LAST_EMAIL_KEY) || '';
     }
 
     /**

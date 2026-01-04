@@ -216,6 +216,115 @@
             to { transform: rotate(360deg); }
         }
 
+        /* Checkbox personalizado */
+        .form-check {
+            margin-bottom: 20px;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #4a5568;
+            user-select: none;
+        }
+
+        .checkbox-label input[type="checkbox"] {
+            display: none;
+        }
+
+        .checkbox-custom {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #cbd5e0;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .checkbox-label input[type="checkbox"]:checked + .checkbox-custom {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: #667eea;
+        }
+
+        .checkbox-label input[type="checkbox"]:checked + .checkbox-custom::after {
+            content: '✓';
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .checkbox-label:hover .checkbox-custom {
+            border-color: #667eea;
+        }
+
+        /* Validación de email */
+        .input-with-validation {
+            position: relative;
+        }
+
+        .email-validation-icon {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 18px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .email-validation-icon.valid {
+            opacity: 1;
+            color: #48bb78;
+        }
+
+        .email-validation-icon.invalid {
+            opacity: 1;
+            color: #f56565;
+        }
+
+        .email-suggestion {
+            margin-top: 6px;
+            font-size: 12px;
+            color: #718096;
+            min-height: 18px;
+        }
+
+        .email-suggestion.show {
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-5px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .domain-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            background: #edf2f7;
+            border-radius: 4px;
+            font-weight: 600;
+            color: #4a5568;
+            margin-left: 4px;
+        }
+
+        .domain-badge.allowed {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
         @media (max-width: 500px) {
             .login-container {
                 padding: 32px 24px;
@@ -249,14 +358,26 @@
 
             <div class="form-group">
                 <label for="email" class="form-label">Correo electrónico</label>
-                <input
-                    type="email"
-                    id="email"
-                    class="form-input"
-                    placeholder="tu.email@empresa.com"
-                    required
-                    autocomplete="email"
-                >
+                <div class="input-with-validation">
+                    <input
+                        type="email"
+                        id="email"
+                        class="form-input"
+                        placeholder="tu.email@empresa.com"
+                        required
+                        autocomplete="email"
+                    >
+                    <span class="email-validation-icon" id="email-validation"></span>
+                </div>
+                <div id="email-suggestion" class="email-suggestion"></div>
+            </div>
+
+            <div class="form-check">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="remember-me" checked>
+                    <span class="checkbox-custom"></span>
+                    Recordarme en este dispositivo (30 días)
+                </label>
             </div>
 
             <button type="submit" id="login-button" class="login-button">
@@ -275,13 +396,79 @@
         const form = document.getElementById('login-form');
         const nameInput = document.getElementById('name');
         const emailInput = document.getElementById('email');
+        const rememberMeCheckbox = document.getElementById('remember-me');
         const loginButton = document.getElementById('login-button');
         const alertBox = document.getElementById('alert');
+        const emailValidation = document.getElementById('email-validation');
+        const emailSuggestion = document.getElementById('email-suggestion');
+
+        const ALLOWED_DOMAINS = ['gocsa.es', 'proyeco.es'];
 
         // Verificar si ya está autenticado
         if (AuthMgr.isAuthenticated()) {
             window.location.href = '/index.html';
         }
+
+        // Auto-completar último email usado
+        const lastEmail = AuthMgr.getLastEmail();
+        if (lastEmail) {
+            emailInput.value = lastEmail;
+            // Sugerir nombre basado en email
+            const name = lastEmail.split('@')[0].split('.').map(word =>
+                word.charAt(0).toUpperCase() + word.slice(1)
+            ).join(' ');
+            nameInput.placeholder = `Ej: ${name}`;
+        }
+
+        // Validación de email en tiempo real
+        emailInput.addEventListener('input', (e) => {
+            const email = e.target.value.trim();
+
+            // Limpiar validación si está vacío
+            if (!email) {
+                emailValidation.className = 'email-validation-icon';
+                emailSuggestion.textContent = '';
+                emailSuggestion.classList.remove('show');
+                return;
+            }
+
+            // Validar formato de email
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (emailRegex.test(email)) {
+                const domain = email.split('@')[1]?.toLowerCase();
+
+                if (ALLOWED_DOMAINS.includes(domain)) {
+                    emailValidation.className = 'email-validation-icon valid';
+                    emailValidation.textContent = '✓';
+                    emailSuggestion.innerHTML = `✅ Dominio <span class="domain-badge allowed">@${domain}</span> permitido - acceso inmediato`;
+                    emailSuggestion.classList.add('show');
+                } else {
+                    emailValidation.className = 'email-validation-icon valid';
+                    emailValidation.textContent = '✓';
+                    emailSuggestion.innerHTML = `⏳ Dominio <span class="domain-badge">@${domain}</span> requiere aprobación`;
+                    emailSuggestion.classList.add('show');
+                }
+            } else {
+                emailValidation.className = 'email-validation-icon invalid';
+                emailValidation.textContent = '✗';
+                emailSuggestion.textContent = '';
+                emailSuggestion.classList.remove('show');
+            }
+        });
+
+        // Sugerencias de dominio al escribir
+        emailInput.addEventListener('keyup', (e) => {
+            const email = e.target.value;
+
+            // Si el usuario escribe @ pero no ha completado el dominio
+            if (email.includes('@') && !email.split('@')[1]) {
+                const commonDomains = ['gocsa.es', 'proyeco.es', 'gmail.com', 'hotmail.com'];
+                emailSuggestion.innerHTML = `💡 Sugerencias: ${commonDomains.map(d =>
+                    `<span class="domain-badge ${ALLOWED_DOMAINS.includes(d) ? 'allowed' : ''}">@${d}</span>`
+                ).join(' ')}`;
+                emailSuggestion.classList.add('show');
+            }
+        });
 
         function showAlert(message, type = 'info') {
             alertBox.textContent = message;
@@ -308,6 +495,7 @@
 
             const name = nameInput.value.trim();
             const email = emailInput.value.trim();
+            const rememberMe = rememberMeCheckbox.checked;
 
             if (!name || !email) {
                 showAlert('Por favor, completa todos los campos', 'error');
@@ -317,7 +505,7 @@
             setLoading(true);
 
             try {
-                const result = await AuthMgr.login(name, email);
+                const result = await AuthMgr.login(name, email, rememberMe);
 
                 if (result.success) {
                     showAlert(result.message, 'success');
