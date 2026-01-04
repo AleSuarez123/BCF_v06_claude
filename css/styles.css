@@ -1705,6 +1705,25 @@ option {
     justify-content: center;
 }
 
+/* Centrar contenido de todas las columnas excepto título */
+.col-index,
+.col-status,
+.col-priority,
+.col-type,
+.col-assigned,
+.col-creation,
+.col-modification,
+.col-due-date,
+.col-labels,
+.col-comments,
+.col-guid,
+.col-actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
 .col-title {
     display: flex;
     flex-direction: column;
@@ -1735,8 +1754,6 @@ option {
 }
 
 .col-status {
-    display: flex;
-    align-items: center;
     gap: 8px;
     font-weight: 500;
 }
@@ -1746,12 +1763,6 @@ option {
     height: 8px;
     border-radius: 50%;
     flex-shrink: 0;
-}
-
-.col-priority {
-    display: flex;
-    align-items: center;
-    justify-content: center;
 }
 
 .priority-tag {
@@ -1767,7 +1778,7 @@ option {
 .priority-medium { color: var(--priority-medium); background: var(--priority-medium-bg); }
 .priority-low { color: var(--priority-low); background: var(--priority-low-bg); }
 
-.col-type, .col-date {
+.col-type {
     color: var(--text-secondary);
     white-space: nowrap;
     overflow: hidden;
@@ -1775,8 +1786,6 @@ option {
 }
 
 .col-assigned {
-    display: flex;
-    align-items: center;
     overflow: hidden;
 }
 
@@ -1833,6 +1842,13 @@ option {
     gap: 2px;
 }
 
+.user-info-inline {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
 .user-name-small {
     font-size: 0.85rem;
     font-weight: 500;
@@ -1848,19 +1864,37 @@ option {
     white-space: nowrap;
 }
 
-/* Estilos para columna de vencimiento */
+/* Estilos para columna de vencimiento con badge */
 .col-due-date {
     display: flex;
     align-items: center;
+    justify-content: center;
 }
 
-.col-due-date.overdue {
-    background: rgba(239, 68, 68, 0.1);
-    border-left: 3px solid #ef4444;
+.date-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 12px;
+    border-radius: 16px;
+    background: var(--bg-tertiary);
+    font-size: 0.85rem;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: var(--transition);
 }
 
-.due-date-text {
-    font-size: 0.875rem;
+.date-badge:hover {
+    background: var(--border-color);
+}
+
+.date-badge.overdue {
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.date-badge-text {
     white-space: nowrap;
 }
 

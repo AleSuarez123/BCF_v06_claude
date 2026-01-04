@@ -42,12 +42,11 @@ let columnConfig = [
     { id: 'status', width: 'minmax(120px, 1fr)', label: 'ESTADO', icon: HEADER_ICONS.status, resize: true, sortable: true },
     { id: 'priority', width: 'minmax(110px, 1fr)', label: 'PRIORIDAD', icon: HEADER_ICONS.priority, resize: true, sortable: true, align: 'center' },
     { id: 'type', width: 'minmax(110px, 1fr)', label: 'TIPO', icon: HEADER_ICONS.type, resize: true, sortable: true, align: 'center' },
+    { id: 'creation', width: 'minmax(160px, 1.5fr)', label: 'CREACIÓN', icon: HEADER_ICONS.date, resize: true, sortable: true },
+    { id: 'modification', width: 'minmax(160px, 1.5fr)', label: 'MODIFICACIÓN', icon: HEADER_ICONS.date, resize: true, sortable: true },
     { id: 'assigned', width: 'minmax(160px, 1.5fr)', label: 'ASIGNADO A', icon: HEADER_ICONS.assigned, resize: true, sortable: true },
-    { id: 'creation', width: 'minmax(160px, 1.5fr)', label: 'CREACIÓN', icon: HEADER_ICONS.date, resize: true, sortable: true, hidden: true },
-    { id: 'modification', width: 'minmax(160px, 1.5fr)', label: 'MODIFICACIÓN', icon: HEADER_ICONS.date, resize: true, sortable: true, hidden: true },
-    { id: 'dueDate', width: 'minmax(120px, 1fr)', label: 'VENCIMIENTO', icon: HEADER_ICONS.date, resize: true, sortable: true, hidden: true },
-    { id: 'date', width: 'minmax(110px, 1fr)', label: 'FECHA', icon: HEADER_ICONS.date, resize: true, sortable: true },
-    { id: 'labels', width: '150px', label: 'ETIQUETAS', icon: HEADER_ICONS.tag, resize: true, sortable: false, hidden: true },
+    { id: 'dueDate', width: 'minmax(120px, 1fr)', label: 'VENCIMIENTO', icon: HEADER_ICONS.date, resize: true, sortable: true },
+    { id: 'labels', width: '150px', label: 'ETIQUETAS', icon: HEADER_ICONS.tag, resize: true, sortable: false },
     { id: 'comments', width: 'minmax(80px, 0.5fr)', label: 'COMENTARIOS', icon: HEADER_ICONS.comments, resize: true, sortable: false, fixed: true },
     { id: 'guid', width: '48px', label: 'GUID', icon: HEADER_ICONS.guid, resize: true, sortable: false, fixed: true },
     { id: 'actions', width: '80px', fixed: true, label: '' }
@@ -66,12 +65,11 @@ export function updateColumnConfig(newConfigIds) {
         status: { id: 'status', width: 'minmax(120px, 1fr)', label: 'ESTADO', icon: HEADER_ICONS.status, resize: true, sortable: true },
         priority: { id: 'priority', width: 'minmax(110px, 1fr)', label: 'PRIORIDAD', icon: HEADER_ICONS.priority, resize: true, sortable: true },
         type: { id: 'type', width: 'minmax(110px, 1fr)', label: 'TIPO', icon: HEADER_ICONS.type, resize: true, sortable: true, align: 'center' },
-        assigned: { id: 'assigned', width: 'minmax(160px, 1.5fr)', label: 'ASIGNADO A', icon: HEADER_ICONS.assigned, resize: true, sortable: true },
         creation: { id: 'creation', width: 'minmax(160px, 1.5fr)', label: 'CREACIÓN', icon: HEADER_ICONS.date, resize: true, sortable: true },
         modification: { id: 'modification', width: 'minmax(160px, 1.5fr)', label: 'MODIFICACIÓN', icon: HEADER_ICONS.date, resize: true, sortable: true },
+        assigned: { id: 'assigned', width: 'minmax(160px, 1.5fr)', label: 'ASIGNADO A', icon: HEADER_ICONS.assigned, resize: true, sortable: true },
         dueDate: { id: 'dueDate', width: 'minmax(120px, 1fr)', label: 'VENCIMIENTO', icon: HEADER_ICONS.date, resize: true, sortable: true },
         labels: { id: 'labels', width: '150px', label: 'ETIQUETAS', icon: HEADER_ICONS.tag, resize: true, sortable: false },
-        date: { id: 'date', width: 'minmax(110px, 1fr)', label: 'FECHA', icon: HEADER_ICONS.date, resize: true, sortable: true },
         guid: { id: 'guid', width: '48px', label: 'GUID', icon: HEADER_ICONS.guid, resize: true, sortable: false, fixed: true },
         comments: { id: 'comments', width: 'minmax(80px, 0.5fr)', label: 'COMENTARIOS', icon: HEADER_ICONS.comments, resize: true, sortable: false, fixed: true },
         actions: { id: 'actions', width: '80px', fixed: true, label: '' }
@@ -311,7 +309,6 @@ function renderIssuesList(onIssueClick, onFavoriteClick) {
                 case 'creation': valA = new Date(a.creationDate || 0); valB = new Date(b.creationDate || 0); break;
                 case 'modification': valA = new Date(a.modifiedDate || a.modificationDate || 0); valB = new Date(b.modifiedDate || b.modificationDate || 0); break;
                 case 'dueDate': valA = new Date(a.dueDate || '9999-12-31'); valB = new Date(b.dueDate || '9999-12-31'); break;
-                case 'date': valA = new Date(a.creationDate); valB = new Date(b.creationDate); break;
                 default: valA = ''; valB = '';
             }
             
@@ -416,24 +413,30 @@ function getCellContent(col, issue, isFavorite, index) {
             return `<div class="col-labels" style="padding-left: 8px; text-align: center;">${labelChips}</div>`;
         case 'creation':
             const creationAuthor = issue.creationAuthor || 'Desconocido';
-            const creationDate = issue.creationDateFormatted || issue.creationDate || '-';
-            // Formato: DD/MM/AAAA HH:mm
+            const creationInitials = getInitials(creationAuthor);
+            const creationColor = stringToColor(creationAuthor);
             const creationFormatted = formatDateDDMMYYYY(issue.creationDate);
             return `<div class="col-creation">
-                <div class="user-info">
-                    <span class="user-name-small">${escapeHtml(creationAuthor)}</span>
-                    <span class="date-small">${creationFormatted}</span>
+                <div class="user-badge" title="${escapeHtml(creationAuthor)}">
+                    <div class="user-avatar" style="background-color: ${creationColor}">${creationInitials}</div>
+                    <div class="user-info-inline">
+                        <span class="user-name">${escapeHtml(creationAuthor)}</span>
+                        <span class="date-small">${creationFormatted}</span>
+                    </div>
                 </div>
             </div>`;
         case 'modification':
             const modAuthor = issue.modifiedAuthor || issue.modifiedBy || '-';
-            const modDate = issue.modifiedDate || issue.modificationDate || '-';
-            // Formato: DD/MM/AAAA HH:mm
-            const modFormatted = formatDateDDMMYYYY(modDate);
+            const modInitials = getInitials(modAuthor);
+            const modColor = stringToColor(modAuthor);
+            const modFormatted = formatDateDDMMYYYY(issue.modifiedDate || issue.modificationDate);
             return `<div class="col-modification">
-                <div class="user-info">
-                    <span class="user-name-small">${escapeHtml(modAuthor)}</span>
-                    <span class="date-small">${modFormatted}</span>
+                <div class="user-badge" title="${escapeHtml(modAuthor)}">
+                    <div class="user-avatar" style="background-color: ${modColor}">${modInitials}</div>
+                    <div class="user-info-inline">
+                        <span class="user-name">${escapeHtml(modAuthor)}</span>
+                        <span class="date-small">${modFormatted}</span>
+                    </div>
                 </div>
             </div>`;
         case 'dueDate':
@@ -441,15 +444,13 @@ function getCellContent(col, issue, isFavorite, index) {
             if (!dueDate) {
                 return `<div class="col-due-date"><span class="text-muted">-</span></div>`;
             }
-            // Formato: DD/MM/AAAA
             const dueDateFormatted = formatDateDDMMYYYY(dueDate, false);
-            // Verificar si está vencido
             const isOverdue = new Date(dueDate) < new Date();
-            return `<div class="col-due-date ${isOverdue ? 'overdue' : ''}">
-                <span class="due-date-text" style="${isOverdue ? 'color: #ef4444; font-weight: 600;' : ''}">${dueDateFormatted}</span>
+            return `<div class="col-due-date">
+                <div class="date-badge ${isOverdue ? 'overdue' : ''}">
+                    <span class="date-badge-text">${dueDateFormatted}</span>
+                </div>
             </div>`;
-        case 'date':
-            return `<div class="col-date">${issue.creationDateFormatted?.split(' ')[0] || '-'}</div>`;
         case 'guid':
             return `
                 <div class="col-guid">
@@ -464,13 +465,32 @@ function getCellContent(col, issue, isFavorite, index) {
             const remoteCount = (issue.bcfComments?.length || 0);
             const commentCount = remoteCount + (issue.comments?.length || 0) + (issue.localComments?.length || 0);
             const unread = Math.max(0, remoteCount - (issue.lastReadRemoteCount || 0));
+
+            // Si hay comentarios sin leer: mostrar icono con círculo y número
+            if (unread > 0) {
+                return `
+                    <div class="col-comments">
+                        <span class="comment-badge has-unread" title="${unread} sin leer de ${commentCount} totales">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                            <span class="unread-badge">${unread}</span>
+                        </span>
+                    </div>`;
+            }
+
+            // Si todos están leídos: mostrar solo el número en texto normal
+            if (commentCount > 0) {
+                return `
+                    <div class="col-comments">
+                        <span class="comment-count" title="${commentCount} comentarios (todos leídos)">
+                            ${commentCount}
+                        </span>
+                    </div>`;
+            }
+
+            // Sin comentarios
             return `
                 <div class="col-comments">
-                    <span class="comment-badge ${commentCount > 0 ? 'has-comments' : ''}" title="${commentCount} comentarios">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                        ${commentCount > 0 ? commentCount : ''}
-                        ${unread > 0 ? `<span class="unread-badge" title="${unread} sin leer">${unread}</span>` : ''}
-                    </span>
+                    <span class="comment-count text-muted">-</span>
                 </div>`;
         case 'actions':
             return `
@@ -1217,7 +1237,6 @@ export function filterIssuesByColumns(issues, columnFilters) {
                 case 'priority': value = issue.priority; break;
                 case 'type': value = issue.topicType; break;
                 case 'assigned': value = issue.assignedTo || ''; break;
-                case 'date': value = issue.creationDate; break;
                 default: return true;
             }
 
