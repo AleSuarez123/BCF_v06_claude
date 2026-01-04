@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Administración - BCF Viewer Pro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        /* Admin Panel Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: #f7fafc;
+            color: #2d3748;
+        }
+
+        .admin-header {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .admin-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1a202c;
+        }
+
+        .admin-user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .admin-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #718096;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #1a202c;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 8px;
+            border-bottom: 2px solid #e2e8f0;
+            margin-bottom: 24px;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            background: none;
+            border: none;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            cursor: pointer;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 15px;
+            font-weight: 500;
+            color: #718096;
+            transition: all 0.2s;
+        }
+
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .section {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin-bottom: 24px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: #1a202c;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            text-align: left;
+            padding: 12px;
+            background: #f7fafc;
+            font-size: 13px;
+            font-weight: 600;
+            color: #4a5568;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 14px;
+        }
+
+        tr:hover {
+            background: #f7fafc;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge-success {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .badge-warning {
+            background: #fef3c7;
+            color: #78350f;
+        }
+
+        .badge-error {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+
+        .badge-info {
+            background: #dbeafe;
+            color: #1e3a8a;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: 'DM Sans', sans-serif;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+
+        .btn-success {
+            background: #48bb78;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #38a169;
+        }
+
+        .btn-danger {
+            background: #f56565;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #e53e3e;
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .btn-secondary:hover {
+            background: #cbd5e0;
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #2d3748;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: 'DM Sans', sans-serif;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 32px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 24px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 48px 24px;
+            color: #718096;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+
+        .alert-success {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .alert-error {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+
+        .domain-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .domain-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            background: #edf2f7;
+            border-radius: 16px;
+            font-size: 13px;
+        }
+
+        .domain-chip button {
+            background: none;
+            border: none;
+            color: #e53e3e;
+            cursor: pointer;
+            padding: 0;
+            font-size: 16px;
+        }
+
+        .logout-btn {
+            padding: 8px 16px;
+            background: #e2e8f0;
+            color: #4a5568;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 600;
+        }
+
+        .logout-btn:hover {
+            background: #cbd5e0;
+        }
+    </style>
+</head>
+<body>
+    <header class="admin-header">
+        <h1 class="admin-title">🛠️ Panel de Administración</h1>
+        <div class="admin-user-info">
+            <span id="admin-name"></span>
+            <button class="logout-btn" onclick="handleLogout()">Cerrar Sesión</button>
+        </div>
+    </header>
+
+    <div class="admin-container">
+        <!-- Estadísticas -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Total Usuarios</div>
+                <div class="stat-value" id="stat-total-users">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Usuarios Activos</div>
+                <div class="stat-value" id="stat-active-users">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Solicitudes Pendientes</div>
+                <div class="stat-value" id="stat-pending-requests">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Total Sesiones</div>
+                <div class="stat-value" id="stat-total-sessions">0</div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('requests')">Solicitudes de Acceso</button>
+            <button class="tab" onclick="switchTab('users')">Usuarios</button>
+            <button class="tab" onclick="switchTab('domains')">Dominios Permitidos</button>
+            <button class="tab" onclick="switchTab('sessions')">Sesiones</button>
+        </div>
+
+        <div id="alert-container"></div>
+
+        <!-- Tab: Solicitudes -->
+        <div id="tab-requests" class="tab-content active">
+            <div class="section">
+                <h2 class="section-title">Solicitudes Pendientes</h2>
+                <div id="requests-container"></div>
+            </div>
+        </div>
+
+        <!-- Tab: Usuarios -->
+        <div id="tab-users" class="tab-content">
+            <div class="section">
+                <h2 class="section-title">Gestión de Usuarios</h2>
+                <div id="users-container"></div>
+            </div>
+        </div>
+
+        <!-- Tab: Dominios -->
+        <div id="tab-domains" class="tab-content">
+            <div class="section">
+                <h2 class="section-title">Dominios Permitidos</h2>
+                <div id="domains-container"></div>
+                <div style="margin-top: 20px;">
+                    <button class="btn btn-primary" onclick="showAddDomainModal()">Añadir Dominio</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: Sesiones -->
+        <div id="tab-sessions" class="tab-content">
+            <div class="section">
+                <h2 class="section-title">Historial de Sesiones</h2>
+                <div id="sessions-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Aprobar Solicitud -->
+    <div id="approve-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">Aprobar Solicitud</div>
+            <div id="approve-modal-body"></div>
+            <div class="form-group">
+                <label class="form-label">Notas (opcional)</label>
+                <textarea id="approve-notes" class="form-input" rows="3" placeholder="Añadir comentarios..."></textarea>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('approve-modal')">Cancelar</button>
+                <button class="btn btn-success" onclick="confirmApprove()">Aprobar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Denegar Solicitud -->
+    <div id="deny-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">Denegar Solicitud</div>
+            <div id="deny-modal-body"></div>
+            <div class="form-group">
+                <label class="form-label">Motivo (opcional)</label>
+                <textarea id="deny-notes" class="form-input" rows="3" placeholder="Razón de la denegación..."></textarea>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('deny-modal')">Cancelar</button>
+                <button class="btn btn-danger" onclick="confirmDeny()">Denegar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Añadir Dominio -->
+    <div id="add-domain-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">Añadir Dominio Permitido</div>
+            <div class="form-group">
+                <label class="form-label">Dominio</label>
+                <input type="text" id="new-domain" class="form-input" placeholder="ejemplo.com">
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('add-domain-modal')">Cancelar</button>
+                <button class="btn btn-primary" onclick="confirmAddDomain()">Añadir</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { AuthMgr } from './js/auth-manager.js';
+        import { UserDB } from './js/user-db.js';
+        import { SessionDB } from './js/session-db.js';
+        import { AccessRequestDB } from './js/access-request-db.js';
+
+        // Verificar autenticación y permisos de administrador
+        if (!AuthMgr.isAuthenticated()) {
+            window.location.href = '/login.html';
+        }
+
+        if (!AuthMgr.isAdmin()) {
+            alert('No tienes permisos de administrador');
+            window.location.href = '/index.html';
+        }
+
+        // Globales
+        window.currentRequestId = null;
+        window.UserDB = UserDB;
+        window.SessionDB = SessionDB;
+        window.AccessRequestDB = AccessRequestDB;
+        window.AuthMgr = AuthMgr;
+
+        // Mostrar nombre del admin
+        document.getElementById('admin-name').textContent = AuthMgr.getCurrentUser().name;
+
+        // Cargar datos iniciales
+        loadStats();
+        loadRequests();
+        loadUsers();
+        loadDomains();
+        loadSessions();
+
+        // Funciones globales
+        window.switchTab = function(tabName) {
+            // Actualizar tabs
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+
+            event.target.classList.add('active');
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+        };
+
+        window.showAlert = function(message, type = 'success') {
+            const container = document.getElementById('alert-container');
+            container.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+            setTimeout(() => container.innerHTML = '', 5000);
+        };
+
+        window.closeModal = function(modalId) {
+            document.getElementById(modalId).classList.remove('show');
+        };
+
+        window.handleLogout = function() {
+            AuthMgr.logout();
+            window.location.href = '/login.html';
+        };
+
+        function loadStats() {
+            const userStats = UserDB.getStats();
+            const requestStats = AccessRequestDB.getStats();
+            const sessionStats = SessionDB.getStats();
+
+            document.getElementById('stat-total-users').textContent = userStats.totalUsers;
+            document.getElementById('stat-active-users').textContent = userStats.activeUsers;
+            document.getElementById('stat-pending-requests').textContent = requestStats.pending;
+            document.getElementById('stat-total-sessions').textContent = sessionStats.totalSessions;
+        }
+
+        function loadRequests() {
+            const requests = AccessRequestDB.getPendingRequests();
+            const container = document.getElementById('requests-container');
+
+            if (requests.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📭</div>
+                        <p>No hay solicitudes pendientes</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const html = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Email</th>
+                            <th>Dominio</th>
+                            <th>Fecha</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${requests.map(r => `
+                            <tr>
+                                <td>${r.name}</td>
+                                <td>${r.email}</td>
+                                <td><span class="badge badge-info">@${r.domain}</span></td>
+                                <td>${new Date(r.requestDate).toLocaleString('es-ES')}</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn btn-success btn-sm" onclick="showApproveModal('${r.id}')">
+                                            Aprobar
+                                        </button>
+                                        <button class="btn btn-danger btn-sm" onclick="showDenyModal('${r.id}')">
+                                            Denegar
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+
+            container.innerHTML = html;
+        }
+
+        function loadUsers() {
+            const users = UserDB.getAllUsers();
+            const container = document.getElementById('users-container');
+
+            const html = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Email</th>
+                            <th>Rol</th>
+                            <th>Estado</th>
+                            <th>Último Acceso</th>
+                            <th>Logins</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${users.map(u => `
+                            <tr>
+                                <td>${u.name}</td>
+                                <td>${u.email}</td>
+                                <td><span class="badge ${u.role === 'admin' ? 'badge-warning' : 'badge-info'}">${u.role === 'admin' ? 'Admin' : 'Usuario'}</span></td>
+                                <td><span class="badge ${u.status === 'active' ? 'badge-success' : 'badge-error'}">${u.status === 'active' ? 'Activo' : 'Bloqueado'}</span></td>
+                                <td>${u.lastLogin ? new Date(u.lastLogin).toLocaleString('es-ES') : '-'}</td>
+                                <td>${u.loginCount || 0}</td>
+                                <td>
+                                    ${u.role !== 'admin' ? `
+                                        <button class="btn ${u.status === 'active' ? 'btn-danger' : 'btn-success'} btn-sm"
+                                                onclick="toggleUserStatus('${u.id}', '${u.status}')">
+                                            ${u.status === 'active' ? 'Bloquear' : 'Desbloquear'}
+                                        </button>
+                                    ` : '<span class="badge badge-warning">Admin</span>'}
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+
+            container.innerHTML = html;
+        }
+
+        function loadDomains() {
+            const domains = UserDB.getAllowedDomains();
+            const container = document.getElementById('domains-container');
+
+            const html = `
+                <div class="domain-list">
+                    ${domains.map(d => `
+                        <div class="domain-chip">
+                            <span>@${d}</span>
+                            ${!['gocsa.es', 'proyeco.es'].includes(d) ? `
+                                <button onclick="removeDomain('${d}')" title="Eliminar">×</button>
+                            ` : ''}
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+
+            container.innerHTML = html;
+        }
+
+        function loadSessions() {
+            const sessions = SessionDB.getAllSessions().sort((a, b) => b.startTime - a.startTime).slice(0, 50);
+            const container = document.getElementById('sessions-container');
+
+            const html = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Usuario</th>
+                            <th>Email</th>
+                            <th>Inicio</th>
+                            <th>Última Actividad</th>
+                            <th>Duración</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${sessions.map(s => {
+                            const duration = Math.round((s.duration || 0) / 1000 / 60);
+                            return `
+                                <tr>
+                                    <td>${s.userName}</td>
+                                    <td>${s.userEmail}</td>
+                                    <td>${new Date(s.startTime).toLocaleString('es-ES')}</td>
+                                    <td>${new Date(s.lastActivity).toLocaleString('es-ES')}</td>
+                                    <td>${duration} min</td>
+                                    <td><span class="badge ${s.active ? 'badge-success' : 'badge-info'}">${s.active ? 'Activa' : 'Cerrada'}</span></td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+            `;
+
+            container.innerHTML = html;
+        }
+
+        window.showApproveModal = function(requestId) {
+            const request = AccessRequestDB.getRequestById(requestId);
+            window.currentRequestId = requestId;
+
+            document.getElementById('approve-modal-body').innerHTML = `
+                <p><strong>Nombre:</strong> ${request.name}</p>
+                <p><strong>Email:</strong> ${request.email}</p>
+                <p><strong>Dominio:</strong> @${request.domain}</p>
+            `;
+
+            document.getElementById('approve-modal').classList.add('show');
+        };
+
+        window.showDenyModal = function(requestId) {
+            const request = AccessRequestDB.getRequestById(requestId);
+            window.currentRequestId = requestId;
+
+            document.getElementById('deny-modal-body').innerHTML = `
+                <p><strong>Nombre:</strong> ${request.name}</p>
+                <p><strong>Email:</strong> ${request.email}</p>
+                <p><strong>Dominio:</strong> @${request.domain}</p>
+            `;
+
+            document.getElementById('deny-modal').classList.add('show');
+        };
+
+        window.confirmApprove = async function() {
+            const notes = document.getElementById('approve-notes').value;
+            const request = AccessRequestDB.approveRequest(window.currentRequestId, AuthMgr.getCurrentUser().email, notes);
+
+            // Crear usuario automáticamente
+            UserDB.createUser({
+                name: request.name,
+                email: request.email,
+                role: 'user'
+            });
+
+            // Enviar email de aprobación
+            await AuthMgr.sendApprovalEmail(request);
+
+            window.closeModal('approve-modal');
+            window.showAlert('Solicitud aprobada y usuario creado correctamente', 'success');
+            loadStats();
+            loadRequests();
+            loadUsers();
+        };
+
+        window.confirmDeny = function() {
+            const notes = document.getElementById('deny-notes').value;
+            AccessRequestDB.denyRequest(window.currentRequestId, AuthMgr.getCurrentUser().email, notes);
+
+            window.closeModal('deny-modal');
+            window.showAlert('Solicitud denegada', 'success');
+            loadStats();
+            loadRequests();
+        };
+
+        window.showAddDomainModal = function() {
+            document.getElementById('new-domain').value = '';
+            document.getElementById('add-domain-modal').classList.add('show');
+        };
+
+        window.confirmAddDomain = function() {
+            const domain = document.getElementById('new-domain').value.trim().toLowerCase();
+
+            if (!domain) {
+                alert('Ingresa un dominio válido');
+                return;
+            }
+
+            UserDB.addAllowedDomain(domain);
+            window.closeModal('add-domain-modal');
+            window.showAlert(`Dominio @${domain} añadido correctamente`, 'success');
+            loadDomains();
+        };
+
+        window.removeDomain = function(domain) {
+            if (confirm(`¿Eliminar el dominio @${domain}?`)) {
+                UserDB.removeAllowedDomain(domain);
+                window.showAlert(`Dominio @${domain} eliminado`, 'success');
+                loadDomains();
+            }
+        };
+
+        window.toggleUserStatus = function(userId, currentStatus) {
+            const user = UserDB.getUserById(userId);
+
+            if (currentStatus === 'active') {
+                if (confirm(`¿Bloquear al usuario ${user.name}?`)) {
+                    UserDB.blockUser(userId);
+                    window.showAlert('Usuario bloqueado', 'success');
+                }
+            } else {
+                UserDB.unblockUser(userId);
+                window.showAlert('Usuario desbloqueado', 'success');
+            }
+
+            loadStats();
+            loadUsers();
+        };
+    </script>
+</body>
+</html>
