@@ -39,11 +39,6 @@ export function initializeAuth() {
         window.notificationCenter = new NotificationCenter().initialize();
     }
 
-    // Si es administrador, añadir botón de admin
-    if (AuthMgr.isAdmin() && !isAdminPage) {
-        addAdminButton();
-    }
-
     console.log(`✅ Usuario autenticado: ${user.name} (${user.email})`);
 }
 
@@ -140,35 +135,6 @@ function addUserInfoToHeader(user) {
             window.location.href = '/admin.html';
         }
     };
-}
-
-/**
- * Añadir botón de administración
- */
-function addAdminButton() {
-    const header = document.querySelector('.header, header, .app-header');
-    if (!header) return;
-
-    if (document.getElementById('admin-quick-btn')) return;
-
-    const btn = document.createElement('a');
-    btn.id = 'admin-quick-btn';
-    btn.href = '/admin.html';
-    btn.className = 'btn btn-sm btn-admin';
-    btn.innerHTML = `
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="3"></circle>
-            <path d="M12 1v6m0 6v10m-7-7h14"/>
-        </svg>
-        Admin
-    `;
-
-    const nav = header.querySelector('nav, .header-nav, .nav');
-    if (nav) {
-        nav.insertBefore(btn, nav.firstChild);
-    } else {
-        header.appendChild(btn);
-    }
 }
 
 /**
@@ -291,23 +257,6 @@ function addUserWidgetStyles() {
 
         .user-menu-item.text-danger {
             color: #e53e3e;
-        }
-
-        .btn-admin {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 6px;
-            font-weight: 600;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .btn-admin:hover {
-            opacity: 0.9;
         }
     `;
 
