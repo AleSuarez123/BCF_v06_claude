@@ -45,6 +45,37 @@
             justify-content: center;
         }
 
+        .admin-brand {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            text-decoration: none;
+            color: inherit;
+            transition: opacity 0.2s;
+        }
+
+        .admin-brand:hover {
+            opacity: 0.8;
+        }
+
+        .admin-brand-text {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .admin-brand-name {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1a202c;
+            line-height: 1.2;
+        }
+
+        .admin-brand-subtitle {
+            font-size: 12px;
+            color: #718096;
+            font-weight: 500;
+        }
+
         .admin-page-title {
             font-size: 24px;
             font-weight: 700;
@@ -422,7 +453,13 @@
 </head>
 <body>
     <header class="admin-header">
-        <div class="admin-logo"></div>
+        <a href="/index.html" class="admin-brand">
+            <div class="admin-logo"></div>
+            <div class="admin-brand-text">
+                <span class="admin-brand-name">BCF Viewer Pro</span>
+                <span class="admin-brand-subtitle">Gestor de Incidencias BIM</span>
+            </div>
+        </a>
         <div class="admin-user-info">
             <span id="admin-name"></span>
             <a href="/index.html" class="back-btn">
@@ -638,6 +675,7 @@
         import { InvitationMgr } from './js/invitation-manager.js';
         import { NotificationDB } from './js/notification-db.js';
         import { LogoManager } from './js/logo-manager.js';
+        import { LogManager } from './js/log-manager.js';
 
         // Verificar autenticación y permisos de administrador
         if (!AuthMgr.isAuthenticated()) {
@@ -925,44 +963,142 @@
         };
 
         window.confirmApprove = async function() {
-            const notes = document.getElementById('approve-notes').value;
-            const request = AccessRequestDB.approveRequest(window.currentRequestId, AuthMgr.getCurrentUser().email, notes);
+            try {
+                const notes = document.getElementById('approve-notes').value;
+                const currentUser = AuthMgr.getCurrentUser();
 
-            // Crear usuario automáticamente
-            const newUser = UserDB.createUser({
-                name: request.name,
-                email: request.email,
-                role: 'user'
-            });
+                // Aprobar solicitud
+                const request = AccessRequestDB.approveRequest(window.currentRequestId, currentUser.email, notes);
 
-            // Crear notificación para el nuevo usuario con link a incidencias
-            NotificationDB.createNotification({
-                userId: newUser.id,
-                type: 'success',
-                title: '¡Bienvenido a BCF Viewer Pro!',
-                message: `Tu solicitud de acceso ha sido aprobada. Ya puedes empezar a gestionar incidencias BIM.`,
-                link: '/index.html',
-                data: { requestId: request.id }
-            });
+                // Log: Solicitud aprobada
+                LogManager.log({
+                    type: LogManager.LogType.REQUEST_APPROVED,
+                    severity: LogManager.Severity.INFO,
+                    message: `Solicitud de acceso aprobada: ${request.email}`,
+                    userId: currentUser.id,
+                    userEmail: currentUser.email,
+                    data: {
+                        requestId: request.id,
+                        requestEmail: request.email,
+                        requestName: request.name,
+                        notes: notes
+                    }
+                });
 
-            // Enviar email de aprobación
-            await AuthMgr.sendApprovalEmail(request);
+                // Crear usuario automáticamente
+                const newUser = UserDB.createUser({
+                    name: request.name,
+                    email: request.email,
+                    role: 'user'
+                });
 
-            window.closeModal('approve-modal');
-            window.showAlert('Solicitud aprobada y usuario creado correctamente', 'success');
-            loadStats();
-            loadRequests();
-            loadUsers();
+                // Log: Usuario creado
+                LogManager.log({
+                    type: LogManager.LogType.USER_CREATED,
+                    severity: LogManager.Severity.INFO,
+                    message: `Usuario creado: ${newUser.email}`,
+                    userId: currentUser.id,
+                    userEmail: currentUser.email,
+                    data: {
+                        newUserId: newUser.id,
+                        newUserEmail: newUser.email,
+                        createdVia: 'approval'
+                    }
+                });
+
+                // Crear notificación para el nuevo usuario con link a incidencias
+                NotificationDB.createNotification({
+                    userId: newUser.id,
+                    type: 'success',
+                    title: '¡Bienvenido a BCF Viewer Pro!',
+                    message: `Tu solicitud de acceso ha sido aprobada. Ya puedes empezar a gestionar incidencias BIM.`,
+                    link: '/index.html',
+                    data: { requestId: request.id }
+                });
+
+                // Simular envío de email con link a incidencias
+                console.log('📧 EMAIL DE APROBACIÓN ENVIADO:');
+                console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+                console.log(`Para: ${request.email}`);
+                console.log(`Asunto: ¡Tu acceso a BCF Viewer Pro ha sido aprobado!`);
+                console.log('');
+                console.log(`Hola ${request.name},`);
+                console.log('');
+                console.log('¡Buenas noticias! Tu solicitud de acceso a BCF Viewer Pro ha sido aprobada.');
+                console.log('');
+                console.log('Ya puedes acceder al sistema y comenzar a gestionar incidencias BIM.');
+                console.log('');
+                console.log('👉 Accede directamente a la gestión de incidencias:');
+                console.log(`${window.location.origin}/index.html`);
+                console.log('');
+                console.log('Usa tu email para iniciar sesión.');
+                console.log('');
+                console.log('Saludos,');
+                console.log('El equipo de BCF Viewer Pro');
+                console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
+                // Log: Email enviado
+                LogManager.log({
+                    type: LogManager.LogType.EMAIL_SENT,
+                    severity: LogManager.Severity.INFO,
+                    message: `Email de aprobación enviado a ${request.email}`,
+                    userId: currentUser.id,
+                    userEmail: currentUser.email,
+                    data: {
+                        recipient: request.email,
+                        type: 'approval',
+                        includesLink: true,
+                        link: '/index.html'
+                    }
+                });
+
+                window.closeModal('approve-modal');
+                window.showAlert('Solicitud aprobada y usuario creado correctamente', 'success');
+                loadStats();
+                loadRequests();
+                loadUsers();
+            } catch (error) {
+                LogManager.logError('Error al aprobar solicitud', error, {
+                    requestId: window.currentRequestId
+                });
+                window.showAlert('Error al aprobar la solicitud: ' + error.message, 'error');
+            }
         };
 
         window.confirmDeny = function() {
-            const notes = document.getElementById('deny-notes').value;
-            AccessRequestDB.denyRequest(window.currentRequestId, AuthMgr.getCurrentUser().email, notes);
+            try {
+                const notes = document.getElementById('deny-notes').value;
+                const currentUser = AuthMgr.getCurrentUser();
 
-            window.closeModal('deny-modal');
-            window.showAlert('Solicitud denegada', 'success');
-            loadStats();
-            loadRequests();
+                // Denegar solicitud (se mueve a historial con estado 'denied')
+                const request = AccessRequestDB.denyRequest(window.currentRequestId, currentUser.email, notes);
+
+                // Log: Solicitud denegada
+                LogManager.log({
+                    type: LogManager.LogType.REQUEST_DENIED,
+                    severity: LogManager.Severity.INFO,
+                    message: `Solicitud de acceso denegada: ${request.email}`,
+                    userId: currentUser.id,
+                    userEmail: currentUser.email,
+                    data: {
+                        requestId: request.id,
+                        requestEmail: request.email,
+                        requestName: request.name,
+                        notes: notes,
+                        movedToHistory: true
+                    }
+                });
+
+                window.closeModal('deny-modal');
+                window.showAlert('Solicitud denegada y movida al historial', 'success');
+                loadStats();
+                loadRequests();
+            } catch (error) {
+                LogManager.logError('Error al denegar solicitud', error, {
+                    requestId: window.currentRequestId
+                });
+                window.showAlert('Error al denegar la solicitud: ' + error.message, 'error');
+            }
         };
 
         window.showAddDomainModal = function() {
@@ -971,24 +1107,74 @@
         };
 
         window.confirmAddDomain = function() {
-            const domain = document.getElementById('new-domain').value.trim().toLowerCase();
+            try {
+                const domain = document.getElementById('new-domain').value.trim().toLowerCase();
+                const currentUser = AuthMgr.getCurrentUser();
 
-            if (!domain) {
-                alert('Ingresa un dominio válido');
-                return;
+                // Validar dominio vacío
+                if (!domain) {
+                    window.showAlert('Por favor, ingresa un dominio válido', 'error');
+                    return;
+                }
+
+                // Validar formato de dominio (ej: ejemplo.com, sub.ejemplo.es)
+                const domainRegex = /^[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,}$/;
+                if (!domainRegex.test(domain)) {
+                    window.showAlert('Formato de dominio inválido. Ejemplo: ejemplo.com', 'error');
+                    return;
+                }
+
+                // Añadir dominio
+                UserDB.addAllowedDomain(domain);
+
+                // Log: Dominio añadido
+                LogManager.log({
+                    type: LogManager.LogType.DOMAIN_ADDED,
+                    severity: LogManager.Severity.INFO,
+                    message: `Dominio añadido a la lista permitidos: @${domain}`,
+                    userId: currentUser.id,
+                    userEmail: currentUser.email,
+                    data: {
+                        domain: domain,
+                        addedAt: Date.now()
+                    }
+                });
+
+                window.closeModal('add-domain-modal');
+                window.showAlert(`Dominio @${domain} añadido correctamente`, 'success');
+                loadDomains();
+            } catch (error) {
+                LogManager.logError('Error al añadir dominio', error);
+                window.showAlert('Error al añadir el dominio: ' + error.message, 'error');
             }
-
-            UserDB.addAllowedDomain(domain);
-            window.closeModal('add-domain-modal');
-            window.showAlert(`Dominio @${domain} añadido correctamente`, 'success');
-            loadDomains();
         };
 
         window.removeDomain = function(domain) {
             if (confirm(`¿Eliminar el dominio @${domain}?`)) {
-                UserDB.removeAllowedDomain(domain);
-                window.showAlert(`Dominio @${domain} eliminado`, 'success');
-                loadDomains();
+                try {
+                    const currentUser = AuthMgr.getCurrentUser();
+
+                    UserDB.removeAllowedDomain(domain);
+
+                    // Log: Dominio eliminado
+                    LogManager.log({
+                        type: LogManager.LogType.DOMAIN_REMOVED,
+                        severity: LogManager.Severity.WARNING,
+                        message: `Dominio eliminado de la lista permitidos: @${domain}`,
+                        userId: currentUser.id,
+                        userEmail: currentUser.email,
+                        data: {
+                            domain: domain,
+                            removedAt: Date.now()
+                        }
+                    });
+
+                    window.showAlert(`Dominio @${domain} eliminado`, 'success');
+                    loadDomains();
+                } catch (error) {
+                    LogManager.logError('Error al eliminar dominio', error, { domain });
+                    window.showAlert('Error al eliminar el dominio: ' + error.message, 'error');
+                }
             }
         };
 
@@ -1018,59 +1204,105 @@
         };
 
         window.confirmCreateInvitation = function() {
-            const email = document.getElementById('invitation-email').value.trim();
-            const name = document.getElementById('invitation-name').value.trim();
-            const expiryDays = parseInt(document.getElementById('invitation-expiry').value);
+            try {
+                const email = document.getElementById('invitation-email').value.trim();
+                const name = document.getElementById('invitation-name').value.trim();
+                const expiryDays = parseInt(document.getElementById('invitation-expiry').value);
+                const currentUser = AuthMgr.getCurrentUser();
 
-            // Validar email
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!email || !emailRegex.test(email)) {
-                alert('Por favor, ingresa un email válido');
-                return;
+                // Validar email
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!email || !emailRegex.test(email)) {
+                    window.showAlert('Por favor, ingresa un email válido', 'error');
+                    return;
+                }
+
+                // Extraer dominio del email
+                const domain = email.split('@')[1]?.toLowerCase();
+
+                // Crear invitación
+                const invitation = InvitationMgr.createInvitation({
+                    createdBy: currentUser.email,
+                    expiryDays: expiryDays,
+                    maxUses: 1,
+                    allowedDomain: domain
+                });
+
+                // Log: Invitación creada
+                LogManager.log({
+                    type: LogManager.LogType.INVITATION_CREATED,
+                    severity: LogManager.Severity.INFO,
+                    message: `Invitación generada para ${email}`,
+                    userId: currentUser.id,
+                    userEmail: currentUser.email,
+                    data: {
+                        invitationId: invitation.id,
+                        recipientEmail: email,
+                        recipientName: name,
+                        expiryDays: expiryDays,
+                        domain: domain
+                    }
+                });
+
+                // Generar link
+                const invitationLink = InvitationMgr.generateInvitationLink(invitation.token);
+
+                // Simular envío de email con notificación
+                console.log('📧 EMAIL DE INVITACIÓN ENVIADO:');
+                console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+                console.log(`Para: ${email}`);
+                console.log(`Asunto: Invitación a BCF Viewer Pro`);
+                console.log('');
+                console.log(`Hola${name ? ' ' + name : ''},`);
+                console.log('');
+                console.log('Has sido invitado a unirte a BCF Viewer Pro, la plataforma de gestión de incidencias BIM.');
+                console.log('');
+                console.log('📋 Pasos para aceptar la invitación:');
+                console.log('');
+                console.log('1. Haz clic en el siguiente enlace:');
+                console.log(`   ${invitationLink}`);
+                console.log('');
+                console.log('2. Completa el formulario de registro con tu información');
+                console.log('');
+                console.log('3. Una vez registrado, podrás acceder al sistema inmediatamente');
+                console.log('');
+                console.log(`⚠️ Importante: Esta invitación expirará en ${expiryDays} día(s).`);
+                console.log('   Asegúrate de completar el registro antes de esa fecha.');
+                console.log('');
+                console.log('Si tienes alguna pregunta, no dudes en contactarnos.');
+                console.log('');
+                console.log('Saludos,');
+                console.log('El equipo de BCF Viewer Pro');
+                console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
+                // Log: Email enviado
+                LogManager.log({
+                    type: LogManager.LogType.EMAIL_SENT,
+                    severity: LogManager.Severity.INFO,
+                    message: `Email de invitación enviado a ${email}`,
+                    userId: currentUser.id,
+                    userEmail: currentUser.email,
+                    data: {
+                        recipient: email,
+                        type: 'invitation',
+                        invitationId: invitation.id,
+                        includesLink: true
+                    }
+                });
+
+                // Cerrar modal de creación
+                window.closeModal('create-invitation-modal');
+
+                // Mostrar modal con el link
+                document.getElementById('invitation-link-input').value = invitationLink;
+                document.getElementById('invitation-link-modal').classList.add('show');
+
+                // Mostrar alerta de éxito
+                window.showAlert(`Invitación generada y enviada a ${email}`, 'success');
+            } catch (error) {
+                LogManager.logError('Error al generar invitación', error);
+                window.showAlert('Error al generar la invitación: ' + error.message, 'error');
             }
-
-            // Extraer dominio del email
-            const domain = email.split('@')[1]?.toLowerCase();
-
-            // Crear invitación
-            const invitation = InvitationMgr.createInvitation({
-                createdBy: AuthMgr.getCurrentUser().email,
-                expiryDays: expiryDays,
-                maxUses: 1,
-                allowedDomain: domain
-            });
-
-            // Generar link
-            const invitationLink = InvitationMgr.generateInvitationLink(invitation.token);
-
-            // Simular envío de email con notificación
-            console.log('📧 EMAIL DE INVITACIÓN ENVIADO:');
-            console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-            console.log(`Para: ${email}`);
-            console.log(`Asunto: Invitación a BCF Viewer Pro`);
-            console.log('');
-            console.log(`Hola${name ? ' ' + name : ''},`);
-            console.log('');
-            console.log('Has sido invitado a unirte a BCF Viewer Pro.');
-            console.log('');
-            console.log('Para crear tu cuenta, haz clic en el siguiente enlace:');
-            console.log(invitationLink);
-            console.log('');
-            console.log(`Esta invitación expirará en ${expiryDays} día(s).`);
-            console.log('');
-            console.log('Saludos,');
-            console.log('El equipo de BCF Viewer Pro');
-            console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-
-            // Cerrar modal de creación
-            window.closeModal('create-invitation-modal');
-
-            // Mostrar modal con el link
-            document.getElementById('invitation-link-input').value = invitationLink;
-            document.getElementById('invitation-link-modal').classList.add('show');
-
-            // Mostrar alerta de éxito
-            window.showAlert(`Invitación generada y enviada a ${email}`, 'success');
         };
 
         window.copyInvitationLink = function() {
