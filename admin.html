@@ -329,7 +329,7 @@
             justify-content: center;
         }
 
-        .modal.show {
+        .modal.active {
             display: flex;
         }
 
@@ -725,7 +725,7 @@
         };
 
         window.closeModal = function(modalId) {
-            document.getElementById(modalId).classList.remove('show');
+            document.getElementById(modalId).classList.remove('active');
         };
 
         window.handleLogout = function() {
@@ -946,7 +946,7 @@
                 <p><strong>Dominio:</strong> @${request.domain}</p>
             `;
 
-            document.getElementById('approve-modal').classList.add('show');
+            document.getElementById('approve-modal').classList.add('active');
         };
 
         window.showDenyModal = function(requestId) {
@@ -959,7 +959,7 @@
                 <p><strong>Dominio:</strong> @${request.domain}</p>
             `;
 
-            document.getElementById('deny-modal').classList.add('show');
+            document.getElementById('deny-modal').classList.add('active');
         };
 
         window.confirmApprove = async function() {
@@ -1103,7 +1103,7 @@
 
         window.showAddDomainModal = function() {
             document.getElementById('new-domain').value = '';
-            document.getElementById('add-domain-modal').classList.add('show');
+            document.getElementById('add-domain-modal').classList.add('active');
         };
 
         window.confirmAddDomain = function() {
@@ -1200,7 +1200,7 @@
             document.getElementById('invitation-email').value = '';
             document.getElementById('invitation-name').value = '';
             document.getElementById('invitation-expiry').value = '7';
-            document.getElementById('create-invitation-modal').classList.add('show');
+            document.getElementById('create-invitation-modal').classList.add('active');
         };
 
         window.confirmCreateInvitation = function() {
@@ -1295,7 +1295,7 @@
 
                 // Mostrar modal con el link
                 document.getElementById('invitation-link-input').value = invitationLink;
-                document.getElementById('invitation-link-modal').classList.add('show');
+                document.getElementById('invitation-link-modal').classList.add('active');
 
                 // Mostrar alerta de éxito
                 window.showAlert(`Invitación generada y enviada a ${email}`, 'success');
