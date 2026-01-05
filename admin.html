@@ -61,12 +61,33 @@
             padding: 24px;
             border-radius: 12px;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card-icon {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            width: 48px;
+            height: 48px;
+            opacity: 0.1;
         }
 
         .stat-label {
             font-size: 14px;
             color: #718096;
             margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stat-label-icon {
+            width: 20px;
+            height: 20px;
         }
 
         .stat-value {
@@ -368,6 +389,26 @@
         .logout-btn:hover {
             background: #cbd5e0;
         }
+
+        .back-btn {
+            padding: 8px 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .back-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
     </style>
 </head>
 <body>
@@ -375,6 +416,12 @@
         <h1 class="admin-title">🛠️ Panel de Administración</h1>
         <div class="admin-user-info">
             <span id="admin-name"></span>
+            <a href="/index.html" class="back-btn">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M8 14L2 8L8 2M2 8H14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Volver al Panel de Proyectos
+            </a>
             <button class="logout-btn" onclick="handleLogout()">Cerrar Sesión</button>
         </div>
     </header>
@@ -383,19 +430,51 @@
         <!-- Estadísticas -->
         <div class="stats-grid">
             <div class="stat-card">
-                <div class="stat-label">Total Usuarios</div>
+                <svg class="stat-card-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M17 21V19C17 17.9391 16.5786 16.9217 15.8284 16.1716C15.0783 15.4214 14.0609 15 13 15H5C3.93913 15 2.92172 15.4214 2.17157 16.1716C1.42143 16.9217 1 17.9391 1 19V21M23 21V19C22.9993 18.1137 22.7044 17.2528 22.1614 16.5523C21.6184 15.8519 20.8581 15.3516 20 15.13M16 3.13C16.8604 3.3503 17.623 3.8507 18.1676 4.55231C18.7122 5.25392 19.0078 6.11683 19.0078 7.005C19.0078 7.89317 18.7122 8.75608 18.1676 9.45769C17.623 10.1593 16.8604 10.6597 16 10.88M13 7C13 9.20914 11.2091 11 9 11C6.79086 11 5 9.20914 5 7C5 4.79086 6.79086 3 9 3C11.2091 3 13 4.79086 13 7Z" stroke="#667eea" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <div class="stat-label">
+                    <svg class="stat-label-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M17 21V19C17 17.9391 16.5786 16.9217 15.8284 16.1716C15.0783 15.4214 14.0609 15 13 15H5C3.93913 15 2.92172 15.4214 2.17157 16.1716C1.42143 16.9217 1 17.9391 1 19V21M13 7C13 9.20914 11.2091 11 9 11C6.79086 11 5 9.20914 5 7C5 4.79086 6.79086 3 9 3C11.2091 3 13 4.79086 13 7Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    Total Usuarios
+                </div>
                 <div class="stat-value" id="stat-total-users">0</div>
             </div>
             <div class="stat-card">
-                <div class="stat-label">Usuarios Activos</div>
+                <svg class="stat-card-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="#48bb78" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <div class="stat-label">
+                    <svg class="stat-label-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    Usuarios Activos
+                </div>
                 <div class="stat-value" id="stat-active-users">0</div>
             </div>
             <div class="stat-card">
-                <div class="stat-label">Solicitudes Pendientes</div>
+                <svg class="stat-card-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 8V12L15 15M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <div class="stat-label">
+                    <svg class="stat-label-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 8V12L15 15M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    Solicitudes Pendientes
+                </div>
                 <div class="stat-value" id="stat-pending-requests">0</div>
             </div>
             <div class="stat-card">
-                <div class="stat-label">Total Sesiones</div>
+                <svg class="stat-card-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M9 3H5C3.89543 3 3 3.89543 3 5V9M9 21H5C3.89543 21 3 20.1046 3 19V15M21 9V5C21 3.89543 20.1046 3 19 3H15M21 15V19C21 20.1046 20.1046 21 19 21H15M12 12H12.01M18 12H18.01M6 12H6.01" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <div class="stat-label">
+                    <svg class="stat-label-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M9 3H5C3.89543 3 3 3.89543 3 5V9M9 21H5C3.89543 21 3 20.1046 3 19V15M21 9V5C21 3.89543 20.1046 3 19 3H15M21 15V19C21 20.1046 20.1046 21 19 21H15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    Total Sesiones
+                </div>
                 <div class="stat-value" id="stat-total-sessions">0</div>
             </div>
         </div>
@@ -517,6 +596,15 @@
         <div class="modal-content">
             <div class="modal-header">Generar Link de Invitación</div>
             <div class="form-group">
+                <label class="form-label">Email del invitado *</label>
+                <input type="email" id="invitation-email" class="form-input" placeholder="email@ejemplo.com" required>
+                <small style="color: #718096; font-size: 12px;">Se enviará una notificación a este email con el link de invitación</small>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Nombre del invitado (opcional)</label>
+                <input type="text" id="invitation-name" class="form-input" placeholder="Juan Pérez">
+            </div>
+            <div class="form-group">
                 <label class="form-label">Días de validez</label>
                 <select id="invitation-expiry" class="form-input">
                     <option value="1">1 día</option>
@@ -526,22 +614,9 @@
                     <option value="30">30 días</option>
                 </select>
             </div>
-            <div class="form-group">
-                <label class="form-label">Máximo de usos</label>
-                <select id="invitation-max-uses" class="form-input">
-                    <option value="1" selected>1 uso (recomendado)</option>
-                    <option value="3">3 usos</option>
-                    <option value="5">5 usos</option>
-                    <option value="10">10 usos</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label class="form-label">Restringir a dominio (opcional)</label>
-                <input type="text" id="invitation-domain" class="form-input" placeholder="ejemplo.com (dejar vacío para cualquier dominio)">
-            </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary" onclick="closeModal('create-invitation-modal')">Cancelar</button>
-                <button class="btn btn-primary" onclick="confirmCreateInvitation()">Generar Link</button>
+                <button class="btn btn-primary" onclick="confirmCreateInvitation()">Generar y Enviar Invitación</button>
             </div>
         </div>
     </div>
@@ -570,6 +645,7 @@
         import { SessionDB } from './js/session-db.js';
         import { AccessRequestDB } from './js/access-request-db.js';
         import { InvitationMgr } from './js/invitation-manager.js';
+        import { NotificationDB } from './js/notification-db.js';
 
         // Verificar autenticación y permisos de administrador
         if (!AuthMgr.isAuthenticated()) {
@@ -857,10 +933,20 @@
             const request = AccessRequestDB.approveRequest(window.currentRequestId, AuthMgr.getCurrentUser().email, notes);
 
             // Crear usuario automáticamente
-            UserDB.createUser({
+            const newUser = UserDB.createUser({
                 name: request.name,
                 email: request.email,
                 role: 'user'
+            });
+
+            // Crear notificación para el nuevo usuario con link a incidencias
+            NotificationDB.createNotification({
+                userId: newUser.id,
+                type: 'success',
+                title: '¡Bienvenido a BCF Viewer Pro!',
+                message: `Tu solicitud de acceso ha sido aprobada. Ya puedes empezar a gestionar incidencias BIM.`,
+                link: '/index.html',
+                data: { requestId: request.id }
             });
 
             // Enviar email de aprobación
@@ -925,6 +1011,77 @@
 
             loadStats();
             loadUsers();
+        };
+
+        // Funciones de invitación
+        window.showCreateInvitationModal = function() {
+            document.getElementById('invitation-email').value = '';
+            document.getElementById('invitation-name').value = '';
+            document.getElementById('invitation-expiry').value = '7';
+            document.getElementById('create-invitation-modal').classList.add('show');
+        };
+
+        window.confirmCreateInvitation = function() {
+            const email = document.getElementById('invitation-email').value.trim();
+            const name = document.getElementById('invitation-name').value.trim();
+            const expiryDays = parseInt(document.getElementById('invitation-expiry').value);
+
+            // Validar email
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!email || !emailRegex.test(email)) {
+                alert('Por favor, ingresa un email válido');
+                return;
+            }
+
+            // Extraer dominio del email
+            const domain = email.split('@')[1]?.toLowerCase();
+
+            // Crear invitación
+            const invitation = InvitationMgr.createInvitation({
+                createdBy: AuthMgr.getCurrentUser().email,
+                expiryDays: expiryDays,
+                maxUses: 1,
+                allowedDomain: domain
+            });
+
+            // Generar link
+            const invitationLink = InvitationMgr.generateInvitationLink(invitation.token);
+
+            // Simular envío de email con notificación
+            console.log('📧 EMAIL DE INVITACIÓN ENVIADO:');
+            console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+            console.log(`Para: ${email}`);
+            console.log(`Asunto: Invitación a BCF Viewer Pro`);
+            console.log('');
+            console.log(`Hola${name ? ' ' + name : ''},`);
+            console.log('');
+            console.log('Has sido invitado a unirte a BCF Viewer Pro.');
+            console.log('');
+            console.log('Para crear tu cuenta, haz clic en el siguiente enlace:');
+            console.log(invitationLink);
+            console.log('');
+            console.log(`Esta invitación expirará en ${expiryDays} día(s).`);
+            console.log('');
+            console.log('Saludos,');
+            console.log('El equipo de BCF Viewer Pro');
+            console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
+            // Cerrar modal de creación
+            window.closeModal('create-invitation-modal');
+
+            // Mostrar modal con el link
+            document.getElementById('invitation-link-input').value = invitationLink;
+            document.getElementById('invitation-link-modal').classList.add('show');
+
+            // Mostrar alerta de éxito
+            window.showAlert(`Invitación generada y enviada a ${email}`, 'success');
+        };
+
+        window.copyInvitationLink = function() {
+            const input = document.getElementById('invitation-link-input');
+            input.select();
+            document.execCommand('copy');
+            window.showAlert('Link copiado al portapapeles', 'success');
         };
     </script>
 </body>

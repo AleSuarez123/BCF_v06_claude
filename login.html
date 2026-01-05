@@ -266,6 +266,11 @@
         /* Validación de email */
         .input-with-validation {
             position: relative;
+            width: 100%;
+        }
+
+        .input-with-validation .form-input {
+            width: 100%;
         }
 
         .email-validation-icon {
@@ -350,7 +355,7 @@
                     type="text"
                     id="name"
                     class="form-input"
-                    placeholder="Ej: Juan Pérez"
+                    placeholder="Ej: Alejandro Suárez Santana"
                     required
                     autocomplete="name"
                 >
@@ -450,40 +455,14 @@
             // Validar formato de email
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (emailRegex.test(email)) {
-                const domain = email.split('@')[1]?.toLowerCase();
-
-                if (ALLOWED_DOMAINS.includes(domain)) {
-                    emailValidation.className = 'email-validation-icon valid';
-                    emailValidation.textContent = '✓';
-                    emailSuggestion.innerHTML = `✅ Dominio <span class="domain-badge allowed">@${domain}</span> permitido - acceso inmediato`;
-                    emailSuggestion.classList.add('show');
-                } else {
-                    emailValidation.className = 'email-validation-icon valid';
-                    emailValidation.textContent = '✓';
-                    emailSuggestion.innerHTML = `⏳ Dominio <span class="domain-badge">@${domain}</span> requiere aprobación`;
-                    emailSuggestion.classList.add('show');
-                }
+                emailValidation.className = 'email-validation-icon valid';
+                emailValidation.textContent = '✓';
             } else {
                 emailValidation.className = 'email-validation-icon invalid';
                 emailValidation.textContent = '✗';
-                emailSuggestion.textContent = '';
-                emailSuggestion.classList.remove('show');
             }
         });
 
-        // Sugerencias de dominio al escribir
-        emailInput.addEventListener('keyup', (e) => {
-            const email = e.target.value;
-
-            // Si el usuario escribe @ pero no ha completado el dominio
-            if (email.includes('@') && !email.split('@')[1]) {
-                const commonDomains = ['gocsa.es', 'proyeco.es', 'gmail.com', 'hotmail.com'];
-                emailSuggestion.innerHTML = `💡 Sugerencias: ${commonDomains.map(d =>
-                    `<span class="domain-badge ${ALLOWED_DOMAINS.includes(d) ? 'allowed' : ''}">@${d}</span>`
-                ).join(' ')}`;
-                emailSuggestion.classList.add('show');
-            }
-        });
 
         function showAlert(message, type = 'info') {
             alertBox.textContent = message;
