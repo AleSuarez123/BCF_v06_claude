@@ -70,13 +70,6 @@ function addUserInfoToHeader(user) {
                 </div>
             </div>
             <div class="user-menu-divider"></div>
-            <button class="user-menu-item" onclick="window.authHelpers.viewProfile()">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                    <circle cx="12" cy="7" r="4"></circle>
-                </svg>
-                Mi Perfil
-            </button>
             ${AuthMgr.isAdmin() ? `
                 <button class="user-menu-item" onclick="window.authHelpers.goToAdmin()">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -85,6 +78,14 @@ function addUserInfoToHeader(user) {
                     Panel de Admin
                 </button>
             ` : ''}
+            <button class="user-menu-item" onclick="window.authHelpers.showSupport()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+                Soporte
+            </button>
             <div class="user-menu-divider"></div>
             <button class="user-menu-item text-danger" onclick="window.authHelpers.logout()">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -139,13 +140,196 @@ function addUserInfoToHeader(user) {
                 window.location.href = '/login.html';
             }
         },
-        viewProfile: () => {
-            alert('Función de perfil en desarrollo');
-        },
         goToAdmin: () => {
             window.location.href = '/admin.html';
+        },
+        showSupport: () => {
+            createSupportModal();
         }
     };
+
+    // Crear modal de soporte
+    function createSupportModal() {
+        // Verificar si ya existe el modal
+        let modal = document.getElementById('support-modal');
+        if (modal) {
+            modal.classList.add('active');
+            return;
+        }
+
+        // Crear modal
+        modal = document.createElement('div');
+        modal.id = 'support-modal';
+        modal.className = 'modal';
+        modal.innerHTML = `
+            <div class="modal-backdrop"></div>
+            <div class="modal-content" style="max-width: 600px;">
+                <div class="modal-header">
+                    <h3 style="margin: 0; font-size: 20px; font-weight: 700;">Soporte Técnico</h3>
+                    <button class="modal-close" onclick="closeSupportModal()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #718096;">&times;</button>
+                </div>
+                <div class="modal-body" style="padding: 24px;">
+                    <form id="support-form" onsubmit="submitSupportForm(event)">
+                        <div class="form-group">
+                            <label class="form-label">Tipo de incidencia *</label>
+                            <select id="support-category" class="form-input" required>
+                                <option value="">Selecciona una categoría</option>
+                                <option value="error">Error / Bug</option>
+                                <option value="feature">Solicitud de funcionalidad</option>
+                                <option value="performance">Problema de rendimiento</option>
+                                <option value="ui">Problema de interfaz</option>
+                                <option value="data">Problema con datos</option>
+                                <option value="other">Otro</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Descripción del problema *</label>
+                            <textarea id="support-description" class="form-input" rows="6" placeholder="Describe detalladamente el problema que estás experimentando..." required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Captura de pantalla (opcional)</label>
+                            <input type="file" id="support-screenshot" class="form-input" accept="image/*">
+                            <small style="color: #718096; font-size: 12px; display: block; margin-top: 4px;">Formatos permitidos: PNG, JPG, GIF (máx. 5MB)</small>
+                        </div>
+                        <div style="background: #f7fafc; padding: 12px; border-radius: 6px; margin-bottom: 16px;">
+                            <small style="color: #4a5568; font-size: 12px;">
+                                <strong>Información del sistema:</strong><br>
+                                Navegador: <span id="browser-info"></span><br>
+                                Sistema operativo: <span id="os-info"></span><br>
+                                URL actual: <span id="url-info"></span>
+                            </small>
+                        </div>
+                        <div class="modal-footer" style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px;">
+                            <button type="button" class="btn btn-secondary" onclick="closeSupportModal()">Cancelar</button>
+                            <button type="submit" class="btn btn-primary">Enviar Reporte</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        // Rellenar información del sistema
+        document.getElementById('browser-info').textContent = getBrowserInfo();
+        document.getElementById('os-info').textContent = getOSInfo();
+        document.getElementById('url-info').textContent = window.location.href;
+
+        // Mostrar modal
+        setTimeout(() => modal.classList.add('active'), 10);
+
+        // Cerrar al hacer clic fuera
+        modal.addEventListener('click', (e) => {
+            if (e.target.classList.contains('modal-backdrop')) {
+                closeSupportModal();
+            }
+        });
+    }
+
+    // Función global para cerrar modal de soporte
+    window.closeSupportModal = function() {
+        const modal = document.getElementById('support-modal');
+        if (modal) {
+            modal.classList.remove('active');
+            setTimeout(() => modal.remove(), 300);
+        }
+    };
+
+    // Función global para enviar formulario de soporte
+    window.submitSupportForm = async function(event) {
+        event.preventDefault();
+
+        const user = AuthMgr.getCurrentUser();
+        const category = document.getElementById('support-category').value;
+        const description = document.getElementById('support-description').value;
+        const screenshot = document.getElementById('support-screenshot').files[0];
+
+        // Preparar datos del reporte
+        const reportData = {
+            usuario: {
+                nombre: user.name,
+                email: user.email,
+                rol: user.role
+            },
+            incidencia: {
+                categoria: category,
+                descripcion: description
+            },
+            sistema: {
+                navegador: getBrowserInfo(),
+                sistemaOperativo: getOSInfo(),
+                url: window.location.href,
+                fecha: new Date().toLocaleString('es-ES'),
+                userAgent: navigator.userAgent
+            }
+        };
+
+        // Simular envío de email
+        console.log('📧 EMAIL DE SOPORTE ENVIADO A: asuarez@gocsa.es');
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        console.log('REPORTE DE SOPORTE - BCF Viewer Pro');
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        console.log('');
+        console.log('INFORMACIÓN DEL USUARIO:');
+        console.log(`  Nombre: ${reportData.usuario.nombre}`);
+        console.log(`  Email: ${reportData.usuario.email}`);
+        console.log(`  Rol: ${reportData.usuario.rol}`);
+        console.log('');
+        console.log('DETALLES DE LA INCIDENCIA:');
+        console.log(`  Categoría: ${getCategoryLabel(category)}`);
+        console.log(`  Descripción: ${description}`);
+        console.log('');
+        console.log('INFORMACIÓN DEL SISTEMA:');
+        console.log(`  Navegador: ${reportData.sistema.navegador}`);
+        console.log(`  Sistema Operativo: ${reportData.sistema.sistemaOperativo}`);
+        console.log(`  URL: ${reportData.sistema.url}`);
+        console.log(`  Fecha y Hora: ${reportData.sistema.fecha}`);
+        console.log(`  User Agent: ${reportData.sistema.userAgent}`);
+        console.log('');
+        if (screenshot) {
+            console.log(`  Captura adjunta: ${screenshot.name} (${(screenshot.size / 1024).toFixed(2)} KB)`);
+        }
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
+        // Mostrar confirmación
+        alert('✅ Reporte de soporte enviado correctamente.\n\nNos pondremos en contacto contigo lo antes posible.');
+
+        // Cerrar modal
+        closeSupportModal();
+    };
+
+    // Helpers para detectar navegador y SO
+    function getBrowserInfo() {
+        const ua = navigator.userAgent;
+        if (ua.indexOf('Firefox') > -1) return 'Mozilla Firefox';
+        if (ua.indexOf('Chrome') > -1) return 'Google Chrome';
+        if (ua.indexOf('Safari') > -1) return 'Safari';
+        if (ua.indexOf('Edge') > -1) return 'Microsoft Edge';
+        if (ua.indexOf('Opera') > -1 || ua.indexOf('OPR') > -1) return 'Opera';
+        return 'Desconocido';
+    }
+
+    function getOSInfo() {
+        const ua = navigator.userAgent;
+        if (ua.indexOf('Win') > -1) return 'Windows';
+        if (ua.indexOf('Mac') > -1) return 'macOS';
+        if (ua.indexOf('Linux') > -1) return 'Linux';
+        if (ua.indexOf('Android') > -1) return 'Android';
+        if (ua.indexOf('iOS') > -1) return 'iOS';
+        return 'Desconocido';
+    }
+
+    function getCategoryLabel(category) {
+        const labels = {
+            'error': 'Error / Bug',
+            'feature': 'Solicitud de funcionalidad',
+            'performance': 'Problema de rendimiento',
+            'ui': 'Problema de interfaz',
+            'data': 'Problema con datos',
+            'other': 'Otro'
+        };
+        return labels[category] || category;
+    }
 }
 
 /**

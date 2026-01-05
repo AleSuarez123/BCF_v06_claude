@@ -140,8 +140,8 @@ class NotificationCenter {
 
             .notification-badge {
                 position: absolute;
-                top: 4px;
-                right: 4px;
+                top: 2px;
+                right: 2px;
                 background: #ef4444;
                 color: white;
                 border-radius: 10px;
@@ -150,6 +150,8 @@ class NotificationCenter {
                 font-weight: 700;
                 min-width: 18px;
                 text-align: center;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+                border: 2px solid white;
             }
 
             /* Ocultar panel lateral viejo del sistema antiguo */
