@@ -72,17 +72,19 @@ function addUserInfoToHeader(user) {
             <div class="user-menu-divider"></div>
             ${AuthMgr.isAdmin() ? `
                 <button class="user-menu-item" onclick="window.authHelpers.goToAdmin()">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M12 2v6m0 4v10m-7-7h14m-7-7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5z"/>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M12 1v6m0 6v6m6.4-15.4l-4.2 4.2m-4.4 4.4l-4.2 4.2m16.8-4.2l-4.2-4.2m-4.4-4.4l-4.2-4.2"></path>
                     </svg>
                     Panel de Admin
                 </button>
             ` : ''}
             <button class="user-menu-item" onclick="window.authHelpers.showSupport()">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
-                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                    <circle cx="9" cy="10" r="1"></circle>
+                    <circle cx="15" cy="10" r="1"></circle>
+                    <path d="M9 15c.7.6 1.8 1 3 1s2.3-.4 3-1"></path>
                 </svg>
                 Soporte
             </button>
@@ -171,15 +173,31 @@ function addUserInfoToHeader(user) {
                 <div class="modal-body" style="padding: 24px;">
                     <form id="support-form" onsubmit="submitSupportForm(event)">
                         <div class="form-group">
-                            <label class="form-label">Tipo de incidencia *</label>
-                            <select id="support-category" class="form-input" required>
-                                <option value="">Selecciona una categoría</option>
-                                <option value="error">Error / Bug</option>
-                                <option value="feature">Solicitud de funcionalidad</option>
-                                <option value="performance">Problema de rendimiento</option>
-                                <option value="ui">Problema de interfaz</option>
-                                <option value="data">Problema con datos</option>
-                                <option value="other">Otro</option>
+                            <label class="form-label" style="font-weight: 600; color: #2d3748; margin-bottom: 8px; display: block;">Tipo de incidencia *</label>
+                            <select id="support-category" class="form-input support-select" required style="
+                                width: 100%;
+                                padding: 12px 16px;
+                                border: 2px solid #e2e8f0;
+                                border-radius: 8px;
+                                font-size: 14px;
+                                font-family: 'DM Sans', sans-serif;
+                                background: white;
+                                cursor: pointer;
+                                transition: all 0.2s ease;
+                                appearance: none;
+                                background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2716%27 height=%2716%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%23718096%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3e%3cpolyline points=%276 9 12 15 18 9%27%3e%3c/polyline%3e%3c/svg%3e');
+                                background-repeat: no-repeat;
+                                background-position: right 12px center;
+                                background-size: 16px;
+                                padding-right: 40px;
+                            ">
+                                <option value="" disabled selected>Selecciona una categoría...</option>
+                                <option value="error">🐛 Error / Bug</option>
+                                <option value="feature">✨ Solicitud de funcionalidad</option>
+                                <option value="performance">⚡ Problema de rendimiento</option>
+                                <option value="ui">🎨 Problema de interfaz</option>
+                                <option value="data">📊 Problema con datos</option>
+                                <option value="other">💬 Otro</option>
                             </select>
                         </div>
                         <div class="form-group">
@@ -214,6 +232,27 @@ function addUserInfoToHeader(user) {
         document.getElementById('browser-info').textContent = getBrowserInfo();
         document.getElementById('os-info').textContent = getOSInfo();
         document.getElementById('url-info').textContent = window.location.href;
+
+        // Añadir estilos hover/focus al selector
+        const selectElement = document.getElementById('support-category');
+        selectElement.addEventListener('focus', function() {
+            this.style.borderColor = '#667eea';
+            this.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.1)';
+        });
+        selectElement.addEventListener('blur', function() {
+            this.style.borderColor = '#e2e8f0';
+            this.style.boxShadow = 'none';
+        });
+        selectElement.addEventListener('mouseover', function() {
+            if (document.activeElement !== this) {
+                this.style.borderColor = '#cbd5e0';
+            }
+        });
+        selectElement.addEventListener('mouseout', function() {
+            if (document.activeElement !== this) {
+                this.style.borderColor = '#e2e8f0';
+            }
+        });
 
         // Mostrar modal
         setTimeout(() => modal.classList.add('active'), 10);
