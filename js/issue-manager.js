@@ -1510,13 +1510,18 @@ export function renderProjects() {
     container.innerHTML = displayProjects.map(p => {
         const fileCount = p.bcfFiles?.length || 0;
         const fileLabel = fileCount === 1 ? 'archivo' : 'archivos';
-        const dateStr = new Date(p.createdAt).toLocaleDateString('es-ES', { 
-            year: 'numeric', 
-            month: '2-digit', 
-            day: '2-digit' 
+        const dateStr = new Date(p.createdAt).toLocaleDateString('es-ES', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
         });
         const initials = getInitials(p.name);
         const color = stringToColor(p.name);
+
+        // Ensure members array exists and get count
+        if (!p.members) p.members = [];
+        const memberCount = p.members.length;
+        const memberLabel = memberCount === 1 ? 'miembro' : 'miembros';
 
         return `
         <div class="project-card ${p.pinned ? 'pinned' : ''}" data-id="${p.id}" onclick="window.loadProject('${p.id}')">
@@ -1525,6 +1530,13 @@ export function renderProjects() {
                     ${initials}
                 </div>
                 <div class="project-actions">
+                    <button class="btn btn-icon btn-ghost btn-sm" onclick="event.stopPropagation(); shareProject('${p.id}')" title="Compartir proyecto">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
+                            <polyline points="16 6 12 2 8 6"></polyline>
+                            <line x1="12" y1="2" x2="12" y2="15"></line>
+                        </svg>
+                    </button>
                     <button class="btn btn-icon btn-ghost btn-sm ${p.pinned ? 'active' : ''}" onclick="event.stopPropagation(); toggleProjectPin('${p.id}')" title="${p.pinned ? 'Desanclar' : 'Anclar'}">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M12 22v-5"></path>
@@ -1553,6 +1565,15 @@ export function renderProjects() {
                             <path d="M16 3v6l3 3H5l3-3V3"></path>
                         </svg>
                     </span>` : ''}
+                    <span title="Miembros del equipo">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="9" cy="7" r="4"></circle>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                        </svg>
+                        ${memberCount} ${memberLabel}
+                    </span>
                     <span title="Archivos">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
@@ -1639,7 +1660,232 @@ export function renderProjects() {
         modal.classList.add('active');
         confirmBtn.focus();
     };
-    
+
+    window.shareProject = async (id) => {
+        const project = AppState.projects.find(p => p.id === id);
+        if (!project) return;
+
+        // Get user-db to search for users
+        const { UserDB } = await import('./user-db.js');
+        const { NotificationDB } = await import('./notification-db.js');
+        const { LogManager } = await import('./log-manager.js');
+        const { AuthMgr } = await import('./auth-manager.js');
+
+        // Create share modal if it doesn't exist
+        let modal = document.getElementById('modal-share-project');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'modal-share-project';
+            modal.className = 'modal';
+            modal.innerHTML = `
+                <div class="modal-backdrop"></div>
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>Compartir Proyecto: ${escapeHtml(project.name)}</h3>
+                        <button class="btn btn-icon btn-ghost" onclick="document.getElementById('modal-share-project').classList.remove('active')">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="share-user-email">Email del usuario</label>
+                            <input type="email" id="share-user-email" class="form-input" placeholder="usuario@ejemplo.com" />
+                            <p class="form-help">Ingresa el email de un usuario registrado en el sistema</p>
+                        </div>
+                        <div class="form-group">
+                            <label for="share-user-role">Rol</label>
+                            <select id="share-user-role" class="form-input">
+                                <option value="member">Miembro (Ver y editar incidencias)</option>
+                                <option value="viewer">Espectador (Solo ver)</option>
+                                <option value="admin">Administrador (Control total)</option>
+                            </select>
+                        </div>
+                        <div class="members-list-section" style="margin-top: 24px;">
+                            <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 12px;">Miembros actuales</h4>
+                            <div id="current-members-list"></div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" onclick="document.getElementById('modal-share-project').classList.remove('active')">Cancelar</button>
+                        <button class="btn btn-primary" id="btn-add-member">Añadir miembro</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+
+            // Close on backdrop click
+            modal.querySelector('.modal-backdrop').addEventListener('click', () => {
+                modal.classList.remove('active');
+            });
+        }
+
+        // Update modal title and current members
+        const updateMembersList = () => {
+            const membersList = document.getElementById('current-members-list');
+            if (!membersList) return;
+
+            if (!project.members || project.members.length === 0) {
+                membersList.innerHTML = '<p style="color: #718096; font-size: 13px;">No hay miembros en este proyecto</p>';
+                return;
+            }
+
+            membersList.innerHTML = project.members.map(member => `
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #f7fafc; border-radius: 6px; margin-bottom: 8px;">
+                    <div>
+                        <div style="font-weight: 600; font-size: 14px;">${escapeHtml(member.name)}</div>
+                        <div style="font-size: 12px; color: #718096;">${escapeHtml(member.email)}</div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <span style="font-size: 12px; padding: 4px 8px; background: #667eea; color: white; border-radius: 4px;">
+                            ${member.role === 'owner' ? 'Propietario' : member.role === 'admin' ? 'Admin' : member.role === 'member' ? 'Miembro' : 'Espectador'}
+                        </span>
+                        ${member.role !== 'owner' ? `
+                        <button class="btn btn-icon btn-ghost btn-sm" onclick="window.removeMemberFromProject('${project.id}', '${member.id}')" title="Eliminar miembro">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                        </button>
+                        ` : ''}
+                    </div>
+                </div>
+            `).join('');
+        };
+
+        updateMembersList();
+
+        // Add member handler
+        const addButton = document.getElementById('btn-add-member');
+        addButton.onclick = async () => {
+            const emailInput = document.getElementById('share-user-email');
+            const roleSelect = document.getElementById('share-user-role');
+            const email = emailInput.value.trim();
+            const role = roleSelect.value;
+
+            if (!email) {
+                alert('Por favor ingresa un email');
+                return;
+            }
+
+            // Check if user exists
+            const user = UserDB.getUserByEmail(email);
+            if (!user) {
+                alert('El usuario no existe en el sistema. Debe estar registrado primero.');
+                return;
+            }
+
+            if (user.status !== 'active') {
+                alert('El usuario no tiene acceso activo al sistema');
+                return;
+            }
+
+            // Check if already a member
+            if (project.members && project.members.find(m => m.id === user.id)) {
+                alert('Este usuario ya es miembro del proyecto');
+                return;
+            }
+
+            // Add member
+            if (!project.members) project.members = [];
+            project.members.push({
+                id: user.id,
+                email: user.email,
+                name: user.name,
+                role: role,
+                addedAt: new Date().toISOString()
+            });
+
+            // Save changes
+            await import('./storage.js').then(m => m.Storage.saveAll());
+
+            // Send notification
+            const currentUser = AuthMgr.getCurrentUser();
+            NotificationDB.createNotification({
+                userId: user.id,
+                type: 'info',
+                title: 'Añadido a un proyecto',
+                message: `${currentUser?.name || 'Un usuario'} te ha añadido al proyecto "${project.name}"`,
+                link: `#/project/${project.id}`
+            });
+
+            // Log the action
+            LogManager.log({
+                type: LogManager.LogType.INFO,
+                severity: LogManager.Severity.INFO,
+                message: `Usuario ${user.email} añadido al proyecto ${project.name}`,
+                userId: currentUser?.id,
+                userEmail: currentUser?.email,
+                data: { projectId: project.id, addedUserId: user.id, role }
+            });
+
+            // Update UI
+            updateMembersList();
+            renderProjects();
+            emailInput.value = '';
+            roleSelect.value = 'member';
+
+            // Show success message
+            import('./ui-utils.js').then(m => m.notify(`${user.name} añadido al proyecto`, 'success'));
+        };
+
+        modal.classList.add('active');
+    };
+
+    window.removeMemberFromProject = async (projectId, memberId) => {
+        const project = AppState.projects.find(p => p.id === projectId);
+        if (!project) return;
+
+        const memberIndex = project.members.findIndex(m => m.id === memberId);
+        if (memberIndex === -1) return;
+
+        const member = project.members[memberIndex];
+
+        if (confirm(`¿Eliminar a ${member.name} del proyecto?`)) {
+            // Remove member
+            project.members.splice(memberIndex, 1);
+
+            // Save changes
+            await import('./storage.js').then(m => m.Storage.saveAll());
+
+            // Send notification
+            const { NotificationDB } = await import('./notification-db.js');
+            const { AuthMgr } = await import('./auth-manager.js');
+            const currentUser = AuthMgr.getCurrentUser();
+
+            NotificationDB.createNotification({
+                userId: memberId,
+                type: 'warning',
+                title: 'Eliminado de un proyecto',
+                message: `Has sido eliminado del proyecto "${project.name}"`
+            });
+
+            // Log
+            const { LogManager } = await import('./log-manager.js');
+            LogManager.log({
+                type: LogManager.LogType.INFO,
+                severity: LogManager.Severity.INFO,
+                message: `Usuario ${member.email} eliminado del proyecto ${project.name}`,
+                userId: currentUser?.id,
+                userEmail: currentUser?.email,
+                data: { projectId, removedUserId: memberId }
+            });
+
+            // Update UI
+            renderProjects();
+
+            // Refresh modal if open
+            const modal = document.getElementById('modal-share-project');
+            if (modal && modal.classList.contains('active')) {
+                window.shareProject(projectId);
+            }
+
+            import('./ui-utils.js').then(m => m.notify(`${member.name} eliminado del proyecto`, 'success'));
+        }
+    };
+
     requestAnimationFrame(() => {
         container.querySelectorAll('.project-card').forEach(card => {
             const id = card.dataset.id;

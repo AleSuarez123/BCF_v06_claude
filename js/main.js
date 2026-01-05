@@ -775,14 +775,24 @@ async function handleFiles(files) {
 }
 
 async function createNewProject(name, description, files = []) {
+    // Get current user to add as project creator
+    const currentUser = await import('./auth-manager.js').then(m => m.AuthMgr.getCurrentUser());
+
     const newProject = {
         id: crypto.randomUUID(),
         name: name,
         description: description || `Creado el ${new Date().toLocaleDateString()}`,
         createdAt: new Date().toISOString(),
-        bcfFiles: []
+        bcfFiles: [],
+        members: currentUser ? [{
+            id: currentUser.id,
+            email: currentUser.email,
+            name: currentUser.name,
+            role: 'owner',
+            addedAt: new Date().toISOString()
+        }] : []
     };
-    
+
     AppState.projects.push(newProject);
     await Storage.saveAll();
     
