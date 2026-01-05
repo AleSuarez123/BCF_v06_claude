@@ -36,11 +36,17 @@ class NotificationCenter {
      * Crear botón de notificaciones en el header
      */
     createNotificationButton() {
+        // Verificar si el botón ya existe (evitar duplicados)
+        // Usar 'btn-notifications' para compatibilidad con ui-panels.js
+        if (document.getElementById('btn-notifications')) {
+            return;
+        }
+
         const header = document.querySelector('.header, header, .app-header');
         if (!header) return;
 
         const button = document.createElement('button');
-        button.id = 'notification-btn';
+        button.id = 'btn-notifications';
         button.className = 'btn btn-icon btn-ghost notification-btn';
         button.title = 'Notificaciones';
         button.innerHTML = `
@@ -53,12 +59,23 @@ class NotificationCenter {
 
         button.onclick = () => this.toggle();
 
-        // Intentar insertar en un lugar apropiado
-        const nav = header.querySelector('nav, .header-nav, .nav');
-        if (nav) {
-            nav.appendChild(button);
+        // Insertar en header-actions, antes del primer botón (keyboard shortcuts)
+        const headerActions = header.querySelector('.header-actions');
+        if (headerActions) {
+            const firstButton = headerActions.querySelector('button');
+            if (firstButton) {
+                headerActions.insertBefore(button, firstButton);
+            } else {
+                headerActions.appendChild(button);
+            }
         } else {
-            header.appendChild(button);
+            // Fallback: buscar nav o añadir directamente al header
+            const nav = header.querySelector('nav, .header-nav, .nav');
+            if (nav) {
+                nav.appendChild(button);
+            } else {
+                header.appendChild(button);
+            }
         }
 
         // Añadir estilos
@@ -101,7 +118,7 @@ class NotificationCenter {
 
         // Click fuera para cerrar
         document.addEventListener('click', (e) => {
-            if (this.isOpen && !panel.contains(e.target) && !e.target.closest('#notification-btn')) {
+            if (this.isOpen && !panel.contains(e.target) && !e.target.closest('#btn-notifications')) {
                 this.close();
             }
         });
@@ -517,7 +534,7 @@ class NotificationCenter {
             this.unsubscribe();
         }
 
-        const btn = document.getElementById('notification-btn');
+        const btn = document.getElementById('btn-notifications');
         if (btn) btn.remove();
 
         if (this.container) {
