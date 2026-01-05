@@ -788,7 +788,6 @@ async function createNewProject(name, description, files = []) {
             id: currentUser.id,
             email: currentUser.email,
             name: currentUser.name,
-            role: 'owner',
             addedAt: new Date().toISOString()
         }] : []
     };

@@ -1520,7 +1520,31 @@ export function renderProjects() {
 
         // Ensure members array exists and get count
         if (!p.members) p.members = [];
-        const memberCount = p.members.length;
+
+        // Extract users from BCF files
+        const bcfUsers = new Set();
+        if (p.bcfFiles && p.bcfFiles.length > 0) {
+            p.bcfFiles.forEach(bcfFile => {
+                if (bcfFile.issues && Array.isArray(bcfFile.issues)) {
+                    bcfFile.issues.forEach(issue => {
+                        if (issue.creationAuthor && issue.creationAuthor.trim() !== '' && issue.creationAuthor !== 'Desconocido') {
+                            bcfUsers.add(issue.creationAuthor.trim());
+                        }
+                        if (issue.assignedTo && issue.assignedTo.trim() !== '') {
+                            bcfUsers.add(issue.assignedTo.trim());
+                        }
+                    });
+                }
+            });
+        }
+
+        // Combine manual members and BCF users (unique count)
+        const allUsers = new Set([
+            ...p.members.map(m => m.email),
+            ...Array.from(bcfUsers)
+        ]);
+
+        const memberCount = allUsers.size;
         const memberLabel = memberCount === 1 ? 'miembro' : 'miembros';
 
         return `
@@ -1661,6 +1685,36 @@ export function renderProjects() {
         confirmBtn.focus();
     };
 
+    /**
+     * Extrae usuarios únicos desde archivos BCF del proyecto
+     * Busca en creationAuthor y assignedTo para evitar duplicados
+     */
+    window.extractUsersFromBCF = (project) => {
+        if (!project.bcfFiles || project.bcfFiles.length === 0) {
+            return [];
+        }
+
+        const uniqueUsers = new Set();
+
+        project.bcfFiles.forEach(bcfFile => {
+            if (bcfFile.issues && Array.isArray(bcfFile.issues)) {
+                bcfFile.issues.forEach(issue => {
+                    // Agregar creationAuthor si existe y no está vacío
+                    if (issue.creationAuthor && issue.creationAuthor.trim() !== '' && issue.creationAuthor !== 'Desconocido') {
+                        uniqueUsers.add(issue.creationAuthor.trim());
+                    }
+
+                    // Agregar assignedTo si existe y no está vacío
+                    if (issue.assignedTo && issue.assignedTo.trim() !== '') {
+                        uniqueUsers.add(issue.assignedTo.trim());
+                    }
+                });
+            }
+        });
+
+        return Array.from(uniqueUsers).sort();
+    };
+
     window.shareProject = async (id) => {
         const project = AppState.projects.find(p => p.id === id);
         if (!project) return;
@@ -1671,6 +1725,10 @@ export function renderProjects() {
         const { LogManager } = await import('./log-manager.js');
         const { AuthMgr } = await import('./auth-manager.js');
 
+        // Extract users from BCF files
+        const bcfUsers = window.extractUsersFromBCF(project);
+        const bcfUserCount = bcfUsers.length;
+
         // Create share modal if it doesn't exist
         let modal = document.getElementById('modal-share-project');
         if (!modal) {
@@ -1679,7 +1737,7 @@ export function renderProjects() {
             modal.className = 'modal';
             modal.innerHTML = `
                 <div class="modal-backdrop"></div>
-                <div class="modal-content">
+                <div class="modal-content" style="max-width: 600px;">
                     <div class="modal-header">
                         <h3>Compartir Proyecto: ${escapeHtml(project.name)}</h3>
                         <button class="btn btn-icon btn-ghost" onclick="document.getElementById('modal-share-project').classList.remove('active')">
@@ -1690,21 +1748,30 @@ export function renderProjects() {
                         </button>
                     </div>
                     <div class="modal-body">
+                        ${bcfUserCount > 0 ? `
+                        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 16px; border-radius: 8px; margin-bottom: 24px; color: white;">
+                            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="9" cy="7" r="4"></circle>
+                                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                                </svg>
+                                <div>
+                                    <div style="font-size: 28px; font-weight: 700; line-height: 1;">${bcfUserCount}</div>
+                                    <div style="font-size: 13px; opacity: 0.9;">Usuario${bcfUserCount === 1 ? '' : 's'} detectado${bcfUserCount === 1 ? '' : 's'} en archivos BCF</div>
+                                </div>
+                            </div>
+                            <div id="bcf-users-list" style="margin-top: 12px; display: flex; flex-wrap: wrap; gap: 6px;"></div>
+                        </div>
+                        ` : ''}
                         <div class="form-group">
                             <label for="share-user-email">Email del usuario</label>
                             <input type="email" id="share-user-email" class="form-input" placeholder="usuario@ejemplo.com" />
                             <p class="form-help">Ingresa el email de un usuario registrado en el sistema</p>
                         </div>
-                        <div class="form-group">
-                            <label for="share-user-role">Rol</label>
-                            <select id="share-user-role" class="form-input">
-                                <option value="member">Miembro (Ver y editar incidencias)</option>
-                                <option value="viewer">Espectador (Solo ver)</option>
-                                <option value="admin">Administrador (Control total)</option>
-                            </select>
-                        </div>
                         <div class="members-list-section" style="margin-top: 24px;">
-                            <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 12px;">Miembros actuales</h4>
+                            <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 12px;">Miembros del proyecto</h4>
                             <div id="current-members-list"></div>
                         </div>
                     </div>
@@ -1722,48 +1789,52 @@ export function renderProjects() {
             });
         }
 
+        // Update BCF users list
+        const updateBCFUsersList = () => {
+            const bcfUsersList = document.getElementById('bcf-users-list');
+            if (!bcfUsersList || bcfUsers.length === 0) return;
+
+            bcfUsersList.innerHTML = bcfUsers.map(user => `
+                <span style="background: rgba(255,255,255,0.2); padding: 4px 10px; border-radius: 12px; font-size: 12px; backdrop-filter: blur(10px);">
+                    ${escapeHtml(user)}
+                </span>
+            `).join('');
+        };
+
         // Update modal title and current members
         const updateMembersList = () => {
             const membersList = document.getElementById('current-members-list');
             if (!membersList) return;
 
             if (!project.members || project.members.length === 0) {
-                membersList.innerHTML = '<p style="color: #718096; font-size: 13px;">No hay miembros en este proyecto</p>';
+                membersList.innerHTML = '<p style="color: #718096; font-size: 13px;">No hay miembros añadidos manualmente</p>';
                 return;
             }
 
             membersList.innerHTML = project.members.map(member => `
                 <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #f7fafc; border-radius: 6px; margin-bottom: 8px;">
-                    <div>
+                    <div style="flex: 1;">
                         <div style="font-weight: 600; font-size: 14px;">${escapeHtml(member.name)}</div>
                         <div style="font-size: 12px; color: #718096;">${escapeHtml(member.email)}</div>
                     </div>
-                    <div style="display: flex; align-items: center; gap: 12px;">
-                        <span style="font-size: 12px; padding: 4px 8px; background: #667eea; color: white; border-radius: 4px;">
-                            ${member.role === 'owner' ? 'Propietario' : member.role === 'admin' ? 'Admin' : member.role === 'member' ? 'Miembro' : 'Espectador'}
-                        </span>
-                        ${member.role !== 'owner' ? `
-                        <button class="btn btn-icon btn-ghost btn-sm" onclick="window.removeMemberFromProject('${project.id}', '${member.id}')" title="Eliminar miembro">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <line x1="18" y1="6" x2="6" y2="18"></line>
-                                <line x1="6" y1="6" x2="18" y2="18"></line>
-                            </svg>
-                        </button>
-                        ` : ''}
-                    </div>
+                    <button class="btn btn-icon btn-ghost btn-sm" onclick="window.removeMemberFromProject('${project.id}', '${member.id}')" title="Eliminar miembro">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
                 </div>
             `).join('');
         };
 
+        updateBCFUsersList();
         updateMembersList();
 
         // Add member handler
         const addButton = document.getElementById('btn-add-member');
         addButton.onclick = async () => {
             const emailInput = document.getElementById('share-user-email');
-            const roleSelect = document.getElementById('share-user-role');
             const email = emailInput.value.trim();
-            const role = roleSelect.value;
 
             if (!email) {
                 alert('Por favor ingresa un email');
@@ -1788,13 +1859,12 @@ export function renderProjects() {
                 return;
             }
 
-            // Add member
+            // Add member (without role)
             if (!project.members) project.members = [];
             project.members.push({
                 id: user.id,
                 email: user.email,
                 name: user.name,
-                role: role,
                 addedAt: new Date().toISOString()
             });
 
@@ -1818,14 +1888,13 @@ export function renderProjects() {
                 message: `Usuario ${user.email} añadido al proyecto ${project.name}`,
                 userId: currentUser?.id,
                 userEmail: currentUser?.email,
-                data: { projectId: project.id, addedUserId: user.id, role }
+                data: { projectId: project.id, addedUserId: user.id }
             });
 
             // Update UI
             updateMembersList();
             renderProjects();
             emailInput.value = '';
-            roleSelect.value = 'member';
 
             // Show success message
             import('./ui-utils.js').then(m => m.notify(`${user.name} añadido al proyecto`, 'success'));
