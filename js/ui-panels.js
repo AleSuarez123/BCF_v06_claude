@@ -140,17 +140,36 @@ export function selectSpotlightResult(resultEl) {
 export function initNotificationsPanel() {
     const btn = $('#btn-notifications');
     const panel = $('#notifications-panel');
-    
-    if (btn) {
-        btn.addEventListener('click', (e) => {
+    const closeBtn = $('#btn-close-notifications');
+
+    if (!btn || !panel) {
+        console.warn('[Notifications] Elementos del panel no encontrados');
+        return;
+    }
+
+    // Abrir/cerrar panel con el botón principal
+    btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isActive = panel.classList.toggle('active');
+        console.log('[Notifications] Panel', isActive ? 'abierto' : 'cerrado');
+    });
+
+    // Cerrar con botón × del panel
+    if (closeBtn) {
+        closeBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            panel.classList.toggle('active');
+            panel.classList.remove('active');
+            console.log('[Notifications] Panel cerrado con botón ×');
         });
     }
 
+    // Cerrar al hacer clic fuera
     document.addEventListener('click', (e) => {
         if (!e.target.closest('#notifications-panel') && !e.target.closest('#btn-notifications')) {
-            panel.classList.remove('active');
+            if (panel.classList.contains('active')) {
+                panel.classList.remove('active');
+                console.log('[Notifications] Panel cerrado (click fuera)');
+            }
         }
     });
 }
