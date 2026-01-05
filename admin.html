@@ -37,6 +37,23 @@
             color: #1a202c;
         }
 
+        .admin-logo {
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .admin-page-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
         .admin-user-info {
             display: flex;
             align-items: center;
@@ -80,14 +97,6 @@
             font-size: 14px;
             color: #718096;
             margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .stat-label-icon {
-            width: 20px;
-            height: 20px;
         }
 
         .stat-value {
@@ -413,7 +422,7 @@
 </head>
 <body>
     <header class="admin-header">
-        <h1 class="admin-title">🛠️ Panel de Administración</h1>
+        <div class="admin-logo"></div>
         <div class="admin-user-info">
             <span id="admin-name"></span>
             <a href="/index.html" class="back-btn">
@@ -427,54 +436,36 @@
     </header>
 
     <div class="admin-container">
+        <h2 class="admin-page-title">Panel de Administración</h2>
+
         <!-- Estadísticas -->
         <div class="stats-grid">
             <div class="stat-card">
                 <svg class="stat-card-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M17 21V19C17 17.9391 16.5786 16.9217 15.8284 16.1716C15.0783 15.4214 14.0609 15 13 15H5C3.93913 15 2.92172 15.4214 2.17157 16.1716C1.42143 16.9217 1 17.9391 1 19V21M23 21V19C22.9993 18.1137 22.7044 17.2528 22.1614 16.5523C21.6184 15.8519 20.8581 15.3516 20 15.13M16 3.13C16.8604 3.3503 17.623 3.8507 18.1676 4.55231C18.7122 5.25392 19.0078 6.11683 19.0078 7.005C19.0078 7.89317 18.7122 8.75608 18.1676 9.45769C17.623 10.1593 16.8604 10.6597 16 10.88M13 7C13 9.20914 11.2091 11 9 11C6.79086 11 5 9.20914 5 7C5 4.79086 6.79086 3 9 3C11.2091 3 13 4.79086 13 7Z" stroke="#667eea" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
-                <div class="stat-label">
-                    <svg class="stat-label-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M17 21V19C17 17.9391 16.5786 16.9217 15.8284 16.1716C15.0783 15.4214 14.0609 15 13 15H5C3.93913 15 2.92172 15.4214 2.17157 16.1716C1.42143 16.9217 1 17.9391 1 19V21M13 7C13 9.20914 11.2091 11 9 11C6.79086 11 5 9.20914 5 7C5 4.79086 6.79086 3 9 3C11.2091 3 13 4.79086 13 7Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                    Total Usuarios
-                </div>
+                <div class="stat-label">Total Usuarios</div>
                 <div class="stat-value" id="stat-total-users">0</div>
             </div>
             <div class="stat-card">
                 <svg class="stat-card-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="#48bb78" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
-                <div class="stat-label">
-                    <svg class="stat-label-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                    Usuarios Activos
-                </div>
+                <div class="stat-label">Usuarios Activos</div>
                 <div class="stat-value" id="stat-active-users">0</div>
             </div>
             <div class="stat-card">
                 <svg class="stat-card-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M12 8V12L15 15M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
-                <div class="stat-label">
-                    <svg class="stat-label-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M12 8V12L15 15M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                    Solicitudes Pendientes
-                </div>
+                <div class="stat-label">Solicitudes Pendientes</div>
                 <div class="stat-value" id="stat-pending-requests">0</div>
             </div>
             <div class="stat-card">
                 <svg class="stat-card-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M9 3H5C3.89543 3 3 3.89543 3 5V9M9 21H5C3.89543 21 3 20.1046 3 19V15M21 9V5C21 3.89543 20.1046 3 19 3H15M21 15V19C21 20.1046 20.1046 21 19 21H15M12 12H12.01M18 12H18.01M6 12H6.01" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
-                <div class="stat-label">
-                    <svg class="stat-label-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M9 3H5C3.89543 3 3 3.89543 3 5V9M9 21H5C3.89543 21 3 20.1046 3 19V15M21 9V5C21 3.89543 20.1046 3 19 3H15M21 15V19C21 20.1046 20.1046 21 19 21H15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                    Total Sesiones
-                </div>
+                <div class="stat-label">Total Sesiones</div>
                 <div class="stat-value" id="stat-total-sessions">0</div>
             </div>
         </div>
@@ -646,6 +637,7 @@
         import { AccessRequestDB } from './js/access-request-db.js';
         import { InvitationMgr } from './js/invitation-manager.js';
         import { NotificationDB } from './js/notification-db.js';
+        import { LogoManager } from './js/logo-manager.js';
 
         // Verificar autenticación y permisos de administrador
         if (!AuthMgr.isAuthenticated()) {
@@ -665,7 +657,11 @@
         window.AuthMgr = AuthMgr;
 
         // Mostrar nombre del admin
-        document.getElementById('admin-name').textContent = AuthMgr.getCurrentUser().name;
+        const currentUser = AuthMgr.getCurrentUser();
+        document.getElementById('admin-name').textContent = currentUser.name;
+
+        // Actualizar logos según dominio del usuario
+        LogoManager.updateAllLogos(currentUser.email);
 
         // Cargar datos iniciales
         loadStats();

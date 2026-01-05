@@ -5,6 +5,7 @@
 
 import { AuthMgr } from './auth-manager.js';
 import { NotificationCenter } from './notification-center.js';
+import { LogoManager } from './logo-manager.js';
 
 /**
  * Verificar autenticación y redirigir si es necesario
@@ -33,6 +34,9 @@ export function initializeAuth() {
 
     // Añadir información del usuario al header
     addUserInfoToHeader(user);
+
+    // Actualizar logos según el dominio del usuario
+    LogoManager.updateAllLogos(user.email);
 
     // Inicializar centro de notificaciones
     if (!window.notificationCenter) {
@@ -109,9 +113,14 @@ function addUserInfoToHeader(user) {
     // Buscar el lugar adecuado para insertar (header-actions)
     const headerActions = header.querySelector('.header-actions');
     if (headerActions) {
-        // Insertar notification button
-        headerActions.appendChild(notificationButton);
-        // Insertar widget de usuario
+        // Insertar notification button al principio (antes del keyboard help)
+        const firstButton = headerActions.querySelector('button');
+        if (firstButton) {
+            headerActions.insertBefore(notificationButton, firstButton);
+        } else {
+            headerActions.appendChild(notificationButton);
+        }
+        // Insertar widget de usuario al final
         headerActions.appendChild(widget);
     } else {
         // Fallback: buscar nav o añadir directamente al header
