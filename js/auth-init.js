@@ -73,18 +73,17 @@ function addUserInfoToHeader(user) {
             ${AuthMgr.isAdmin() ? `
                 <button class="user-menu-item" onclick="window.authHelpers.goToAdmin()">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="3"></circle>
-                        <path d="M12 1v6m0 6v6m6.4-15.4l-4.2 4.2m-4.4 4.4l-4.2 4.2m16.8-4.2l-4.2-4.2m-4.4-4.4l-4.2-4.2"></path>
+                        <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"></path>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
                     </svg>
                     Panel de Admin
                 </button>
             ` : ''}
             <button class="user-menu-item" onclick="window.authHelpers.showSupport()">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                    <circle cx="9" cy="10" r="1"></circle>
-                    <circle cx="15" cy="10" r="1"></circle>
-                    <path d="M9 15c.7.6 1.8 1 3 1s2.3-.4 3-1"></path>
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
                 </svg>
                 Soporte
             </button>
@@ -173,7 +172,7 @@ function addUserInfoToHeader(user) {
                 <div class="modal-body" style="padding: 24px;">
                     <form id="support-form" onsubmit="submitSupportForm(event)">
                         <div class="form-group">
-                            <label class="form-label" style="font-weight: 600; color: #2d3748; margin-bottom: 8px; display: block;">Tipo de incidencia *</label>
+                            <label class="form-label">Tipo de incidencia *</label>
                             <select id="support-category" class="form-input support-select" required style="
                                 width: 100%;
                                 padding: 12px 16px;

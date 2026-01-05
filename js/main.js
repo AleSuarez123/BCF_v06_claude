@@ -381,6 +381,25 @@ function setupModals() {
         });
     }
 
+    // Cerrar modal de atajos con click fuera o ESC
+    const keyboardHelpModal = $('#keyboard-help');
+    if (keyboardHelpModal) {
+        // Cerrar con click en el backdrop
+        const backdrop = keyboardHelpModal.querySelector('.keyboard-help-backdrop');
+        if (backdrop) {
+            backdrop.addEventListener('click', () => {
+                keyboardHelpModal.classList.remove('active');
+            });
+        }
+
+        // Cerrar con ESC (ya implementado en keyboard-shortcuts.js, pero añadimos aquí también por consistencia)
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && keyboardHelpModal.classList.contains('active')) {
+                keyboardHelpModal.classList.remove('active');
+            }
+        });
+    }
+
     // Modal Crear/Editar Incidencia
     const formEditIssue = $('#form-edit-issue');
     if (formEditIssue) {
