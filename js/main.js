@@ -25,6 +25,9 @@ import { initColumnCustomizer } from './column-customizer.js';
 import { openIssueDetail } from './issue-detail.js';
 import { applyBulkStatus, applyBulkUpdate, applyBulkDelete, deselectAllIssues, toggleIssueSelection, selectAllIssues } from './selection-utils.js';
 import { openEditSidebar } from './edit-panel.js';
+import { LogManager } from './log-manager.js';
+import { AuthMgr } from './auth-manager.js';
+import { NotificationDB } from './notification-db.js';
 
 // Inicializar API Client
 export const bcfApi = new BCFApiClient('');

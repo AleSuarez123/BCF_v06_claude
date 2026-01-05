@@ -1426,8 +1426,12 @@ export async function saveIssue(formData) {
         // Actualizar incidencia existente
         const issue = AppState.currentIssues.find(i => i.guid === guid);
         if (issue) {
+            // Guardar el valor anterior de assignedTo antes de actualizar
+            const previousAssignedTo = issue.assignedTo;
+            const newAssignedTo = issueData.assignedTo;
+
             Object.assign(issue, issueData);
-            
+
             // También actualizar en el proyecto persistente
             AppState.projects.forEach(p => {
                 p.bcfFiles.forEach(bcf => {
@@ -1437,6 +1441,9 @@ export async function saveIssue(formData) {
                     }
                 });
             });
+
+            // Verificar si hubo cambio de asignación
+            checkAssignmentChange(issue, previousAssignedTo, newAssignedTo);
         }
     }
 
@@ -1654,5 +1661,229 @@ export function renderProjects() {
                 }, 240);
             }
         });
+    });
+}
+
+/**
+ * Verificar cambio de asignación y notificar si corresponde
+ * @param {Object} issue - La incidencia actualizada
+ * @param {string} previousAssignedTo - Valor anterior de assignedTo
+ * @param {string} newAssignedTo - Nuevo valor de assignedTo
+ */
+function checkAssignmentChange(issue, previousAssignedTo, newAssignedTo) {
+    // Solo proceder si hubo cambio de asignación
+    if (previousAssignedTo === newAssignedTo) return;
+
+    // Importar dinámicamente los módulos necesarios
+    Promise.all([
+        import('./auth-manager.js'),
+        import('./notification-db.js'),
+        import('./log-manager.js'),
+        import('./ui-utils.js')
+    ]).then(([authModule, notifModule, logModule, uiModule]) => {
+        const { AuthMgr } = authModule;
+        const { NotificationDB } = notifModule;
+        const { LogManager } = logModule;
+        const { notify } = uiModule;
+
+        if (!AuthMgr.isAuthenticated()) return;
+
+        const currentUser = AuthMgr.getCurrentUser();
+
+        // Verificar si el usuario actual fue asignado
+        const isAssignedToCurrentUser = newAssignedTo && (
+            newAssignedTo.toLowerCase().includes(currentUser.email.toLowerCase()) ||
+            newAssignedTo.toLowerCase().includes(currentUser.name.toLowerCase())
+        );
+
+        if (isAssignedToCurrentUser) {
+            // Log: Incidencia asignada
+            LogManager.log({
+                type: LogManager.LogType.ISSUE_ASSIGNED,
+                severity: LogManager.Severity.INFO,
+                message: `Incidencia asignada al usuario: ${issue.title}`,
+                userId: currentUser.id,
+                userEmail: currentUser.email,
+                data: {
+                    issueGuid: issue.guid,
+                    issueTitle: issue.title,
+                    issuePriority: issue.priority,
+                    assignedFrom: previousAssignedTo || 'Sin asignar',
+                    assignedTo: newAssignedTo
+                }
+            });
+
+            // Crear notificación en la base de datos
+            const notification = NotificationDB.createNotification({
+                userId: currentUser.id,
+                type: 'issue_assigned',
+                title: '🎯 Nueva incidencia asignada',
+                message: `Se te ha asignado: "${issue.title}"`,
+                link: `#issue-${issue.guid}`,
+                data: {
+                    issueGuid: issue.guid,
+                    issueTitle: issue.title,
+                    issuePriority: issue.priority || 'Medium',
+                    issueStatus: issue.topicStatus || 'Open'
+                }
+            });
+
+            // Mostrar notificación visual temporal (5 segundos)
+            const priorityIcon = {
+                'High': '🔴',
+                'Medium': '🟡',
+                'Low': '🟢',
+                'Critical': '⚠️'
+            }[issue.priority] || '📋';
+
+            const notificationHTML = `
+                <div class="assignment-notification" style="cursor: pointer;" data-guid="${issue.guid}">
+                    <div class="assignment-notification-icon">${priorityIcon}</div>
+                    <div class="assignment-notification-content">
+                        <div class="assignment-notification-title">
+                            <strong>Nueva incidencia asignada</strong>
+                        </div>
+                        <div class="assignment-notification-details">
+                            <div><strong>GUID:</strong> ${issue.guid.substring(0, 8)}...</div>
+                            <div><strong>Título:</strong> ${issue.title}</div>
+                            <div><strong>Prioridad:</strong> ${issue.priority || 'Medium'}</div>
+                        </div>
+                        <div class="assignment-notification-action">
+                            Click para ver la incidencia →
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Crear elemento de notificación
+            const notifEl = document.createElement('div');
+            notifEl.className = 'toast-notification assignment-toast';
+            notifEl.innerHTML = notificationHTML;
+            notifEl.setAttribute('role', 'alert');
+            notifEl.setAttribute('aria-live', 'polite');
+            notifEl.setAttribute('aria-label', `Nueva incidencia asignada: ${issue.title}`);
+
+            // Añadir estilos si no existen
+            if (!document.getElementById('assignment-notification-styles')) {
+                const styles = document.createElement('style');
+                styles.id = 'assignment-notification-styles';
+                styles.textContent = `
+                    .toast-notification {
+                        position: fixed;
+                        top: 80px;
+                        right: 20px;
+                        background: white;
+                        border-radius: 8px;
+                        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                        padding: 16px;
+                        max-width: 400px;
+                        z-index: 10000;
+                        animation: slideInRight 0.3s ease-out;
+                    }
+
+                    @keyframes slideInRight {
+                        from {
+                            transform: translateX(100%);
+                            opacity: 0;
+                        }
+                        to {
+                            transform: translateX(0);
+                            opacity: 1;
+                        }
+                    }
+
+                    @keyframes slideOutRight {
+                        from {
+                            transform: translateX(0);
+                            opacity: 1;
+                        }
+                        to {
+                            transform: translateX(100%);
+                            opacity: 0;
+                        }
+                    }
+
+                    .assignment-notification {
+                        display: flex;
+                        gap: 12px;
+                        align-items: flex-start;
+                    }
+
+                    .assignment-notification-icon {
+                        font-size: 24px;
+                        flex-shrink: 0;
+                    }
+
+                    .assignment-notification-content {
+                        flex: 1;
+                    }
+
+                    .assignment-notification-title {
+                        font-size: 14px;
+                        margin-bottom: 8px;
+                        color: #1a202c;
+                    }
+
+                    .assignment-notification-details {
+                        font-size: 12px;
+                        color: #4a5568;
+                        margin-bottom: 8px;
+                    }
+
+                    .assignment-notification-details div {
+                        margin-bottom: 4px;
+                    }
+
+                    .assignment-notification-action {
+                        font-size: 12px;
+                        color: #667eea;
+                        font-weight: 600;
+                    }
+
+                    .assignment-toast:hover {
+                        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+                    }
+                `;
+                document.head.appendChild(styles);
+            }
+
+            // Añadir al DOM
+            document.body.appendChild(notifEl);
+
+            // Click handler para ir a la incidencia
+            notifEl.addEventListener('click', () => {
+                // Remover notificación
+                notifEl.style.animation = 'slideOutRight 0.3s ease-in';
+                setTimeout(() => notifEl.remove(), 300);
+
+                // Navegar a la incidencia
+                import('./edit-panel.js').then(m => {
+                    m.openEditSidebar(issue.guid);
+                });
+            });
+
+            // Auto-remover después de 5 segundos
+            setTimeout(() => {
+                if (notifEl.parentElement) {
+                    notifEl.style.animation = 'slideOutRight 0.3s ease-in';
+                    setTimeout(() => notifEl.remove(), 300);
+                }
+            }, 5000);
+
+            // Log de notificación enviada
+            LogManager.log({
+                type: LogManager.LogType.NOTIFICATION_SENT,
+                severity: LogManager.Severity.INFO,
+                message: 'Notificación de asignación enviada',
+                userId: currentUser.id,
+                userEmail: currentUser.email,
+                data: {
+                    notificationId: notification.id,
+                    issueGuid: issue.guid
+                }
+            });
+        }
+    }).catch(error => {
+        console.error('Error al verificar asignación:', error);
     });
 }
