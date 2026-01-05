@@ -229,16 +229,17 @@ function initUI() {
     
     // Configurar dropdowns
     setupDropdowns();
-    
+
     // Configurar tema
     setupTheme();
 
     // Inicializar paneles de la interfaz
-    initNotificationsPanel();
-    
+    // DESACTIVADO: initNotificationsPanel() - Ahora se usa NotificationCenter en notification-center.js
+    // initNotificationsPanel();
+
     // Inicializar personalizador de columnas
     initColumnCustomizer();
-    
+
     // Configurar modales y formularios
     setupModals();
 }

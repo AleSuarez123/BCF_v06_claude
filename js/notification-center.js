@@ -152,11 +152,17 @@ class NotificationCenter {
                 text-align: center;
             }
 
+            /* Ocultar panel lateral viejo del sistema antiguo */
+            #notifications-panel {
+                display: none !important;
+            }
+
             .notification-panel {
                 position: fixed;
                 top: 60px;
                 right: 20px;
-                width: 400px;
+                width: 450px;
+                max-width: calc(100vw - 40px);
                 max-height: 600px;
                 background: white;
                 border-radius: 12px;
@@ -245,11 +251,12 @@ class NotificationCenter {
             }
 
             .notification-item {
-                padding: 16px 20px;
+                padding: 20px 24px;
                 border-bottom: 1px solid #e2e8f0;
                 cursor: pointer;
                 transition: background 0.2s;
                 position: relative;
+                margin-bottom: 4px;
             }
 
             .notification-item:hover {
@@ -294,19 +301,25 @@ class NotificationCenter {
             .notification-content {
                 flex: 1;
                 min-width: 0;
+                word-break: break-word;
+                overflow-wrap: break-word;
             }
 
             .notification-title {
                 font-weight: 600;
                 font-size: 14px;
                 color: #1a202c;
-                margin-bottom: 4px;
+                margin-bottom: 8px;
+                line-height: 1.5;
+                word-break: break-word;
             }
 
             .notification-message {
                 font-size: 13px;
                 color: #718096;
-                line-height: 1.4;
+                line-height: 1.6;
+                word-break: break-word;
+                margin-bottom: 6px;
             }
 
             .notification-time {
