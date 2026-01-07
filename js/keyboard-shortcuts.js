@@ -53,6 +53,15 @@ export function initKeyboardShortcuts(actions) {
             return;
         }
 
+        // Ctrl+B: Exportar BCF
+        if ((e.ctrlKey || e.metaKey) && e.key === 'b' && !isInput) {
+            e.preventDefault();
+            if ($('#viewer-page').classList.contains('active') && actions.openBCFExportModal) {
+                actions.openBCFExportModal();
+            }
+            return;
+        }
+
         // Ctrl+P: Exportar PDF
         if ((e.ctrlKey || e.metaKey) && e.key === 'p' && !isInput) {
             e.preventDefault();
