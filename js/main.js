@@ -26,6 +26,9 @@ import { initColumnCustomizer } from './column-customizer.js';
 import { openIssueDetail } from './issue-detail.js';
 import { applyBulkStatus, applyBulkUpdate, applyBulkDelete, deselectAllIssues, toggleIssueSelection, selectAllIssues } from './selection-utils.js';
 import { openEditSidebar } from './edit-panel.js';
+import { LogManager } from './log-manager.js';
+import { AuthMgr } from './auth-manager.js';
+import { NotificationDB } from './notification-db.js';
 
 // Inicializar API Client
 export const bcfApi = new BCFApiClient('');
@@ -45,13 +48,36 @@ const renderAppIssues = () => {
 };
 
 function toggleFavorite(guid) {
-    if (AppState.favorites.has(guid)) {
+    const isFavorite = AppState.favorites.has(guid);
+
+    if (isFavorite) {
         AppState.favorites.delete(guid);
     } else {
         AppState.favorites.add(guid);
     }
     Storage.saveAll();
-    renderAppIssues();
+
+    // Optimización: solo actualizar los botones de favoritos en el DOM
+    // en lugar de re-renderizar toda la lista
+    const newState = !isFavorite;
+    document.querySelectorAll(`.btn-favorite[data-id="${guid}"]`).forEach(btn => {
+        if (newState) {
+            btn.classList.add('active');
+            btn.querySelector('svg').setAttribute('fill', 'currentColor');
+        } else {
+            btn.classList.remove('active');
+            btn.querySelector('svg').setAttribute('fill', 'none');
+        }
+    });
+
+    // También actualizar la clase de la fila/card si existe
+    document.querySelectorAll(`.issue-row[data-id="${guid}"], .issue-card[data-id="${guid}"]`).forEach(el => {
+        if (newState) {
+            el.classList.add('favorite');
+        } else {
+            el.classList.remove('favorite');
+        }
+    });
 }
 
 // Inicialización principal
@@ -205,16 +231,17 @@ function initUI() {
     
     // Configurar dropdowns
     setupDropdowns();
-    
+
     // Configurar tema
     setupTheme();
 
     // Inicializar paneles de la interfaz
-    initNotificationsPanel();
-    
+    // DESACTIVADO: initNotificationsPanel() - Ahora se usa NotificationCenter en notification-center.js
+    // initNotificationsPanel();
+
     // Inicializar personalizador de columnas
     initColumnCustomizer();
-    
+
     // Configurar modales y formularios
     setupModals();
 }
@@ -353,6 +380,25 @@ function setupModals() {
     if (btnKeyboardHelp) {
         btnKeyboardHelp.addEventListener('click', () => {
             toggleKeyboardHelp();
+        });
+    }
+
+    // Cerrar modal de atajos con click fuera o ESC
+    const keyboardHelpModal = $('#keyboard-help');
+    if (keyboardHelpModal) {
+        // Cerrar con click en el backdrop
+        const backdrop = keyboardHelpModal.querySelector('.keyboard-help-backdrop');
+        if (backdrop) {
+            backdrop.addEventListener('click', () => {
+                keyboardHelpModal.classList.remove('active');
+            });
+        }
+
+        // Cerrar con ESC (ya implementado en keyboard-shortcuts.js, pero añadimos aquí también por consistencia)
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && keyboardHelpModal.classList.contains('active')) {
+                keyboardHelpModal.classList.remove('active');
+            }
         });
     }
 
@@ -731,14 +777,23 @@ async function handleFiles(files) {
 }
 
 async function createNewProject(name, description, files = []) {
+    // Get current user to add as project creator
+    const currentUser = await import('./auth-manager.js').then(m => m.AuthMgr.getCurrentUser());
+
     const newProject = {
         id: crypto.randomUUID(),
         name: name,
         description: description || `Creado el ${new Date().toLocaleDateString()}`,
         createdAt: new Date().toISOString(),
-        bcfFiles: []
+        bcfFiles: [],
+        members: currentUser ? [{
+            id: currentUser.id,
+            email: currentUser.email,
+            name: currentUser.name,
+            addedAt: new Date().toISOString()
+        }] : []
     };
-    
+
     AppState.projects.push(newProject);
     await Storage.saveAll();
     
@@ -802,7 +857,7 @@ export async function loadProject(projectId) {
     // Update project name in UI
     const currentNameEl = $('#current-project-name');
     if (currentNameEl) currentNameEl.textContent = project.name;
-    
+
     updateFilterOptions();
     applyFiltersAndSort();
     renderAppIssues();
@@ -1057,7 +1112,7 @@ function setupNavigation() {
             renderAppIssues();
         });
     }
-    
+
     if (btnViewGrid) {
         btnViewGrid.addEventListener('click', () => {
             AppState.viewMode = 'grid';

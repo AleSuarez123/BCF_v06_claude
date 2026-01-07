@@ -1121,6 +1121,23 @@ function toSnapshotUrl(issue) {
  * Abre el panel en modo edición individual
  */
 function openSingle(guid) {
+  // Si guid es null o undefined, crear nueva incidencia
+  if (!guid) {
+    const form = {
+      guid: '',
+      title: '',
+      description: '',
+      status: 'Open',
+      priority: 'Medium',
+      type: 'Error',
+      assigned: '',
+      labels: '',
+      dueDate: ''
+    };
+    store.dispatch({ type: 'OPEN_SINGLE', payload: { guid: '', form, snapshots: [] } });
+    return;
+  }
+
   const issue = AppState?.currentIssues?.find(i => i.guid === guid);
   if (!issue) return;
   const form = {

@@ -42,11 +42,11 @@ let columnConfig = [
     { id: 'status', width: 'minmax(120px, 1fr)', label: 'ESTADO', icon: HEADER_ICONS.status, resize: true, sortable: true },
     { id: 'priority', width: 'minmax(110px, 1fr)', label: 'PRIORIDAD', icon: HEADER_ICONS.priority, resize: true, sortable: true, align: 'center' },
     { id: 'type', width: 'minmax(110px, 1fr)', label: 'TIPO', icon: HEADER_ICONS.type, resize: true, sortable: true, align: 'center' },
+    { id: 'creation', width: 'minmax(160px, 1.5fr)', label: 'CREACIÓN', icon: HEADER_ICONS.date, resize: true, sortable: true },
+    { id: 'modification', width: 'minmax(160px, 1.5fr)', label: 'MODIFICACIÓN', icon: HEADER_ICONS.date, resize: true, sortable: true },
     { id: 'assigned', width: 'minmax(160px, 1.5fr)', label: 'ASIGNADO A', icon: HEADER_ICONS.assigned, resize: true, sortable: true },
-    { id: 'date', width: 'minmax(110px, 1fr)', label: 'CREACIÓN', icon: HEADER_ICONS.date, resize: true, sortable: true },
-    { id: 'date-modified', width: 'minmax(110px, 1fr)', label: 'MODIFICACIÓN', icon: HEADER_ICONS.date, resize: true, sortable: true },
-    { id: 'date-due', width: 'minmax(110px, 1fr)', label: 'VENCIMIENTO', icon: HEADER_ICONS.date, resize: true, sortable: true, hidden: true },
-    { id: 'labels', width: '150px', label: 'ETIQUETAS', icon: HEADER_ICONS.tag, resize: true, sortable: false, hidden: true },
+    { id: 'dueDate', width: 'minmax(120px, 1fr)', label: 'VENCIMIENTO', icon: HEADER_ICONS.date, resize: true, sortable: true },
+    { id: 'labels', width: '150px', label: 'ETIQUETAS', icon: HEADER_ICONS.tag, resize: true, sortable: false },
     { id: 'comments', width: 'minmax(80px, 0.5fr)', label: 'COMENTARIOS', icon: HEADER_ICONS.comments, resize: true, sortable: false, fixed: true },
     { id: 'guid', width: '48px', label: 'GUID', icon: HEADER_ICONS.guid, resize: true, sortable: false, fixed: true },
     { id: 'actions', width: '80px', fixed: true, label: '' }
@@ -65,11 +65,11 @@ export function updateColumnConfig(newConfigIds) {
         status: { id: 'status', width: 'minmax(120px, 1fr)', label: 'ESTADO', icon: HEADER_ICONS.status, resize: true, sortable: true },
         priority: { id: 'priority', width: 'minmax(110px, 1fr)', label: 'PRIORIDAD', icon: HEADER_ICONS.priority, resize: true, sortable: true },
         type: { id: 'type', width: 'minmax(110px, 1fr)', label: 'TIPO', icon: HEADER_ICONS.type, resize: true, sortable: true, align: 'center' },
+        creation: { id: 'creation', width: 'minmax(160px, 1.5fr)', label: 'CREACIÓN', icon: HEADER_ICONS.date, resize: true, sortable: true },
+        modification: { id: 'modification', width: 'minmax(160px, 1.5fr)', label: 'MODIFICACIÓN', icon: HEADER_ICONS.date, resize: true, sortable: true },
         assigned: { id: 'assigned', width: 'minmax(160px, 1.5fr)', label: 'ASIGNADO A', icon: HEADER_ICONS.assigned, resize: true, sortable: true },
+        dueDate: { id: 'dueDate', width: 'minmax(120px, 1fr)', label: 'VENCIMIENTO', icon: HEADER_ICONS.date, resize: true, sortable: true },
         labels: { id: 'labels', width: '150px', label: 'ETIQUETAS', icon: HEADER_ICONS.tag, resize: true, sortable: false },
-        date: { id: 'date', width: 'minmax(110px, 1fr)', label: 'CREACIÓN', icon: HEADER_ICONS.date, resize: true, sortable: true },
-        'date-modified': { id: 'date-modified', width: 'minmax(110px, 1fr)', label: 'MODIFICACIÓN', icon: HEADER_ICONS.date, resize: true, sortable: true },
-        'date-due': { id: 'date-due', width: 'minmax(110px, 1fr)', label: 'VENCIMIENTO', icon: HEADER_ICONS.date, resize: true, sortable: true },
         guid: { id: 'guid', width: '48px', label: 'GUID', icon: HEADER_ICONS.guid, resize: true, sortable: false, fixed: true },
         comments: { id: 'comments', width: 'minmax(80px, 0.5fr)', label: 'COMENTARIOS', icon: HEADER_ICONS.comments, resize: true, sortable: false, fixed: true },
         actions: { id: 'actions', width: '80px', fixed: true, label: '' }
@@ -135,7 +135,7 @@ function stringToColor(str) {
 
 function getInitials(name) {
     if (!name) return '-';
-    
+
     // Si parece un email, usar las 2 primeras letras del usuario (antes del @)
     if (name.includes('@')) {
         const localPart = name.split('@')[0];
@@ -144,7 +144,7 @@ function getInitials(name) {
         }
         return localPart.substring(0, 1).toUpperCase();
     }
-    
+
     // Si no es email, intentar usar iniciales de Nombre Apellido
     return name
         .split(/[\s.@]+/) // Split by space, dot, or @
@@ -152,6 +152,35 @@ function getInitials(name) {
         .slice(0, 2)
         .join('')
         .toUpperCase();
+}
+
+/**
+ * Formatea una fecha ISO al formato DD/MM/AAAA HH:mm o DD/MM/AAAA
+ * @param {string} dateString - Fecha en formato ISO
+ * @param {boolean} includeTime - Si incluir la hora (por defecto true)
+ * @returns {string} Fecha formateada
+ */
+function formatDateDDMMYYYY(dateString, includeTime = true) {
+    if (!dateString || dateString === '-') return '-';
+
+    try {
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return '-';
+
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+
+        if (includeTime) {
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            return `${day}/${month}/${year} ${hours}:${minutes}`;
+        }
+
+        return `${day}/${month}/${year}`;
+    } catch (e) {
+        return '-';
+    }
 }
 
 // Callbacks almacenados para re-renderizado
@@ -277,9 +306,9 @@ function renderIssuesList(onIssueClick, onFavoriteClick) {
                 case 'priority': valA = a.priority; valB = b.priority; break;
                 case 'type': valA = a.topicType; valB = b.topicType; break;
                 case 'assigned': valA = a.assignedTo || ''; valB = b.assignedTo || ''; break;
-                case 'date': valA = new Date(a.creationDate); valB = new Date(b.creationDate); break;
-                case 'date-modified': valA = new Date(a.modifiedDate || a.creationDate); valB = new Date(b.modifiedDate || b.creationDate); break;
-                case 'date-due': valA = new Date(a.dueDate || '2099-12-31'); valB = new Date(b.dueDate || '2099-12-31'); break;
+                case 'creation': valA = new Date(a.creationDate || 0); valB = new Date(b.creationDate || 0); break;
+                case 'modification': valA = new Date(a.modifiedDate || a.modificationDate || 0); valB = new Date(b.modifiedDate || b.modificationDate || 0); break;
+                case 'dueDate': valA = new Date(a.dueDate || '9999-12-31'); valB = new Date(b.dueDate || '9999-12-31'); break;
                 default: valA = ''; valB = '';
             }
             
@@ -371,23 +400,53 @@ function getCellContent(col, issue, isFavorite, index) {
             const labelChips = (issue.labels || []).map(l => {
                 const color = stringToColor(l);
                 return `<span class="label-chip" style="
-                    display: inline-block; 
-                    padding: 2px 6px; 
-                    border-radius: 12px; 
-                    background-color: ${color}20; 
-                    color: ${color}; 
+                    display: inline-block;
+                    padding: 2px 6px;
+                    border-radius: 12px;
+                    background-color: ${color}20;
+                    color: ${color};
                     border: 1px solid ${color}40;
                     font-size: 0.8em;
                     margin-right: 4px;
                 ">${escapeHtml(l)}</span>`;
             }).join('');
             return `<div class="col-labels" style="padding-left: 8px; text-align: center;">${labelChips}</div>`;
-        case 'date':
-            return `<div class="col-date">${issue.creationDateFormatted?.split(' ')[0] || '-'}</div>`;
-        case 'date-modified':
-            return `<div class="col-date">${issue.modifiedDateFormatted?.split(' ')[0] || '-'}</div>`;
-        case 'date-due':
-            return `<div class="col-date">${issue.dueDate?.split('T')[0] || '-'}</div>`;
+        case 'creation':
+            const creationAuthor = issue.creationAuthor || 'Desconocido';
+            const creationInitials = getInitials(creationAuthor);
+            const creationColor = stringToColor(creationAuthor);
+            const creationFormatted = formatDateDDMMYYYY(issue.creationDate);
+            return `<div class="col-creation">
+                <div class="user-badge-inline" title="${escapeHtml(creationAuthor)}">
+                    <div class="user-avatar" style="background-color: ${creationColor}">${creationInitials}</div>
+                    <span class="user-name">${escapeHtml(creationAuthor)}</span>
+                </div>
+                <span class="date-small">${creationFormatted}</span>
+            </div>`;
+        case 'modification':
+            const modAuthor = issue.modifiedAuthor || issue.modifiedBy || '-';
+            const modInitials = getInitials(modAuthor);
+            const modColor = stringToColor(modAuthor);
+            const modFormatted = formatDateDDMMYYYY(issue.modifiedDate || issue.modificationDate);
+            return `<div class="col-modification">
+                <div class="user-badge-inline" title="${escapeHtml(modAuthor)}">
+                    <div class="user-avatar" style="background-color: ${modColor}">${modInitials}</div>
+                    <span class="user-name">${escapeHtml(modAuthor)}</span>
+                </div>
+                <span class="date-small">${modFormatted}</span>
+            </div>`;
+        case 'dueDate':
+            const dueDate = issue.dueDate;
+            if (!dueDate) {
+                return `<div class="col-due-date"><span class="text-muted">-</span></div>`;
+            }
+            const dueDateFormatted = formatDateDDMMYYYY(dueDate, false);
+            const isOverdue = new Date(dueDate) < new Date();
+            return `<div class="col-due-date">
+                <div class="date-badge ${isOverdue ? 'overdue' : ''}">
+                    <span class="date-badge-text">${dueDateFormatted}</span>
+                </div>
+            </div>`;
         case 'guid':
             return `
                 <div class="col-guid">
@@ -402,12 +461,35 @@ function getCellContent(col, issue, isFavorite, index) {
             const remoteCount = (issue.bcfComments?.length || 0);
             const commentCount = remoteCount + (issue.comments?.length || 0) + (issue.localComments?.length || 0);
             const unread = Math.max(0, remoteCount - (issue.lastReadRemoteCount || 0));
+
+            // Si hay comentarios sin leer: mostrar icono con círculo y número
+            if (unread > 0) {
+                return `
+                    <div class="col-comments">
+                        <span class="comment-badge has-unread" title="${unread} sin leer de ${commentCount} totales">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                            <span class="unread-badge">${unread}</span>
+                        </span>
+                    </div>`;
+            }
+
+            // Si todos están leídos: mostrar icono con el número
+            if (commentCount > 0) {
+                return `
+                    <div class="col-comments">
+                        <span class="comment-badge" title="${commentCount} comentarios (todos leídos)">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                            <span class="comment-count-text">${commentCount}</span>
+                        </span>
+                    </div>`;
+            }
+
+            // Sin comentarios: mostrar icono con guión
             return `
                 <div class="col-comments">
-                    <span class="comment-badge ${commentCount > 0 ? 'has-comments' : ''}" title="${commentCount} comentarios">
+                    <span class="comment-badge text-muted">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                        ${commentCount > 0 ? commentCount : ''}
-                        ${unread > 0 ? `<span class="unread-badge" title="${unread} sin leer">${unread}</span>` : ''}
+                        <span class="comment-count-text">-</span>
                     </span>
                 </div>`;
         case 'actions':
@@ -1155,9 +1237,6 @@ export function filterIssuesByColumns(issues, columnFilters) {
                 case 'priority': value = issue.priority; break;
                 case 'type': value = issue.topicType; break;
                 case 'assigned': value = issue.assignedTo || ''; break;
-                case 'date': value = issue.creationDate; break;
-                case 'date-modified': value = issue.modifiedDate; break;
-                case 'date-due': value = issue.dueDate; break;
                 default: return true;
             }
 
@@ -1347,8 +1426,12 @@ export async function saveIssue(formData) {
         // Actualizar incidencia existente
         const issue = AppState.currentIssues.find(i => i.guid === guid);
         if (issue) {
+            // Guardar el valor anterior de assignedTo antes de actualizar
+            const previousAssignedTo = issue.assignedTo;
+            const newAssignedTo = issueData.assignedTo;
+
             Object.assign(issue, issueData);
-            
+
             // También actualizar en el proyecto persistente
             AppState.projects.forEach(p => {
                 p.bcfFiles.forEach(bcf => {
@@ -1358,6 +1441,9 @@ export async function saveIssue(formData) {
                     }
                 });
             });
+
+            // Verificar si hubo cambio de asignación
+            checkAssignmentChange(issue, previousAssignedTo, newAssignedTo);
         }
     }
 
@@ -1424,13 +1510,42 @@ export function renderProjects() {
     container.innerHTML = displayProjects.map(p => {
         const fileCount = p.bcfFiles?.length || 0;
         const fileLabel = fileCount === 1 ? 'archivo' : 'archivos';
-        const dateStr = new Date(p.createdAt).toLocaleDateString('es-ES', { 
-            year: 'numeric', 
-            month: '2-digit', 
-            day: '2-digit' 
+        const dateStr = new Date(p.createdAt).toLocaleDateString('es-ES', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
         });
         const initials = getInitials(p.name);
         const color = stringToColor(p.name);
+
+        // Ensure members array exists and get count
+        if (!p.members) p.members = [];
+
+        // Extract users from BCF files
+        const bcfUsers = new Set();
+        if (p.bcfFiles && p.bcfFiles.length > 0) {
+            p.bcfFiles.forEach(bcfFile => {
+                if (bcfFile.issues && Array.isArray(bcfFile.issues)) {
+                    bcfFile.issues.forEach(issue => {
+                        if (issue.creationAuthor && issue.creationAuthor.trim() !== '' && issue.creationAuthor !== 'Desconocido') {
+                            bcfUsers.add(issue.creationAuthor.trim());
+                        }
+                        if (issue.assignedTo && issue.assignedTo.trim() !== '') {
+                            bcfUsers.add(issue.assignedTo.trim());
+                        }
+                    });
+                }
+            });
+        }
+
+        // Combine manual members and BCF users (unique count)
+        const allUsers = new Set([
+            ...p.members.map(m => m.email),
+            ...Array.from(bcfUsers)
+        ]);
+
+        const memberCount = allUsers.size;
+        const memberLabel = memberCount === 1 ? 'miembro' : 'miembros';
 
         return `
         <div class="project-card ${p.pinned ? 'pinned' : ''}" data-id="${p.id}" onclick="window.loadProject('${p.id}')">
@@ -1439,6 +1554,13 @@ export function renderProjects() {
                     ${initials}
                 </div>
                 <div class="project-actions">
+                    <button class="btn btn-icon btn-ghost btn-sm" onclick="event.stopPropagation(); shareProject('${p.id}')" title="Compartir proyecto">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
+                            <polyline points="16 6 12 2 8 6"></polyline>
+                            <line x1="12" y1="2" x2="12" y2="15"></line>
+                        </svg>
+                    </button>
                     <button class="btn btn-icon btn-ghost btn-sm ${p.pinned ? 'active' : ''}" onclick="event.stopPropagation(); toggleProjectPin('${p.id}')" title="${p.pinned ? 'Desanclar' : 'Anclar'}">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M12 22v-5"></path>
@@ -1467,6 +1589,15 @@ export function renderProjects() {
                             <path d="M16 3v6l3 3H5l3-3V3"></path>
                         </svg>
                     </span>` : ''}
+                    <span title="Miembros del equipo">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="9" cy="7" r="4"></circle>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                        </svg>
+                        ${memberCount} ${memberLabel}
+                    </span>
                     <span title="Archivos">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
@@ -1553,7 +1684,277 @@ export function renderProjects() {
         modal.classList.add('active');
         confirmBtn.focus();
     };
-    
+
+    /**
+     * Extrae usuarios únicos desde archivos BCF del proyecto
+     * Busca en creationAuthor y assignedTo para evitar duplicados
+     */
+    window.extractUsersFromBCF = (project) => {
+        if (!project.bcfFiles || project.bcfFiles.length === 0) {
+            return [];
+        }
+
+        const uniqueUsers = new Set();
+
+        project.bcfFiles.forEach(bcfFile => {
+            if (bcfFile.issues && Array.isArray(bcfFile.issues)) {
+                bcfFile.issues.forEach(issue => {
+                    // Agregar creationAuthor si existe y no está vacío
+                    if (issue.creationAuthor && issue.creationAuthor.trim() !== '' && issue.creationAuthor !== 'Desconocido') {
+                        uniqueUsers.add(issue.creationAuthor.trim());
+                    }
+
+                    // Agregar assignedTo si existe y no está vacío
+                    if (issue.assignedTo && issue.assignedTo.trim() !== '') {
+                        uniqueUsers.add(issue.assignedTo.trim());
+                    }
+                });
+            }
+        });
+
+        return Array.from(uniqueUsers).sort();
+    };
+
+    window.shareProject = async (id) => {
+        const project = AppState.projects.find(p => p.id === id);
+        if (!project) return;
+
+        // Get user-db to search for users
+        const { UserDB } = await import('./user-db.js');
+        const { NotificationDB } = await import('./notification-db.js');
+        const { LogManager } = await import('./log-manager.js');
+        const { AuthMgr } = await import('./auth-manager.js');
+
+        // Extract users from BCF files
+        const bcfUsers = window.extractUsersFromBCF(project);
+        const bcfUserCount = bcfUsers.length;
+
+        // Create share modal if it doesn't exist
+        let modal = document.getElementById('modal-share-project');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'modal-share-project';
+            modal.className = 'modal';
+            modal.innerHTML = `
+                <div class="modal-backdrop"></div>
+                <div class="modal-content" style="max-width: 600px;">
+                    <div class="modal-header">
+                        <h3>Compartir Proyecto: ${escapeHtml(project.name)}</h3>
+                        <button class="btn btn-icon btn-ghost" onclick="document.getElementById('modal-share-project').classList.remove('active')">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        ${bcfUserCount > 0 ? `
+                        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 16px; border-radius: 8px; margin-bottom: 24px; color: white;">
+                            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="9" cy="7" r="4"></circle>
+                                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                                </svg>
+                                <div>
+                                    <div style="font-size: 28px; font-weight: 700; line-height: 1;">${bcfUserCount}</div>
+                                    <div style="font-size: 13px; opacity: 0.9;">Usuario${bcfUserCount === 1 ? '' : 's'} detectado${bcfUserCount === 1 ? '' : 's'} en archivos BCF</div>
+                                </div>
+                            </div>
+                            <div id="bcf-users-list" style="margin-top: 12px; display: flex; flex-wrap: wrap; gap: 6px;"></div>
+                        </div>
+                        ` : ''}
+                        <div class="form-group">
+                            <label for="share-user-email">Email del usuario</label>
+                            <input type="email" id="share-user-email" class="form-input" placeholder="usuario@ejemplo.com" />
+                            <p class="form-help">Ingresa el email de un usuario registrado en el sistema</p>
+                        </div>
+                        <div class="members-list-section" style="margin-top: 24px;">
+                            <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 12px;">Miembros del proyecto</h4>
+                            <div id="current-members-list"></div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" onclick="document.getElementById('modal-share-project').classList.remove('active')">Cancelar</button>
+                        <button class="btn btn-primary" id="btn-add-member">Añadir miembro</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+
+            // Close on backdrop click
+            modal.querySelector('.modal-backdrop').addEventListener('click', () => {
+                modal.classList.remove('active');
+            });
+        }
+
+        // Update BCF users list
+        const updateBCFUsersList = () => {
+            const bcfUsersList = document.getElementById('bcf-users-list');
+            if (!bcfUsersList || bcfUsers.length === 0) return;
+
+            bcfUsersList.innerHTML = bcfUsers.map(user => `
+                <span style="background: rgba(255,255,255,0.2); padding: 4px 10px; border-radius: 12px; font-size: 12px; backdrop-filter: blur(10px);">
+                    ${escapeHtml(user)}
+                </span>
+            `).join('');
+        };
+
+        // Update modal title and current members
+        const updateMembersList = () => {
+            const membersList = document.getElementById('current-members-list');
+            if (!membersList) return;
+
+            if (!project.members || project.members.length === 0) {
+                membersList.innerHTML = '<p style="color: #718096; font-size: 13px;">No hay miembros añadidos manualmente</p>';
+                return;
+            }
+
+            membersList.innerHTML = project.members.map(member => `
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #f7fafc; border-radius: 6px; margin-bottom: 8px;">
+                    <div style="flex: 1;">
+                        <div style="font-weight: 600; font-size: 14px;">${escapeHtml(member.name)}</div>
+                        <div style="font-size: 12px; color: #718096;">${escapeHtml(member.email)}</div>
+                    </div>
+                    <button class="btn btn-icon btn-ghost btn-sm" onclick="window.removeMemberFromProject('${project.id}', '${member.id}')" title="Eliminar miembro">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
+            `).join('');
+        };
+
+        updateBCFUsersList();
+        updateMembersList();
+
+        // Add member handler
+        const addButton = document.getElementById('btn-add-member');
+        addButton.onclick = async () => {
+            const emailInput = document.getElementById('share-user-email');
+            const email = emailInput.value.trim();
+
+            if (!email) {
+                alert('Por favor ingresa un email');
+                return;
+            }
+
+            // Check if user exists
+            const user = UserDB.getUserByEmail(email);
+            if (!user) {
+                alert('El usuario no existe en el sistema. Debe estar registrado primero.');
+                return;
+            }
+
+            if (user.status !== 'active') {
+                alert('El usuario no tiene acceso activo al sistema');
+                return;
+            }
+
+            // Check if already a member
+            if (project.members && project.members.find(m => m.id === user.id)) {
+                alert('Este usuario ya es miembro del proyecto');
+                return;
+            }
+
+            // Add member (without role)
+            if (!project.members) project.members = [];
+            project.members.push({
+                id: user.id,
+                email: user.email,
+                name: user.name,
+                addedAt: new Date().toISOString()
+            });
+
+            // Save changes
+            await import('./storage.js').then(m => m.Storage.saveAll());
+
+            // Send notification
+            const currentUser = AuthMgr.getCurrentUser();
+            NotificationDB.createNotification({
+                userId: user.id,
+                type: 'info',
+                title: 'Añadido a un proyecto',
+                message: `${currentUser?.name || 'Un usuario'} te ha añadido al proyecto "${project.name}"`,
+                link: `#/project/${project.id}`
+            });
+
+            // Log the action
+            LogManager.log({
+                type: LogManager.LogType.INFO,
+                severity: LogManager.Severity.INFO,
+                message: `Usuario ${user.email} añadido al proyecto ${project.name}`,
+                userId: currentUser?.id,
+                userEmail: currentUser?.email,
+                data: { projectId: project.id, addedUserId: user.id }
+            });
+
+            // Update UI
+            updateMembersList();
+            renderProjects();
+            emailInput.value = '';
+
+            // Show success message
+            import('./ui-utils.js').then(m => m.notify(`${user.name} añadido al proyecto`, 'success'));
+        };
+
+        modal.classList.add('active');
+    };
+
+    window.removeMemberFromProject = async (projectId, memberId) => {
+        const project = AppState.projects.find(p => p.id === projectId);
+        if (!project) return;
+
+        const memberIndex = project.members.findIndex(m => m.id === memberId);
+        if (memberIndex === -1) return;
+
+        const member = project.members[memberIndex];
+
+        if (confirm(`¿Eliminar a ${member.name} del proyecto?`)) {
+            // Remove member
+            project.members.splice(memberIndex, 1);
+
+            // Save changes
+            await import('./storage.js').then(m => m.Storage.saveAll());
+
+            // Send notification
+            const { NotificationDB } = await import('./notification-db.js');
+            const { AuthMgr } = await import('./auth-manager.js');
+            const currentUser = AuthMgr.getCurrentUser();
+
+            NotificationDB.createNotification({
+                userId: memberId,
+                type: 'warning',
+                title: 'Eliminado de un proyecto',
+                message: `Has sido eliminado del proyecto "${project.name}"`
+            });
+
+            // Log
+            const { LogManager } = await import('./log-manager.js');
+            LogManager.log({
+                type: LogManager.LogType.INFO,
+                severity: LogManager.Severity.INFO,
+                message: `Usuario ${member.email} eliminado del proyecto ${project.name}`,
+                userId: currentUser?.id,
+                userEmail: currentUser?.email,
+                data: { projectId, removedUserId: memberId }
+            });
+
+            // Update UI
+            renderProjects();
+
+            // Refresh modal if open
+            const modal = document.getElementById('modal-share-project');
+            if (modal && modal.classList.contains('active')) {
+                window.shareProject(projectId);
+            }
+
+            import('./ui-utils.js').then(m => m.notify(`${member.name} eliminado del proyecto`, 'success'));
+        }
+    };
+
     requestAnimationFrame(() => {
         container.querySelectorAll('.project-card').forEach(card => {
             const id = card.dataset.id;
@@ -1575,5 +1976,229 @@ export function renderProjects() {
                 }, 240);
             }
         });
+    });
+}
+
+/**
+ * Verificar cambio de asignación y notificar si corresponde
+ * @param {Object} issue - La incidencia actualizada
+ * @param {string} previousAssignedTo - Valor anterior de assignedTo
+ * @param {string} newAssignedTo - Nuevo valor de assignedTo
+ */
+function checkAssignmentChange(issue, previousAssignedTo, newAssignedTo) {
+    // Solo proceder si hubo cambio de asignación
+    if (previousAssignedTo === newAssignedTo) return;
+
+    // Importar dinámicamente los módulos necesarios
+    Promise.all([
+        import('./auth-manager.js'),
+        import('./notification-db.js'),
+        import('./log-manager.js'),
+        import('./ui-utils.js')
+    ]).then(([authModule, notifModule, logModule, uiModule]) => {
+        const { AuthMgr } = authModule;
+        const { NotificationDB } = notifModule;
+        const { LogManager } = logModule;
+        const { notify } = uiModule;
+
+        if (!AuthMgr.isAuthenticated()) return;
+
+        const currentUser = AuthMgr.getCurrentUser();
+
+        // Verificar si el usuario actual fue asignado
+        const isAssignedToCurrentUser = newAssignedTo && (
+            newAssignedTo.toLowerCase().includes(currentUser.email.toLowerCase()) ||
+            newAssignedTo.toLowerCase().includes(currentUser.name.toLowerCase())
+        );
+
+        if (isAssignedToCurrentUser) {
+            // Log: Incidencia asignada
+            LogManager.log({
+                type: LogManager.LogType.ISSUE_ASSIGNED,
+                severity: LogManager.Severity.INFO,
+                message: `Incidencia asignada al usuario: ${issue.title}`,
+                userId: currentUser.id,
+                userEmail: currentUser.email,
+                data: {
+                    issueGuid: issue.guid,
+                    issueTitle: issue.title,
+                    issuePriority: issue.priority,
+                    assignedFrom: previousAssignedTo || 'Sin asignar',
+                    assignedTo: newAssignedTo
+                }
+            });
+
+            // Crear notificación en la base de datos
+            const notification = NotificationDB.createNotification({
+                userId: currentUser.id,
+                type: 'issue_assigned',
+                title: '🎯 Nueva incidencia asignada',
+                message: `Se te ha asignado: "${issue.title}"`,
+                link: `#issue-${issue.guid}`,
+                data: {
+                    issueGuid: issue.guid,
+                    issueTitle: issue.title,
+                    issuePriority: issue.priority || 'Medium',
+                    issueStatus: issue.topicStatus || 'Open'
+                }
+            });
+
+            // Mostrar notificación visual temporal (5 segundos)
+            const priorityIcon = {
+                'High': '🔴',
+                'Medium': '🟡',
+                'Low': '🟢',
+                'Critical': '⚠️'
+            }[issue.priority] || '📋';
+
+            const notificationHTML = `
+                <div class="assignment-notification" style="cursor: pointer;" data-guid="${issue.guid}">
+                    <div class="assignment-notification-icon">${priorityIcon}</div>
+                    <div class="assignment-notification-content">
+                        <div class="assignment-notification-title">
+                            <strong>Nueva incidencia asignada</strong>
+                        </div>
+                        <div class="assignment-notification-details">
+                            <div><strong>GUID:</strong> ${issue.guid.substring(0, 8)}...</div>
+                            <div><strong>Título:</strong> ${issue.title}</div>
+                            <div><strong>Prioridad:</strong> ${issue.priority || 'Medium'}</div>
+                        </div>
+                        <div class="assignment-notification-action">
+                            Click para ver la incidencia →
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Crear elemento de notificación
+            const notifEl = document.createElement('div');
+            notifEl.className = 'toast-notification assignment-toast';
+            notifEl.innerHTML = notificationHTML;
+            notifEl.setAttribute('role', 'alert');
+            notifEl.setAttribute('aria-live', 'polite');
+            notifEl.setAttribute('aria-label', `Nueva incidencia asignada: ${issue.title}`);
+
+            // Añadir estilos si no existen
+            if (!document.getElementById('assignment-notification-styles')) {
+                const styles = document.createElement('style');
+                styles.id = 'assignment-notification-styles';
+                styles.textContent = `
+                    .toast-notification {
+                        position: fixed;
+                        top: 80px;
+                        right: 20px;
+                        background: white;
+                        border-radius: 8px;
+                        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                        padding: 16px;
+                        max-width: 400px;
+                        z-index: 10000;
+                        animation: slideInRight 0.3s ease-out;
+                    }
+
+                    @keyframes slideInRight {
+                        from {
+                            transform: translateX(100%);
+                            opacity: 0;
+                        }
+                        to {
+                            transform: translateX(0);
+                            opacity: 1;
+                        }
+                    }
+
+                    @keyframes slideOutRight {
+                        from {
+                            transform: translateX(0);
+                            opacity: 1;
+                        }
+                        to {
+                            transform: translateX(100%);
+                            opacity: 0;
+                        }
+                    }
+
+                    .assignment-notification {
+                        display: flex;
+                        gap: 12px;
+                        align-items: flex-start;
+                    }
+
+                    .assignment-notification-icon {
+                        font-size: 24px;
+                        flex-shrink: 0;
+                    }
+
+                    .assignment-notification-content {
+                        flex: 1;
+                    }
+
+                    .assignment-notification-title {
+                        font-size: 14px;
+                        margin-bottom: 8px;
+                        color: #1a202c;
+                    }
+
+                    .assignment-notification-details {
+                        font-size: 12px;
+                        color: #4a5568;
+                        margin-bottom: 8px;
+                    }
+
+                    .assignment-notification-details div {
+                        margin-bottom: 4px;
+                    }
+
+                    .assignment-notification-action {
+                        font-size: 12px;
+                        color: #667eea;
+                        font-weight: 600;
+                    }
+
+                    .assignment-toast:hover {
+                        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+                    }
+                `;
+                document.head.appendChild(styles);
+            }
+
+            // Añadir al DOM
+            document.body.appendChild(notifEl);
+
+            // Click handler para ir a la incidencia
+            notifEl.addEventListener('click', () => {
+                // Remover notificación
+                notifEl.style.animation = 'slideOutRight 0.3s ease-in';
+                setTimeout(() => notifEl.remove(), 300);
+
+                // Navegar a la incidencia
+                import('./edit-panel.js').then(m => {
+                    m.openEditSidebar(issue.guid);
+                });
+            });
+
+            // Auto-remover después de 5 segundos
+            setTimeout(() => {
+                if (notifEl.parentElement) {
+                    notifEl.style.animation = 'slideOutRight 0.3s ease-in';
+                    setTimeout(() => notifEl.remove(), 300);
+                }
+            }, 5000);
+
+            // Log de notificación enviada
+            LogManager.log({
+                type: LogManager.LogType.NOTIFICATION_SENT,
+                severity: LogManager.Severity.INFO,
+                message: 'Notificación de asignación enviada',
+                userId: currentUser.id,
+                userEmail: currentUser.email,
+                data: {
+                    notificationId: notification.id,
+                    issueGuid: issue.guid
+                }
+            });
+        }
+    }).catch(error => {
+        console.error('Error al verificar asignación:', error);
     });
 }

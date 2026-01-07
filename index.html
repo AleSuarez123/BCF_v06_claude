@@ -139,16 +139,9 @@
                     <div class="search-trigger" id="search-trigger"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span>Buscar...</span><kbd>Ctrl+K</kbd></div>
 
                     <div class="header-actions">
-                        <button id="btn-notifications" class="btn btn-ghost btn-icon" title="Notificaciones">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-                                <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-                            </svg>
-                            <span class="notification-badge hidden" id="notification-badge">0</span>
-                        </button>
                         <button id="btn-keyboard-help" class="btn btn-ghost btn-icon" title="Atajos (?)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="3"></rect><path d="M5 8h2M8 8h2M11 8h2M14 8h2M17 8h2M6 12h2M9 12h2M12 12h2M15 12h2M6 16h12"></path></svg></button>
                         <button id="btn-theme-toggle" class="btn btn-ghost btn-icon" title="Cambiar tema"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-sun"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-moon hidden"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
-                        
+
                         <button id="btn-connect-server" class="btn btn-secondary" title="Conectar a servidor BCF">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
@@ -156,6 +149,8 @@
                             </svg>
                             Server
                         </button>
+
+                        <!-- Notification button will be added here dynamically by auth-init.js next to user avatar -->
                     </div>
                 </div>
             </header>
@@ -768,6 +763,7 @@
     <div id="toast-container" class="toast-container"></div>
 
     <!-- Scripts -->
+    <script type="module" src="js/auth-init.js"></script>
     <script type="module" src="js/main.js"></script>
     <script>
       (function() {

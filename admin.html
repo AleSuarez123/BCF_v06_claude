@@ -1,0 +1,1316 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Administración - BCF Viewer Pro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        /* Admin Panel Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: #f7fafc;
+            color: #2d3748;
+        }
+
+        .admin-header {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .admin-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1a202c;
+        }
+
+        .admin-logo {
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .admin-brand {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            text-decoration: none;
+            color: inherit;
+            transition: opacity 0.2s;
+        }
+
+        .admin-brand:hover {
+            opacity: 0.8;
+        }
+
+        .admin-brand-text {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .admin-brand-name {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1a202c;
+            line-height: 1.2;
+        }
+
+        .admin-brand-subtitle {
+            font-size: 12px;
+            color: #718096;
+            font-weight: 500;
+        }
+
+        .admin-page-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .admin-user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .admin-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card-icon {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            width: 48px;
+            height: 48px;
+            opacity: 0.1;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #718096;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #1a202c;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 8px;
+            border-bottom: 2px solid #e2e8f0;
+            margin-bottom: 24px;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            background: none;
+            border: none;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            cursor: pointer;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 15px;
+            font-weight: 500;
+            color: #718096;
+            transition: all 0.2s;
+        }
+
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .section {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin-bottom: 24px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: #1a202c;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            text-align: left;
+            padding: 12px;
+            background: #f7fafc;
+            font-size: 13px;
+            font-weight: 600;
+            color: #4a5568;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 14px;
+        }
+
+        tr:hover {
+            background: #f7fafc;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge-success {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .badge-warning {
+            background: #fef3c7;
+            color: #78350f;
+        }
+
+        .badge-error {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+
+        .badge-info {
+            background: #dbeafe;
+            color: #1e3a8a;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: 'DM Sans', sans-serif;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+
+        .btn-success {
+            background: #48bb78;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #38a169;
+        }
+
+        .btn-danger {
+            background: #f56565;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #e53e3e;
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .btn-secondary:hover {
+            background: #cbd5e0;
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #2d3748;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: 'DM Sans', sans-serif;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 32px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 24px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 48px 24px;
+            color: #718096;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+
+        .alert-success {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .alert-error {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+
+        .domain-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .domain-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            background: #edf2f7;
+            border-radius: 16px;
+            font-size: 13px;
+        }
+
+        .domain-chip button {
+            background: none;
+            border: none;
+            color: #e53e3e;
+            cursor: pointer;
+            padding: 0;
+            font-size: 16px;
+        }
+
+        .logout-btn {
+            padding: 8px 16px;
+            background: #e2e8f0;
+            color: #4a5568;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 600;
+        }
+
+        .logout-btn:hover {
+            background: #cbd5e0;
+        }
+
+        .back-btn {
+            padding: 8px 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .back-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <header class="admin-header">
+        <a href="/index.html" class="admin-brand">
+            <div class="admin-logo"></div>
+            <div class="admin-brand-text">
+                <span class="admin-brand-name">BCF Viewer Pro</span>
+                <span class="admin-brand-subtitle">Gestor de Incidencias BIM</span>
+            </div>
+        </a>
+        <div class="admin-user-info">
+            <span id="admin-name"></span>
+            <a href="/index.html" class="back-btn">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M8 14L2 8L8 2M2 8H14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Volver al Panel de Proyectos
+            </a>
+            <button class="logout-btn" onclick="handleLogout()">Cerrar Sesión</button>
+        </div>
+    </header>
+
+    <div class="admin-container">
+        <h2 class="admin-page-title">Panel de Administración</h2>
+
+        <!-- Estadísticas -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <svg class="stat-card-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M17 21V19C17 17.9391 16.5786 16.9217 15.8284 16.1716C15.0783 15.4214 14.0609 15 13 15H5C3.93913 15 2.92172 15.4214 2.17157 16.1716C1.42143 16.9217 1 17.9391 1 19V21M23 21V19C22.9993 18.1137 22.7044 17.2528 22.1614 16.5523C21.6184 15.8519 20.8581 15.3516 20 15.13M16 3.13C16.8604 3.3503 17.623 3.8507 18.1676 4.55231C18.7122 5.25392 19.0078 6.11683 19.0078 7.005C19.0078 7.89317 18.7122 8.75608 18.1676 9.45769C17.623 10.1593 16.8604 10.6597 16 10.88M13 7C13 9.20914 11.2091 11 9 11C6.79086 11 5 9.20914 5 7C5 4.79086 6.79086 3 9 3C11.2091 3 13 4.79086 13 7Z" stroke="#667eea" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <div class="stat-label">Total Usuarios</div>
+                <div class="stat-value" id="stat-total-users">0</div>
+            </div>
+            <div class="stat-card">
+                <svg class="stat-card-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="#48bb78" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <div class="stat-label">Usuarios Activos</div>
+                <div class="stat-value" id="stat-active-users">0</div>
+            </div>
+            <div class="stat-card">
+                <svg class="stat-card-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 8V12L15 15M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <div class="stat-label">Solicitudes Pendientes</div>
+                <div class="stat-value" id="stat-pending-requests">0</div>
+            </div>
+            <div class="stat-card">
+                <svg class="stat-card-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M9 3H5C3.89543 3 3 3.89543 3 5V9M9 21H5C3.89543 21 3 20.1046 3 19V15M21 9V5C21 3.89543 20.1046 3 19 3H15M21 15V19C21 20.1046 20.1046 21 19 21H15M12 12H12.01M18 12H18.01M6 12H6.01" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <div class="stat-label">Total Sesiones</div>
+                <div class="stat-value" id="stat-total-sessions">0</div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('requests')">Solicitudes de Acceso</button>
+            <button class="tab" onclick="switchTab('users')">Usuarios</button>
+            <button class="tab" onclick="switchTab('domains')">Dominios Permitidos</button>
+            <button class="tab" onclick="switchTab('invitations')">Invitaciones</button>
+            <button class="tab" onclick="switchTab('sessions')">Sesiones</button>
+        </div>
+
+        <div id="alert-container"></div>
+
+        <!-- Tab: Solicitudes -->
+        <div id="tab-requests" class="tab-content active">
+            <div class="section">
+                <h2 class="section-title">Solicitudes Pendientes</h2>
+                <div id="requests-container"></div>
+            </div>
+        </div>
+
+        <!-- Tab: Usuarios -->
+        <div id="tab-users" class="tab-content">
+            <div class="section">
+                <h2 class="section-title">Gestión de Usuarios</h2>
+                <div id="users-container"></div>
+            </div>
+        </div>
+
+        <!-- Tab: Dominios -->
+        <div id="tab-domains" class="tab-content">
+            <div class="section">
+                <h2 class="section-title">Dominios Permitidos</h2>
+                <div id="domains-container"></div>
+                <div style="margin-top: 20px;">
+                    <button class="btn btn-primary" onclick="showAddDomainModal()">Añadir Dominio</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: Invitaciones -->
+        <div id="tab-invitations" class="tab-content">
+            <div class="section">
+                <h2 class="section-title">Gestión de Invitaciones</h2>
+                <p style="margin-bottom: 16px; color: #718096;">Genera links de invitación de un solo uso para permitir acceso sin aprobación manual.</p>
+                <div style="margin-bottom: 20px;">
+                    <button class="btn btn-primary" onclick="showCreateInvitationModal()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 6px;">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                        Generar Nueva Invitación
+                    </button>
+                </div>
+                <div id="invitations-container"></div>
+            </div>
+        </div>
+
+        <!-- Tab: Sesiones -->
+        <div id="tab-sessions" class="tab-content">
+            <div class="section">
+                <h2 class="section-title">Historial de Sesiones</h2>
+                <div id="sessions-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Aprobar Solicitud -->
+    <div id="approve-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">Aprobar Solicitud</div>
+            <div id="approve-modal-body"></div>
+            <div class="form-group">
+                <label class="form-label">Notas (opcional)</label>
+                <textarea id="approve-notes" class="form-input" rows="3" placeholder="Añadir comentarios..."></textarea>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('approve-modal')">Cancelar</button>
+                <button class="btn btn-success" onclick="confirmApprove()">Aprobar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Denegar Solicitud -->
+    <div id="deny-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">Denegar Solicitud</div>
+            <div id="deny-modal-body"></div>
+            <div class="form-group">
+                <label class="form-label">Motivo (opcional)</label>
+                <textarea id="deny-notes" class="form-input" rows="3" placeholder="Razón de la denegación..."></textarea>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('deny-modal')">Cancelar</button>
+                <button class="btn btn-danger" onclick="confirmDeny()">Denegar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Añadir Dominio -->
+    <div id="add-domain-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">Añadir Dominio Permitido</div>
+            <div class="form-group">
+                <label class="form-label">Dominio</label>
+                <input type="text" id="new-domain" class="form-input" placeholder="ejemplo.com">
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('add-domain-modal')">Cancelar</button>
+                <button class="btn btn-primary" onclick="confirmAddDomain()">Añadir</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Crear Invitación -->
+    <div id="create-invitation-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">Generar Link de Invitación</div>
+            <div class="form-group">
+                <label class="form-label">Email del invitado *</label>
+                <input type="email" id="invitation-email" class="form-input" placeholder="email@ejemplo.com" required>
+                <small style="color: #718096; font-size: 12px;">Se enviará una notificación a este email con el link de invitación</small>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Nombre del invitado (opcional)</label>
+                <input type="text" id="invitation-name" class="form-input" placeholder="Juan Pérez">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Días de validez</label>
+                <select id="invitation-expiry" class="form-input">
+                    <option value="1">1 día</option>
+                    <option value="3">3 días</option>
+                    <option value="7" selected>7 días (recomendado)</option>
+                    <option value="14">14 días</option>
+                    <option value="30">30 días</option>
+                </select>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('create-invitation-modal')">Cancelar</button>
+                <button class="btn btn-primary" onclick="confirmCreateInvitation()">Generar y Enviar Invitación</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Ver Link de Invitación -->
+    <div id="invitation-link-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">Link de Invitación Generado</div>
+            <p style="margin-bottom: 16px; color: #718096;">Comparte este link con la persona que quieres invitar. Es de un solo uso y expirará automáticamente.</p>
+            <div class="form-group">
+                <label class="form-label">Link de Invitación</label>
+                <div style="display: flex; gap: 8px;">
+                    <input type="text" id="invitation-link-input" class="form-input" readonly style="flex: 1;">
+                    <button class="btn btn-primary" onclick="copyInvitationLink()">Copiar</button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="closeModal('invitation-link-modal')">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { AuthMgr } from './js/auth-manager.js';
+        import { UserDB } from './js/user-db.js';
+        import { SessionDB } from './js/session-db.js';
+        import { AccessRequestDB } from './js/access-request-db.js';
+        import { InvitationMgr } from './js/invitation-manager.js';
+        import { NotificationDB } from './js/notification-db.js';
+        import { LogoManager } from './js/logo-manager.js';
+        import { LogManager } from './js/log-manager.js';
+
+        // Verificar autenticación y permisos de administrador
+        if (!AuthMgr.isAuthenticated()) {
+            window.location.href = '/login.html';
+        }
+
+        if (!AuthMgr.isAdmin()) {
+            alert('No tienes permisos de administrador');
+            window.location.href = '/index.html';
+        }
+
+        // Globales
+        window.currentRequestId = null;
+        window.UserDB = UserDB;
+        window.SessionDB = SessionDB;
+        window.AccessRequestDB = AccessRequestDB;
+        window.AuthMgr = AuthMgr;
+
+        // Mostrar nombre del admin
+        const currentUser = AuthMgr.getCurrentUser();
+        document.getElementById('admin-name').textContent = currentUser.name;
+
+        // Actualizar logos según dominio del usuario
+        LogoManager.updateAllLogos(currentUser.email);
+
+        // Cargar datos iniciales
+        loadStats();
+        loadRequests();
+        loadUsers();
+        loadDomains();
+        loadSessions();
+
+        // Funciones globales
+        window.switchTab = function(tabName) {
+            // Actualizar tabs
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+
+            event.target.classList.add('active');
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+        };
+
+        window.showAlert = function(message, type = 'success') {
+            const container = document.getElementById('alert-container');
+            container.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+            setTimeout(() => container.innerHTML = '', 5000);
+        };
+
+        window.closeModal = function(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        };
+
+        window.handleLogout = function() {
+            AuthMgr.logout();
+            window.location.href = '/login.html';
+        };
+
+        function loadStats() {
+            const userStats = UserDB.getStats();
+            const requestStats = AccessRequestDB.getStats();
+            const sessionStats = SessionDB.getStats();
+
+            document.getElementById('stat-total-users').textContent = userStats.totalUsers;
+            document.getElementById('stat-active-users').textContent = userStats.activeUsers;
+            document.getElementById('stat-pending-requests').textContent = requestStats.pending;
+            document.getElementById('stat-total-sessions').textContent = sessionStats.totalSessions;
+        }
+
+        function loadRequests() {
+            const requests = AccessRequestDB.getPendingRequests();
+            const container = document.getElementById('requests-container');
+
+            if (requests.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📭</div>
+                        <p>No hay solicitudes pendientes</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const html = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Email</th>
+                            <th>Dominio</th>
+                            <th>Fecha</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${requests.map(r => `
+                            <tr>
+                                <td>${r.name}</td>
+                                <td>${r.email}</td>
+                                <td><span class="badge badge-info">@${r.domain}</span></td>
+                                <td>${new Date(r.requestDate).toLocaleString('es-ES')}</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn btn-success btn-sm" onclick="showApproveModal('${r.id}')">
+                                            Aprobar
+                                        </button>
+                                        <button class="btn btn-danger btn-sm" onclick="showDenyModal('${r.id}')">
+                                            Denegar
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+
+            container.innerHTML = html;
+        }
+
+        function loadUsers() {
+            const users = UserDB.getAllUsers();
+            const container = document.getElementById('users-container');
+
+            const html = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Email</th>
+                            <th>Rol</th>
+                            <th>Estado</th>
+                            <th>Último Acceso</th>
+                            <th>Logins</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${users.map(u => `
+                            <tr>
+                                <td>${u.name}</td>
+                                <td>${u.email}</td>
+                                <td><span class="badge ${u.role === 'admin' ? 'badge-warning' : 'badge-info'}">${u.role === 'admin' ? 'Admin' : 'Usuario'}</span></td>
+                                <td><span class="badge ${u.status === 'active' ? 'badge-success' : 'badge-error'}">${u.status === 'active' ? 'Activo' : 'Bloqueado'}</span></td>
+                                <td>${u.lastLogin ? new Date(u.lastLogin).toLocaleString('es-ES') : '-'}</td>
+                                <td>${u.loginCount || 0}</td>
+                                <td>
+                                    ${u.role !== 'admin' ? `
+                                        <button class="btn ${u.status === 'active' ? 'btn-danger' : 'btn-success'} btn-sm"
+                                                onclick="toggleUserStatus('${u.id}', '${u.status}')">
+                                            ${u.status === 'active' ? 'Bloquear' : 'Desbloquear'}
+                                        </button>
+                                    ` : '<span class="badge badge-warning">Admin</span>'}
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+
+            container.innerHTML = html;
+        }
+
+        function loadDomains() {
+            const domains = UserDB.getAllowedDomains();
+            const allUsers = UserDB.getAllUsers();
+            const container = document.getElementById('domains-container');
+
+            // Contar usuarios por dominio
+            const usersByDomain = {};
+            allUsers.forEach(user => {
+                const domain = user.domain;
+                usersByDomain[domain] = (usersByDomain[domain] || 0) + 1;
+            });
+
+            const defaultDomains = ['gocsa.es', 'proyeco.es'];
+
+            const html = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Dominio</th>
+                            <th>Usuarios</th>
+                            <th>Tipo</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${domains.map(d => {
+                            const isDefault = defaultDomains.includes(d);
+                            const userCount = usersByDomain[d] || 0;
+
+                            return `
+                                <tr>
+                                    <td>
+                                        <strong>@${d}</strong>
+                                    </td>
+                                    <td>
+                                        <span class="badge ${userCount > 0 ? 'badge-info' : 'badge-secondary'}">
+                                            ${userCount} usuario${userCount !== 1 ? 's' : ''}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge ${isDefault ? 'badge-success' : 'badge-warning'}">
+                                            ${isDefault ? 'Por defecto' : 'Personalizado'}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        ${!isDefault ? `
+                                            <button class="btn btn-danger btn-sm" onclick="removeDomain('${d}')">
+                                                Eliminar
+                                            </button>
+                                        ` : '<span class="badge badge-info">Protegido</span>'}
+                                    </td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+            `;
+
+            container.innerHTML = html;
+        }
+
+        function loadSessions() {
+            const sessions = SessionDB.getAllSessions().sort((a, b) => b.startTime - a.startTime).slice(0, 50);
+            const container = document.getElementById('sessions-container');
+
+            const html = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Usuario</th>
+                            <th>Email</th>
+                            <th>Inicio</th>
+                            <th>Última Actividad</th>
+                            <th>Duración</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${sessions.map(s => {
+                            const duration = Math.round((s.duration || 0) / 1000 / 60);
+                            return `
+                                <tr>
+                                    <td>${s.userName}</td>
+                                    <td>${s.userEmail}</td>
+                                    <td>${new Date(s.startTime).toLocaleString('es-ES')}</td>
+                                    <td>${new Date(s.lastActivity).toLocaleString('es-ES')}</td>
+                                    <td>${duration} min</td>
+                                    <td><span class="badge ${s.active ? 'badge-success' : 'badge-info'}">${s.active ? 'Activa' : 'Cerrada'}</span></td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+            `;
+
+            container.innerHTML = html;
+        }
+
+        window.showApproveModal = function(requestId) {
+            const request = AccessRequestDB.getRequestById(requestId);
+            window.currentRequestId = requestId;
+
+            document.getElementById('approve-modal-body').innerHTML = `
+                <p><strong>Nombre:</strong> ${request.name}</p>
+                <p><strong>Email:</strong> ${request.email}</p>
+                <p><strong>Dominio:</strong> @${request.domain}</p>
+            `;
+
+            document.getElementById('approve-modal').classList.add('active');
+        };
+
+        window.showDenyModal = function(requestId) {
+            const request = AccessRequestDB.getRequestById(requestId);
+            window.currentRequestId = requestId;
+
+            document.getElementById('deny-modal-body').innerHTML = `
+                <p><strong>Nombre:</strong> ${request.name}</p>
+                <p><strong>Email:</strong> ${request.email}</p>
+                <p><strong>Dominio:</strong> @${request.domain}</p>
+            `;
+
+            document.getElementById('deny-modal').classList.add('active');
+        };
+
+        window.confirmApprove = async function() {
+            try {
+                const notes = document.getElementById('approve-notes').value;
+                const currentUser = AuthMgr.getCurrentUser();
+
+                // Aprobar solicitud
+                const request = AccessRequestDB.approveRequest(window.currentRequestId, currentUser.email, notes);
+
+                // Log: Solicitud aprobada
+                LogManager.log({
+                    type: LogManager.LogType.REQUEST_APPROVED,
+                    severity: LogManager.Severity.INFO,
+                    message: `Solicitud de acceso aprobada: ${request.email}`,
+                    userId: currentUser.id,
+                    userEmail: currentUser.email,
+                    data: {
+                        requestId: request.id,
+                        requestEmail: request.email,
+                        requestName: request.name,
+                        notes: notes
+                    }
+                });
+
+                // Crear usuario automáticamente
+                const newUser = UserDB.createUser({
+                    name: request.name,
+                    email: request.email,
+                    role: 'user'
+                });
+
+                // Log: Usuario creado
+                LogManager.log({
+                    type: LogManager.LogType.USER_CREATED,
+                    severity: LogManager.Severity.INFO,
+                    message: `Usuario creado: ${newUser.email}`,
+                    userId: currentUser.id,
+                    userEmail: currentUser.email,
+                    data: {
+                        newUserId: newUser.id,
+                        newUserEmail: newUser.email,
+                        createdVia: 'approval'
+                    }
+                });
+
+                // Crear notificación para el nuevo usuario con link a incidencias
+                NotificationDB.createNotification({
+                    userId: newUser.id,
+                    type: 'success',
+                    title: '¡Bienvenido a BCF Viewer Pro!',
+                    message: `Tu solicitud de acceso ha sido aprobada. Ya puedes empezar a gestionar incidencias BIM.`,
+                    link: '/index.html',
+                    data: { requestId: request.id }
+                });
+
+                // Simular envío de email con link a incidencias
+                console.log('📧 EMAIL DE APROBACIÓN ENVIADO:');
+                console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+                console.log(`Para: ${request.email}`);
+                console.log(`Asunto: ¡Tu acceso a BCF Viewer Pro ha sido aprobado!`);
+                console.log('');
+                console.log(`Hola ${request.name},`);
+                console.log('');
+                console.log('¡Buenas noticias! Tu solicitud de acceso a BCF Viewer Pro ha sido aprobada.');
+                console.log('');
+                console.log('Ya puedes acceder al sistema y comenzar a gestionar incidencias BIM.');
+                console.log('');
+                console.log('👉 Accede directamente a la gestión de incidencias:');
+                console.log(`${window.location.origin}/index.html`);
+                console.log('');
+                console.log('Usa tu email para iniciar sesión.');
+                console.log('');
+                console.log('Saludos,');
+                console.log('El equipo de BCF Viewer Pro');
+                console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
+                // Log: Email enviado
+                LogManager.log({
+                    type: LogManager.LogType.EMAIL_SENT,
+                    severity: LogManager.Severity.INFO,
+                    message: `Email de aprobación enviado a ${request.email}`,
+                    userId: currentUser.id,
+                    userEmail: currentUser.email,
+                    data: {
+                        recipient: request.email,
+                        type: 'approval',
+                        includesLink: true,
+                        link: '/index.html'
+                    }
+                });
+
+                window.closeModal('approve-modal');
+                window.showAlert('Solicitud aprobada y usuario creado correctamente', 'success');
+                loadStats();
+                loadRequests();
+                loadUsers();
+            } catch (error) {
+                LogManager.logError('Error al aprobar solicitud', error, {
+                    requestId: window.currentRequestId
+                });
+                window.showAlert('Error al aprobar la solicitud: ' + error.message, 'error');
+            }
+        };
+
+        window.confirmDeny = function() {
+            try {
+                const notes = document.getElementById('deny-notes').value;
+                const currentUser = AuthMgr.getCurrentUser();
+
+                // Denegar solicitud (se mueve a historial con estado 'denied')
+                const request = AccessRequestDB.denyRequest(window.currentRequestId, currentUser.email, notes);
+
+                // Log: Solicitud denegada
+                LogManager.log({
+                    type: LogManager.LogType.REQUEST_DENIED,
+                    severity: LogManager.Severity.INFO,
+                    message: `Solicitud de acceso denegada: ${request.email}`,
+                    userId: currentUser.id,
+                    userEmail: currentUser.email,
+                    data: {
+                        requestId: request.id,
+                        requestEmail: request.email,
+                        requestName: request.name,
+                        notes: notes,
+                        movedToHistory: true
+                    }
+                });
+
+                window.closeModal('deny-modal');
+                window.showAlert('Solicitud denegada y movida al historial', 'success');
+                loadStats();
+                loadRequests();
+            } catch (error) {
+                LogManager.logError('Error al denegar solicitud', error, {
+                    requestId: window.currentRequestId
+                });
+                window.showAlert('Error al denegar la solicitud: ' + error.message, 'error');
+            }
+        };
+
+        window.showAddDomainModal = function() {
+            document.getElementById('new-domain').value = '';
+            document.getElementById('add-domain-modal').classList.add('active');
+        };
+
+        window.confirmAddDomain = function() {
+            try {
+                const domain = document.getElementById('new-domain').value.trim().toLowerCase();
+                const currentUser = AuthMgr.getCurrentUser();
+
+                // Validar dominio vacío
+                if (!domain) {
+                    window.showAlert('Por favor, ingresa un dominio válido', 'error');
+                    return;
+                }
+
+                // Validar formato de dominio (ej: ejemplo.com, sub.ejemplo.es)
+                const domainRegex = /^[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,}$/;
+                if (!domainRegex.test(domain)) {
+                    window.showAlert('Formato de dominio inválido. Ejemplo: ejemplo.com', 'error');
+                    return;
+                }
+
+                // Añadir dominio
+                UserDB.addAllowedDomain(domain);
+
+                // Log: Dominio añadido
+                LogManager.log({
+                    type: LogManager.LogType.DOMAIN_ADDED,
+                    severity: LogManager.Severity.INFO,
+                    message: `Dominio añadido a la lista permitidos: @${domain}`,
+                    userId: currentUser.id,
+                    userEmail: currentUser.email,
+                    data: {
+                        domain: domain,
+                        addedAt: Date.now()
+                    }
+                });
+
+                window.closeModal('add-domain-modal');
+                window.showAlert(`Dominio @${domain} añadido correctamente`, 'success');
+                loadDomains();
+            } catch (error) {
+                LogManager.logError('Error al añadir dominio', error);
+                window.showAlert('Error al añadir el dominio: ' + error.message, 'error');
+            }
+        };
+
+        window.removeDomain = function(domain) {
+            if (confirm(`¿Eliminar el dominio @${domain}?`)) {
+                try {
+                    const currentUser = AuthMgr.getCurrentUser();
+
+                    UserDB.removeAllowedDomain(domain);
+
+                    // Log: Dominio eliminado
+                    LogManager.log({
+                        type: LogManager.LogType.DOMAIN_REMOVED,
+                        severity: LogManager.Severity.WARNING,
+                        message: `Dominio eliminado de la lista permitidos: @${domain}`,
+                        userId: currentUser.id,
+                        userEmail: currentUser.email,
+                        data: {
+                            domain: domain,
+                            removedAt: Date.now()
+                        }
+                    });
+
+                    window.showAlert(`Dominio @${domain} eliminado`, 'success');
+                    loadDomains();
+                } catch (error) {
+                    LogManager.logError('Error al eliminar dominio', error, { domain });
+                    window.showAlert('Error al eliminar el dominio: ' + error.message, 'error');
+                }
+            }
+        };
+
+        window.toggleUserStatus = function(userId, currentStatus) {
+            const user = UserDB.getUserById(userId);
+
+            if (currentStatus === 'active') {
+                if (confirm(`¿Bloquear al usuario ${user.name}?`)) {
+                    UserDB.blockUser(userId);
+                    window.showAlert('Usuario bloqueado', 'success');
+                }
+            } else {
+                UserDB.unblockUser(userId);
+                window.showAlert('Usuario desbloqueado', 'success');
+            }
+
+            loadStats();
+            loadUsers();
+        };
+
+        // Funciones de invitación
+        window.showCreateInvitationModal = function() {
+            document.getElementById('invitation-email').value = '';
+            document.getElementById('invitation-name').value = '';
+            document.getElementById('invitation-expiry').value = '7';
+            document.getElementById('create-invitation-modal').classList.add('active');
+        };
+
+        window.confirmCreateInvitation = function() {
+            try {
+                const email = document.getElementById('invitation-email').value.trim();
+                const name = document.getElementById('invitation-name').value.trim();
+                const expiryDays = parseInt(document.getElementById('invitation-expiry').value);
+                const currentUser = AuthMgr.getCurrentUser();
+
+                // Validar email
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!email || !emailRegex.test(email)) {
+                    window.showAlert('Por favor, ingresa un email válido', 'error');
+                    return;
+                }
+
+                // Extraer dominio del email
+                const domain = email.split('@')[1]?.toLowerCase();
+
+                // Crear invitación
+                const invitation = InvitationMgr.createInvitation({
+                    createdBy: currentUser.email,
+                    expiryDays: expiryDays,
+                    maxUses: 1,
+                    allowedDomain: domain
+                });
+
+                // Log: Invitación creada
+                LogManager.log({
+                    type: LogManager.LogType.INVITATION_CREATED,
+                    severity: LogManager.Severity.INFO,
+                    message: `Invitación generada para ${email}`,
+                    userId: currentUser.id,
+                    userEmail: currentUser.email,
+                    data: {
+                        invitationId: invitation.id,
+                        recipientEmail: email,
+                        recipientName: name,
+                        expiryDays: expiryDays,
+                        domain: domain
+                    }
+                });
+
+                // Generar link
+                const invitationLink = InvitationMgr.generateInvitationLink(invitation.token);
+
+                // Simular envío de email con notificación
+                console.log('📧 EMAIL DE INVITACIÓN ENVIADO:');
+                console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+                console.log(`Para: ${email}`);
+                console.log(`Asunto: Invitación a BCF Viewer Pro`);
+                console.log('');
+                console.log(`Hola${name ? ' ' + name : ''},`);
+                console.log('');
+                console.log('Has sido invitado a unirte a BCF Viewer Pro, la plataforma de gestión de incidencias BIM.');
+                console.log('');
+                console.log('📋 Pasos para aceptar la invitación:');
+                console.log('');
+                console.log('1. Haz clic en el siguiente enlace:');
+                console.log(`   ${invitationLink}`);
+                console.log('');
+                console.log('2. Completa el formulario de registro con tu información');
+                console.log('');
+                console.log('3. Una vez registrado, podrás acceder al sistema inmediatamente');
+                console.log('');
+                console.log(`⚠️ Importante: Esta invitación expirará en ${expiryDays} día(s).`);
+                console.log('   Asegúrate de completar el registro antes de esa fecha.');
+                console.log('');
+                console.log('Si tienes alguna pregunta, no dudes en contactarnos.');
+                console.log('');
+                console.log('Saludos,');
+                console.log('El equipo de BCF Viewer Pro');
+                console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
+                // Log: Email enviado
+                LogManager.log({
+                    type: LogManager.LogType.EMAIL_SENT,
+                    severity: LogManager.Severity.INFO,
+                    message: `Email de invitación enviado a ${email}`,
+                    userId: currentUser.id,
+                    userEmail: currentUser.email,
+                    data: {
+                        recipient: email,
+                        type: 'invitation',
+                        invitationId: invitation.id,
+                        includesLink: true
+                    }
+                });
+
+                // Cerrar modal de creación
+                window.closeModal('create-invitation-modal');
+
+                // Mostrar modal con el link
+                document.getElementById('invitation-link-input').value = invitationLink;
+                document.getElementById('invitation-link-modal').classList.add('active');
+
+                // Mostrar alerta de éxito
+                window.showAlert(`Invitación generada y enviada a ${email}`, 'success');
+            } catch (error) {
+                LogManager.logError('Error al generar invitación', error);
+                window.showAlert('Error al generar la invitación: ' + error.message, 'error');
+            }
+        };
+
+        window.copyInvitationLink = function() {
+            const input = document.getElementById('invitation-link-input');
+            input.select();
+            document.execCommand('copy');
+            window.showAlert('Link copiado al portapapeles', 'success');
+        };
+    </script>
+</body>
+</html>

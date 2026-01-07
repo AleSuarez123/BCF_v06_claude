@@ -1638,6 +1638,12 @@ option {
     flex: 1;
     overflow: hidden;
     min-width: 0; /* Prevent flex overflow */
+    justify-content: center; /* Centrar por defecto */
+}
+
+/* Título alineado a la izquierda */
+.col-header[data-col-id="title"] .col-header-content {
+    justify-content: flex-start;
 }
 
 .col-header-content.sortable {
@@ -1705,6 +1711,25 @@ option {
     justify-content: center;
 }
 
+/* Centrar contenido de todas las columnas excepto título */
+.col-index,
+.col-status,
+.col-priority,
+.col-type,
+.col-assigned,
+.col-creation,
+.col-modification,
+.col-due-date,
+.col-labels,
+.col-comments,
+.col-guid,
+.col-actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
 .col-title {
     display: flex;
     flex-direction: column;
@@ -1735,8 +1760,6 @@ option {
 }
 
 .col-status {
-    display: flex;
-    align-items: center;
     gap: 8px;
     font-weight: 500;
 }
@@ -1746,12 +1769,6 @@ option {
     height: 8px;
     border-radius: 50%;
     flex-shrink: 0;
-}
-
-.col-priority {
-    display: flex;
-    align-items: center;
-    justify-content: center;
 }
 
 .priority-tag {
@@ -1767,7 +1784,7 @@ option {
 .priority-medium { color: var(--priority-medium); background: var(--priority-medium-bg); }
 .priority-low { color: var(--priority-low); background: var(--priority-low-bg); }
 
-.col-type, .col-date {
+.col-type {
     color: var(--text-secondary);
     white-space: nowrap;
     overflow: hidden;
@@ -1775,8 +1792,6 @@ option {
 }
 
 .col-assigned {
-    display: flex;
-    align-items: center;
     overflow: hidden;
 }
 
@@ -1817,6 +1832,124 @@ option {
     overflow: hidden;
     text-overflow: ellipsis;
     color: var(--text-primary);
+}
+
+/* Estilos para columnas de creación y modificación */
+.col-creation,
+.col-modification {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    overflow: hidden;
+}
+
+.user-badge-inline {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding-right: 8px;
+    border-radius: 16px;
+    background: var(--bg-tertiary);
+    transition: var(--transition);
+}
+
+.user-badge-inline:hover {
+    background: var(--border-color);
+}
+
+.user-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.user-info-inline {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.user-name-small {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.date-small {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+/* Estilos para columna de vencimiento con badge */
+.col-due-date {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.date-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 12px;
+    border-radius: 16px;
+    background: var(--bg-tertiary);
+    font-size: 0.85rem;
+    white-space: nowrap;
+    transition: var(--transition);
+}
+
+.date-badge:hover {
+    background: var(--border-color);
+}
+
+.date-badge.overdue {
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.date-badge-text {
+    white-space: nowrap;
+}
+
+/* Estilos para columna de comentarios */
+.comment-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    position: relative;
+}
+
+.comment-badge.has-unread {
+    position: relative;
+}
+
+.comment-count-text {
+    font-size: 0.85rem;
+    color: var(--text-primary);
+}
+
+.unread-badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    background: #ef4444;
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 2px 5px;
+    border-radius: 10px;
+    line-height: 1;
+    min-width: 16px;
+    text-align: center;
 }
 
 .col-actions {

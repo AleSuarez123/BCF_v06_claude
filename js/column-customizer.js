@@ -20,11 +20,11 @@ const ALL_COLUMNS = [
     { id: 'status', label: 'Estado', default: true, icon: HEADER_ICONS.status },
     { id: 'priority', label: 'Prioridad', default: true, icon: HEADER_ICONS.priority },
     { id: 'type', label: 'Tipo', default: true, icon: HEADER_ICONS.type },
-    { id: 'labels', label: 'Etiquetas', default: false, icon: HEADER_ICONS.tag },
+    { id: 'creation', label: 'Creación', default: true, icon: HEADER_ICONS.date },
+    { id: 'modification', label: 'Modificación', default: true, icon: HEADER_ICONS.date },
     { id: 'assigned', label: 'Asignado a', default: true, icon: HEADER_ICONS.assigned },
-    { id: 'date', label: 'Creación', default: true, icon: HEADER_ICONS.date },
-    { id: 'date-modified', label: 'Modificación', default: true, icon: HEADER_ICONS.date },
-    { id: 'date-due', label: 'Vencimiento', default: false, icon: HEADER_ICONS.date },
+    { id: 'dueDate', label: 'Vencimiento', default: true, icon: HEADER_ICONS.date },
+    { id: 'labels', label: 'Etiquetas', default: true, icon: HEADER_ICONS.tag },
     { id: 'guid', label: 'GUID', mandatory: true, icon: ICONS.copy },
     { id: 'comments', label: 'Comentarios', mandatory: true, icon: HEADER_ICONS.comments },
     { id: 'actions', label: '', mandatory: true }
@@ -124,7 +124,7 @@ function openCustomizerModal() {
     console.log('Modal no existe, creando...');
 
     const EXCLUDED_IDS = ['actions'];
-    const MASTER_ORDER = ['checkbox','index','title','status','priority','type','assigned','date','comments','guid'];
+    const MASTER_ORDER = ['checkbox','index','title','status','priority','type','creation','modification','assigned','dueDate','labels','comments','guid'];
     const PERMITTED = ALL_COLUMNS.filter(c => !EXCLUDED_IDS.includes(c.id) && !c.mandatory);
 
     function sortByMasterOrder(cols) {
