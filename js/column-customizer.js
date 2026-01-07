@@ -22,7 +22,9 @@ const ALL_COLUMNS = [
     { id: 'type', label: 'Tipo', default: true, icon: HEADER_ICONS.type },
     { id: 'labels', label: 'Etiquetas', default: false, icon: HEADER_ICONS.tag },
     { id: 'assigned', label: 'Asignado a', default: true, icon: HEADER_ICONS.assigned },
-    { id: 'date', label: 'Fecha', default: true, icon: HEADER_ICONS.date },
+    { id: 'date', label: 'Creación', default: true, icon: HEADER_ICONS.date },
+    { id: 'date-modified', label: 'Modificación', default: true, icon: HEADER_ICONS.date },
+    { id: 'date-due', label: 'Vencimiento', default: false, icon: HEADER_ICONS.date },
     { id: 'guid', label: 'GUID', mandatory: true, icon: ICONS.copy },
     { id: 'comments', label: 'Comentarios', mandatory: true, icon: HEADER_ICONS.comments },
     { id: 'actions', label: '', mandatory: true }

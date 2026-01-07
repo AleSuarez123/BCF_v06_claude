@@ -43,7 +43,9 @@ let columnConfig = [
     { id: 'priority', width: 'minmax(110px, 1fr)', label: 'PRIORIDAD', icon: HEADER_ICONS.priority, resize: true, sortable: true, align: 'center' },
     { id: 'type', width: 'minmax(110px, 1fr)', label: 'TIPO', icon: HEADER_ICONS.type, resize: true, sortable: true, align: 'center' },
     { id: 'assigned', width: 'minmax(160px, 1.5fr)', label: 'ASIGNADO A', icon: HEADER_ICONS.assigned, resize: true, sortable: true },
-    { id: 'date', width: 'minmax(110px, 1fr)', label: 'FECHA', icon: HEADER_ICONS.date, resize: true, sortable: true },
+    { id: 'date', width: 'minmax(110px, 1fr)', label: 'CREACIÓN', icon: HEADER_ICONS.date, resize: true, sortable: true },
+    { id: 'date-modified', width: 'minmax(110px, 1fr)', label: 'MODIFICACIÓN', icon: HEADER_ICONS.date, resize: true, sortable: true },
+    { id: 'date-due', width: 'minmax(110px, 1fr)', label: 'VENCIMIENTO', icon: HEADER_ICONS.date, resize: true, sortable: true, hidden: true },
     { id: 'labels', width: '150px', label: 'ETIQUETAS', icon: HEADER_ICONS.tag, resize: true, sortable: false, hidden: true },
     { id: 'comments', width: 'minmax(80px, 0.5fr)', label: 'COMENTARIOS', icon: HEADER_ICONS.comments, resize: true, sortable: false, fixed: true },
     { id: 'guid', width: '48px', label: 'GUID', icon: HEADER_ICONS.guid, resize: true, sortable: false, fixed: true },
@@ -65,7 +67,9 @@ export function updateColumnConfig(newConfigIds) {
         type: { id: 'type', width: 'minmax(110px, 1fr)', label: 'TIPO', icon: HEADER_ICONS.type, resize: true, sortable: true, align: 'center' },
         assigned: { id: 'assigned', width: 'minmax(160px, 1.5fr)', label: 'ASIGNADO A', icon: HEADER_ICONS.assigned, resize: true, sortable: true },
         labels: { id: 'labels', width: '150px', label: 'ETIQUETAS', icon: HEADER_ICONS.tag, resize: true, sortable: false },
-        date: { id: 'date', width: 'minmax(110px, 1fr)', label: 'FECHA', icon: HEADER_ICONS.date, resize: true, sortable: true },
+        date: { id: 'date', width: 'minmax(110px, 1fr)', label: 'CREACIÓN', icon: HEADER_ICONS.date, resize: true, sortable: true },
+        'date-modified': { id: 'date-modified', width: 'minmax(110px, 1fr)', label: 'MODIFICACIÓN', icon: HEADER_ICONS.date, resize: true, sortable: true },
+        'date-due': { id: 'date-due', width: 'minmax(110px, 1fr)', label: 'VENCIMIENTO', icon: HEADER_ICONS.date, resize: true, sortable: true },
         guid: { id: 'guid', width: '48px', label: 'GUID', icon: HEADER_ICONS.guid, resize: true, sortable: false, fixed: true },
         comments: { id: 'comments', width: 'minmax(80px, 0.5fr)', label: 'COMENTARIOS', icon: HEADER_ICONS.comments, resize: true, sortable: false, fixed: true },
         actions: { id: 'actions', width: '80px', fixed: true, label: '' }
@@ -274,6 +278,8 @@ function renderIssuesList(onIssueClick, onFavoriteClick) {
                 case 'type': valA = a.topicType; valB = b.topicType; break;
                 case 'assigned': valA = a.assignedTo || ''; valB = b.assignedTo || ''; break;
                 case 'date': valA = new Date(a.creationDate); valB = new Date(b.creationDate); break;
+                case 'date-modified': valA = new Date(a.modifiedDate || a.creationDate); valB = new Date(b.modifiedDate || b.creationDate); break;
+                case 'date-due': valA = new Date(a.dueDate || '2099-12-31'); valB = new Date(b.dueDate || '2099-12-31'); break;
                 default: valA = ''; valB = '';
             }
             
@@ -378,6 +384,10 @@ function getCellContent(col, issue, isFavorite, index) {
             return `<div class="col-labels" style="padding-left: 8px; text-align: center;">${labelChips}</div>`;
         case 'date':
             return `<div class="col-date">${issue.creationDateFormatted?.split(' ')[0] || '-'}</div>`;
+        case 'date-modified':
+            return `<div class="col-date">${issue.modifiedDateFormatted?.split(' ')[0] || '-'}</div>`;
+        case 'date-due':
+            return `<div class="col-date">${issue.dueDate?.split('T')[0] || '-'}</div>`;
         case 'guid':
             return `
                 <div class="col-guid">
@@ -1146,6 +1156,8 @@ export function filterIssuesByColumns(issues, columnFilters) {
                 case 'type': value = issue.topicType; break;
                 case 'assigned': value = issue.assignedTo || ''; break;
                 case 'date': value = issue.creationDate; break;
+                case 'date-modified': value = issue.modifiedDate; break;
+                case 'date-due': value = issue.dueDate; break;
                 default: return true;
             }
 
