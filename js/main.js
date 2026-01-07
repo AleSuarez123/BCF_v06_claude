@@ -1756,10 +1756,10 @@ async function loadIssueFromAnyProject(issueId) {
         
         if (issue) {
             logger.info('✅ Incidencia encontrada en proyecto:', project.name);
-            
+
             AppState.viewMode = 'list';
-            renderIssues();
-            
+            renderAppIssues();
+
             setTimeout(() => {
                 const el = $(`[data-id="${issueId}"]`);
                 if (el) {
