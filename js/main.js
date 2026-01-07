@@ -21,6 +21,7 @@ import { initSpotlight, openSpotlight, closeSpotlight, navigateSpotlight, select
 import { initKeyboardShortcuts } from './keyboard-shortcuts.js';
 import { exportToPDF, exportToExcel, exportToJSON, exportToCSV } from './export-utils.js';
 import { BCFParser } from './bcf-parser.js';
+import { BCFExporter } from './bcf-exporter.js';
 import { initColumnCustomizer } from './column-customizer.js';
 import { openIssueDetail } from './issue-detail.js';
 import { applyBulkStatus, applyBulkUpdate, applyBulkDelete, deselectAllIssues, toggleIssueSelection, selectAllIssues } from './selection-utils.js';
@@ -121,6 +122,7 @@ const init = async () => {
                 applyFiltersAndSort,
                 exportToExcel,
                 exportToPDF,
+                openBCFExportModal,
                 goToDashboard,
                 navigateIssue,
                 openIssueDetail,
@@ -1176,18 +1178,178 @@ function resetFilters() {
 function setupExport() {
     const btnExcel = $('#btn-export-excel');
     if (btnExcel) btnExcel.addEventListener('click', () => exportToExcel());
-    
+
     const btnCsv = $('#btn-export-csv');
     if (btnCsv) btnCsv.addEventListener('click', () => exportToCSV());
-    
+
     const btnPdf = $('#btn-export-pdf');
     if (btnPdf) btnPdf.addEventListener('click', () => exportToPDF(false));
-    
+
     const btnPdfDetail = $('#btn-export-pdf-detail');
     if (btnPdfDetail) btnPdfDetail.addEventListener('click', () => exportToPDF(true));
-    
+
     const btnJson = $('#btn-export-json');
     if (btnJson) btnJson.addEventListener('click', () => exportToJSON());
+
+    // BCF Export
+    const btnBcf = $('#btn-export-bcf');
+    if (btnBcf) btnBcf.addEventListener('click', () => openBCFExportModal());
+
+    setupBCFExportModal();
+}
+
+function openBCFExportModal() {
+    if (!AppState.currentProject) {
+        notify('Por favor selecciona un proyecto primero', 'warning');
+        return;
+    }
+
+    const modal = $('#modal-export-bcf');
+    if (!modal) return;
+
+    // Resetear UI
+    $('#bcf-export-progress')?.classList.add('hidden');
+    $('#bcf-export-result')?.classList.add('hidden');
+    $('#bcf-export-error')?.classList.add('hidden');
+    $('#btn-start-bcf-export').disabled = false;
+
+    // Calcular conteos según scope
+    updateBCFScopeCount();
+
+    // Generar nombre de archivo sugerido
+    const filename = BCFExporter.generateFilename(
+        AppState.currentProject.name || 'Project',
+        $('#bcf-version')?.value || '3.0'
+    );
+    const filenameInput = $('#bcf-filename');
+    if (filenameInput) filenameInput.value = filename;
+
+    // Mostrar modal
+    modal.classList.add('show');
+}
+
+function updateBCFScopeCount() {
+    const scopeSelect = $('#bcf-scope');
+    const scopeCount = $('#bcf-scope-count');
+
+    if (!scopeSelect || !scopeCount) return;
+
+    const scope = scopeSelect.value;
+    let count = 0;
+
+    if (scope === 'all') {
+        count = AppState.currentIssues.length;
+    } else if (scope === 'filtered') {
+        count = AppState.filteredIssues.length;
+    } else if (scope === 'selected') {
+        count = AppState.selectedIssues.size;
+    }
+
+    scopeCount.textContent = `Se exportarán ${count} incidencia${count !== 1 ? 's' : ''}`;
+}
+
+function setupBCFExportModal() {
+    // Actualizar contador al cambiar scope
+    const scopeSelect = $('#bcf-scope');
+    if (scopeSelect) {
+        scopeSelect.addEventListener('change', updateBCFScopeCount);
+    }
+
+    // Botón de exportar
+    const btnStartExport = $('#btn-start-bcf-export');
+    if (btnStartExport) {
+        btnStartExport.addEventListener('click', async () => {
+            await executeBCFExport();
+        });
+    }
+}
+
+async function executeBCFExport() {
+    const bcfVersion = $('#bcf-version')?.value || '3.0';
+    const scope = $('#bcf-scope')?.value || 'all';
+    const filename = $('#bcf-filename')?.value || 'export.bcfzip';
+    const includeSnapshots = $('#bcf-include-snapshots')?.checked !== false;
+
+    // Validar que hay issues para exportar
+    let topicsToExport = [];
+
+    if (scope === 'all') {
+        topicsToExport = AppState.currentIssues;
+    } else if (scope === 'filtered') {
+        topicsToExport = AppState.filteredIssues;
+    } else if (scope === 'selected') {
+        topicsToExport = Array.from(AppState.selectedIssues)
+            .map(guid => AppState.currentIssues.find(i => i.guid === guid))
+            .filter(i => i);
+    }
+
+    if (topicsToExport.length === 0) {
+        $('#bcf-export-error')?.classList.remove('hidden');
+        const errorMsg = $('#bcf-export-error-message');
+        if (errorMsg) errorMsg.textContent = 'No hay incidencias para exportar con el alcance seleccionado';
+        return;
+    }
+
+    // Ocultar resultados anteriores
+    $('#bcf-export-result')?.classList.add('hidden');
+    $('#bcf-export-error')?.classList.add('hidden');
+
+    // Mostrar progreso
+    $('#bcf-export-progress')?.classList.remove('hidden');
+    $('#btn-start-bcf-export').disabled = true;
+
+    try {
+        const exporter = new BCFExporter({
+            bcfVersion,
+            onProgress: (progress) => {
+                const progressBar = $('#bcf-export-progressbar');
+                const statusText = $('#bcf-export-status');
+                const currentText = $('#bcf-export-current');
+
+                if (progressBar) progressBar.style.width = `${progress.percentage}%`;
+                if (statusText) statusText.textContent = `Exportando ${progress.current} de ${progress.total}...`;
+                if (currentText) currentText.textContent = `Procesando: ${escapeHtml(progress.topic)}`;
+            }
+        });
+
+        const blob = await exporter.exportTopics(topicsToExport, AppState.currentProject.name);
+
+        // Ocultar progreso
+        $('#bcf-export-progress')?.classList.add('hidden');
+
+        // Mostrar éxito
+        $('#bcf-export-result')?.classList.remove('hidden');
+        const resultMsg = $('#bcf-export-result-message');
+        if (resultMsg) {
+            const sizeMB = (blob.size / (1024 * 1024)).toFixed(2);
+            resultMsg.textContent = `Archivo generado: ${filename} (${sizeMB} MB) con ${topicsToExport.length} incidencias`;
+        }
+
+        // Descargar archivo
+        BCFExporter.downloadBlob(blob, filename);
+
+        // Cerrar modal después de 2 segundos
+        setTimeout(() => {
+            closeAllModals();
+        }, 2000);
+
+        notify(`BCF exportado exitosamente: ${topicsToExport.length} incidencias`, 'success');
+
+    } catch (error) {
+        logger.error('Error exportando BCF:', error);
+
+        // Ocultar progreso
+        $('#bcf-export-progress')?.classList.add('hidden');
+
+        // Mostrar error
+        $('#bcf-export-error')?.classList.remove('hidden');
+        const errorMsg = $('#bcf-export-error-message');
+        if (errorMsg) errorMsg.textContent = error.message || 'Error desconocido durante exportación';
+
+        $('#btn-start-bcf-export').disabled = false;
+
+        notify('Error al exportar BCF', 'error');
+    }
 }
 
 function setupTheme() {
