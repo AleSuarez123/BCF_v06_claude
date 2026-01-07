@@ -805,8 +805,8 @@ export async function loadProject(projectId) {
     
     updateFilterOptions();
     applyFiltersAndSort();
-    renderIssues();
-    
+    renderAppIssues();
+
     navigateTo('viewer');
 }
 
@@ -1054,7 +1054,7 @@ function setupNavigation() {
             AppState.viewMode = 'list';
             btnViewList.classList.add('active');
             if (btnViewGrid) btnViewGrid.classList.remove('active');
-            renderIssues();
+            renderAppIssues();
         });
     }
     
@@ -1063,7 +1063,7 @@ function setupNavigation() {
             AppState.viewMode = 'grid';
             btnViewGrid.classList.add('active');
             if (btnViewList) btnViewList.classList.remove('active');
-            renderIssues();
+            renderAppIssues();
         });
     }
 }
@@ -1099,7 +1099,7 @@ function toggleViewMode() {
         if (btnViewList) btnViewList.classList.remove('active');
         if (btnViewGrid) btnViewGrid.classList.add('active');
     }
-    renderIssues();
+    renderAppIssues();
 }
 
 function setupFilters() {
@@ -1144,7 +1144,7 @@ function setupFilters() {
             } else {
                 AppState.selectedIssues.clear();
             }
-            renderIssues();
+            renderAppIssues();
         });
     }
 
@@ -1701,10 +1701,10 @@ async function loadIssueFromAnyProject(issueId) {
         
         if (issue) {
             logger.info('✅ Incidencia encontrada en proyecto:', project.name);
-            
+
             AppState.viewMode = 'list';
-            renderIssues();
-            
+            renderAppIssues();
+
             setTimeout(() => {
                 const el = $(`[data-id="${issueId}"]`);
                 if (el) {
