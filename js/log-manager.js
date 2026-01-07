@@ -310,6 +310,38 @@ export class LogManager {
 
         return stats;
     }
+
+    /**
+     * Obtener un logger para un módulo específico (para módulos BCF)
+     * @param {string} moduleName - Nombre del módulo
+     * @returns {Logger} Instancia de logger
+     */
+    static getLogger(moduleName) {
+        return new Logger(moduleName);
+    }
 }
 
-export default LogManager;
+/**
+ * Clase Logger para módulos BCF
+ */
+class Logger {
+    constructor(moduleName) {
+        this.moduleName = moduleName;
+    }
+
+    debug(...args) {
+        console.debug(`[${this.moduleName}]`, ...args);
+    }
+
+    info(...args) {
+        console.log(`[${this.moduleName}]`, ...args);
+    }
+
+    warn(...args) {
+        console.warn(`[${this.moduleName}]`, ...args);
+    }
+
+    error(...args) {
+        console.error(`[${this.moduleName}]`, ...args);
+    }
+}
