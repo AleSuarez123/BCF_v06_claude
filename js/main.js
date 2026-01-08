@@ -1339,18 +1339,32 @@ function updateBCFScopeCount() {
 }
 
 function setupBCFExportModal() {
+    BCFDebugger.log('MODAL', 'Configurando modal BCF Export...');
+
     // Actualizar contador al cambiar scope
     const scopeSelect = $('#bcf-scope');
     if (scopeSelect) {
         scopeSelect.addEventListener('change', updateBCFScopeCount);
+        BCFDebugger.log('MODAL', '✓ Listener de scope registrado');
+    } else {
+        BCFDebugger.error('MODAL', 'Select de scope NO encontrado', new Error('Scope select not found'));
     }
 
     // Botón de exportar
     const btnStartExport = $('#btn-start-bcf-export');
+    BCFDebugger.log('MODAL', 'Buscando botón de exportar dentro del modal', {
+        buttonFound: !!btnStartExport,
+        buttonId: btnStartExport?.id
+    });
+
     if (btnStartExport) {
         btnStartExport.addEventListener('click', async () => {
+            BCFDebugger.log('EXPORT', '🚀 Click en botón EXPORTAR dentro del modal detectado');
             await executeBCFExport();
         });
+        BCFDebugger.log('MODAL', '✓ Event listener registrado en botón Exportar dentro del modal');
+    } else {
+        BCFDebugger.error('MODAL', 'Botón de exportar (#btn-start-bcf-export) NO encontrado', new Error('Export button not found'));
     }
 }
 
