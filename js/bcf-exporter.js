@@ -41,7 +41,10 @@ export class BCFExporter {
 
             logger.info(`Topics a exportar: ${topicsToExport.length}`);
 
-            // 2. Validar si está habilitado
+            // 2. Limpiar datos (auto-generar fechas faltantes en comentarios)
+            this._sanitizeTopics(topicsToExport);
+
+            // 3. Validar si está habilitado
             if (this.validateBeforeExport) {
                 await this._validateTopics(topicsToExport);
             }
@@ -143,6 +146,66 @@ export class BCFExporter {
         }
 
         return allTopics;
+    }
+
+    /**
+     * Limpia y sanitiza topics antes de exportar
+     * Auto-genera campos faltantes como fechas en comentarios
+     */
+    _sanitizeTopics(topics) {
+        const now = new Date().toISOString();
+        let fixedCount = 0;
+
+        topics.forEach(topic => {
+            // Asegurar que los comentarios tengan fecha
+            if (topic.bcfComments && Array.isArray(topic.bcfComments)) {
+                topic.bcfComments.forEach(comment => {
+                    if (!comment.date || comment.date === '') {
+                        // Usar la fecha de creación del topic si existe, sino la actual
+                        comment.date = topic.creationDate || now;
+                        fixedCount++;
+                    }
+
+                    // Asegurar que tenga GUID
+                    if (!comment.guid || comment.guid === '') {
+                        comment.guid = this._generateGUID();
+                    }
+
+                    // Asegurar que tenga autor
+                    if (!comment.author || comment.author === '') {
+                        comment.author = topic.creationAuthor || 'unknown@example.com';
+                    }
+                });
+            }
+
+            // Asegurar que el topic tenga GUID
+            if (!topic.guid || topic.guid === '') {
+                topic.guid = this._generateGUID();
+            }
+
+            // Asegurar fechas en el topic
+            if (!topic.creationDate || topic.creationDate === '') {
+                topic.creationDate = now;
+            }
+            if (!topic.modifiedDate || topic.modifiedDate === '') {
+                topic.modifiedDate = topic.creationDate || now;
+            }
+        });
+
+        if (fixedCount > 0) {
+            logger.info(`Auto-generadas ${fixedCount} fechas faltantes en comentarios`);
+        }
+    }
+
+    /**
+     * Genera un GUID v4
+     */
+    _generateGUID() {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            const r = Math.random() * 16 | 0;
+            const v = c === 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
     }
 
     /**

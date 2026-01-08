@@ -600,6 +600,16 @@ function setupDropZones() {
     if (btnUploadBcf) {
         btnUploadBcf.addEventListener('click', () => fileInput.click());
     }
+
+    // Botón principal de exportar - Abre modal avanzado
+    const btnOpenAdvancedExport = $('#btn-open-advanced-export');
+    if (btnOpenAdvancedExport) {
+        btnOpenAdvancedExport.addEventListener('click', () => {
+            BCFDebugger.log('EVENT', '🖱️ CLICK en botón Exportar principal');
+            advancedExport.openAdvancedExportModal();
+        });
+        BCFDebugger.log('EVENT', '✓ Event listener registrado en botón Exportar principal');
+    }
 }
 
 // Helpers para lectura de carpetas
