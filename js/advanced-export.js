@@ -101,8 +101,8 @@ export class AdvancedExport {
         const modal = this.createAdvancedModal();
         document.body.appendChild(modal);
 
-        // Mostrar modal con animación
-        setTimeout(() => modal.classList.add('show'), 10);
+        // Mostrar modal con animación (usar 'active' en lugar de 'show' para compatibilidad con CSS)
+        setTimeout(() => modal.classList.add('active'), 10);
 
         // Aplicar preferencias guardadas
         this.applyPreferencesToForm(modal);
