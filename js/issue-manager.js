@@ -989,7 +989,7 @@ function attachListeners(container, onIssueClick, onFavoriteClick) {
       const guid = row?.dataset.id;
       if (guid) {
           // Use dynamic import but ensure store is available or pass intent differently
-          import('./edit-panel.js').then(m => {
+          import('./edit-panel.js?v=2.2.0').then(m => {
               m.store.dispatch({ type: 'SET_TAB', payload: 'comentarios' });
               m.openEditSidebar(guid);
           });
@@ -1001,7 +1001,7 @@ function attachListeners(container, onIssueClick, onFavoriteClick) {
   container.querySelectorAll('.btn-edit').forEach(btn => {
     btn.addEventListener('click', e => {
       e.stopPropagation();
-      import('./edit-panel.js').then(m => m.openEditSidebar(btn.dataset.id));
+      import('./edit-panel.js?v=2.2.0').then(m => m.openEditSidebar(btn.dataset.id));
     });
   });
   
@@ -1279,7 +1279,7 @@ function updateActiveFiltersBadge() {
  * Abre el modal de creación/edición de incidencia
  */
 export function openEditIssueModal(guid = null) {
-    import('./edit-panel.js').then(m => m.openEditSidebar(guid));
+    import('./edit-panel.js?v=2.2.0').then(m => m.openEditSidebar(guid));
 }
 
 /**

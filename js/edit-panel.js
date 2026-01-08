@@ -5,8 +5,12 @@ const ReactRedux = window.ReactRedux;
 import { AppState } from './state.js';
 
 // ===== SISTEMA DE LOGS Y VERSIÓN =====
-const PANEL_VERSION = '2.1.0';
+const PANEL_VERSION = '2.2.0';
 const PANEL_BUILD_DATE = '2026-01-08';
+const PANEL_BUILD_TIME = '14:30:00';
+
+// Log muy visible al cargar
+console.warn(`%c[EDIT-PANEL] Versión ${PANEL_VERSION} cargada (${PANEL_BUILD_DATE} ${PANEL_BUILD_TIME})`, 'background: #3b82f6; color: white; padding: 4px 8px; border-radius: 4px; font-weight: bold;');
 
 const PanelLogger = {
   logs: [],
@@ -39,7 +43,7 @@ const PanelLogger = {
   interaction(msg, data) { this.log('INTERACTION', msg, data); },
   render(msg, data) { this.log('RENDER', msg, data); },
 
-  getVersion() { return { version: PANEL_VERSION, buildDate: PANEL_BUILD_DATE }; },
+  getVersion() { return { version: PANEL_VERSION, buildDate: PANEL_BUILD_DATE, buildTime: PANEL_BUILD_TIME }; },
   getLogs() { return this.logs; },
   clearLogs() { this.logs = []; sessionStorage.removeItem('editPanelLogs'); }
 };
@@ -47,6 +51,7 @@ const PanelLogger = {
 // Exponer globalmente para debugging
 window.PanelLogger = PanelLogger;
 window.PANEL_VERSION = PANEL_VERSION;
+window.EDIT_PANEL_INFO = { version: PANEL_VERSION, buildDate: PANEL_BUILD_DATE, buildTime: PANEL_BUILD_TIME };
 
 PanelLogger.info('Panel lateral cargado', { version: PANEL_VERSION, buildDate: PANEL_BUILD_DATE });
 

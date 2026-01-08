@@ -24,7 +24,7 @@ import { BCFParser } from './bcf-parser.js';
 import { initColumnCustomizer } from './column-customizer.js';
 import { openIssueDetail } from './issue-detail.js';
 import { applyBulkStatus, applyBulkUpdate, applyBulkDelete, deselectAllIssues, toggleIssueSelection, selectAllIssues } from './selection-utils.js';
-import { openEditSidebar } from './edit-panel.js';
+import { openEditSidebar } from './edit-panel.js?v=2.2.0';
 
 // Inicializar API Client
 export const bcfApi = new BCFApiClient('');

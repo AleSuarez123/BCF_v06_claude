@@ -1,6 +1,6 @@
 
 import { filterIssuesByColumns } from './issue-manager.js';
-import { openEditSidebar, openEditSidebarBulk, __getEditPanelState } from './edit-panel.js';
+import { openEditSidebar, openEditSidebarBulk, __getEditPanelState } from './edit-panel.js?v=2.2.0';
 import { AppState } from './state.js';
 
 // Mock data
