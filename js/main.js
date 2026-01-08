@@ -370,6 +370,8 @@ function setupModals() {
             data.append('type', $('#edit-issue-type').value);
             data.append('assigned', $('#edit-issue-assigned').value);
             data.append('labels', $('#edit-issue-labels').value);
+            data.append('dueDate', $('#edit-issue-due-date')?.value || '');
+            data.append('stage', $('#edit-issue-stage')?.value || '');
 
             await saveIssue(data);
             $('#modal-edit-issue').classList.remove('active');

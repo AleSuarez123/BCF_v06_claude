@@ -1298,6 +1298,7 @@ export async function saveIssue(formData) {
     assignedTo: formData.get('assigned'),
     labels: formData.get('labels') ? formData.get('labels').split(',').map(l => l.trim()) : [],
     dueDate: formData.get('dueDate') || '',
+    stage: formData.get('stage') || '',
     modifiedDate: new Date().toISOString(),
     modifiedDateFormatted: BCFParser.formatDate(new Date().toISOString())
   };

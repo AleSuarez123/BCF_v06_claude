@@ -2682,23 +2682,198 @@ option {
     gap: 12px;
 }
 
+/* ===== SECCIÓN CAMPOS BCF - Panel Lateral Derecho ===== */
+
+/* Contenedor principal de campos */
+.bcf-fields-section {
+    background: var(--bg-secondary);
+    border-radius: var(--border-radius-lg);
+    border: 1px solid var(--border-color);
+    margin-bottom: var(--spacing-4);
+    overflow: hidden;
+}
+
+.bcf-fields-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--spacing-3) var(--spacing-4);
+    background: var(--bg-tertiary);
+    border-bottom: 1px solid var(--border-color);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.bcf-fields-header:hover {
+    background: var(--bg-card-hover);
+}
+
+.bcf-fields-title {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+}
+
+.bcf-fields-title svg {
+    width: 16px;
+    height: 16px;
+    color: var(--color-primary);
+}
+
+.bcf-fields-toggle {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.bcf-fields-toggle:hover {
+    background: var(--bg-secondary);
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+}
+
+.bcf-fields-content {
+    padding: var(--spacing-4);
+}
+
+.bcf-fields-section.collapsed .bcf-fields-content {
+    display: none;
+}
+
+/* Grid de campos mejorado */
 .issue-fields-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-    margin-top: 16px;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-4);
+    margin-top: var(--spacing-4);
+}
+
+@media (max-width: 480px) {
+    .issue-fields-grid {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-3);
+    }
+}
+
+/* Campo individual mejorado */
+.issue-field {
+    background: var(--bg-tertiary);
+    padding: var(--spacing-3);
+    border-radius: var(--border-radius);
+    border: 1px solid transparent;
+    transition: var(--transition);
+}
+
+.issue-field:hover {
+    border-color: var(--border-color);
+    background: var(--bg-card-hover);
+}
+
+.issue-field.editable {
+    cursor: pointer;
+}
+
+.issue-field.editable:hover {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
 }
 
 .issue-field label {
-    display: block;
-    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-1);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-medium);
     color: var(--text-muted);
-    margin-bottom: 4px;
+    margin-bottom: var(--spacing-1);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.issue-field label svg {
+    width: 12px;
+    height: 12px;
+    opacity: 0.7;
 }
 
 .issue-field p, .issue-field code {
-    font-size: 0.95rem;
+    font-size: var(--font-size-sm);
     color: var(--text-primary);
+    font-weight: var(--font-weight-medium);
+    word-break: break-word;
+}
+
+.issue-field code {
+    font-family: var(--font-mono);
+    font-size: var(--font-size-xs);
+    background: var(--bg-primary);
+    padding: 2px 6px;
+    border-radius: var(--border-radius-xs);
+    display: inline-block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Campo de ancho completo */
+.issue-field.full-width {
+    grid-column: 1 / -1;
+}
+
+/* Campo con valor vacío */
+.issue-field .empty-value {
+    color: var(--text-muted);
+    font-style: italic;
+    font-weight: var(--font-weight-normal);
+}
+
+/* Indicador de edición */
+.issue-field .edit-indicator {
+    display: none;
+    margin-left: auto;
+    color: var(--color-primary);
+}
+
+.issue-field.editable:hover .edit-indicator {
+    display: inline-flex;
+}
+
+/* Separador de sección */
+.bcf-fields-divider {
+    height: 1px;
+    background: var(--border-color);
+    margin: var(--spacing-4) 0;
+}
+
+/* Grupo de campos relacionados */
+.bcf-field-group {
+    margin-bottom: var(--spacing-4);
+}
+
+.bcf-field-group:last-child {
+    margin-bottom: 0;
+}
+
+.bcf-field-group-title {
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-3);
+    padding-bottom: var(--spacing-2);
+    border-bottom: 1px dashed var(--border-color);
 }
 
 .issue-labels {

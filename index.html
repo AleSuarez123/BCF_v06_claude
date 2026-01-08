@@ -508,18 +508,97 @@
                 <div class="issue-detail-grid">
                     <div class="issue-snapshot-container"><div id="issue-snapshot" class="issue-snapshot"><div class="no-snapshot"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>Sin imagen</span></div></div></div>
                     <div class="issue-info-container">
-                        <div class="issue-meta-row"><span id="issue-status-badge" class="badge"></span><span id="issue-priority-badge" class="badge"></span><span id="issue-type-badge" class="badge badge-type"></span></div>
-                        <div class="issue-field"><label>Descripción</label><p id="issue-description">-</p></div>
-                        <div class="issue-fields-grid">
-                            <div class="issue-field"><label>Autor</label><p id="issue-author">-</p></div>
-                            <div class="issue-field"><label>Asignado</label><p id="issue-assigned">-</p></div>
-                            <div class="issue-field"><label>Creado</label><p id="issue-created">-</p></div>
-                            <div class="issue-field"><label>Modificado</label><p id="issue-modified">-</p></div>
+                        <div class="issue-meta-row">
+                            <span id="issue-status-badge" class="badge"></span>
+                            <span id="issue-priority-badge" class="badge"></span>
+                            <span id="issue-type-badge" class="badge badge-type"></span>
                         </div>
-                        <div class="issue-field"><label>Etiquetas</label><div id="issue-labels" class="issue-labels">-</div></div>
-                        <div class="issue-field"><label>Archivo</label><p id="issue-bcf-file">-</p></div>
-                        <div class="issue-field"><label>GUID</label><code id="issue-guid">-</code></div>
-                        <div class="issue-field" id="issue-link-container" style="display:none;"><label>Enlace</label><a id="issue-link" href="#" target="_blank">-</a></div>
+
+                        <!-- Descripción -->
+                        <div class="issue-field full-width" style="margin-top: 16px;">
+                            <label>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                                Descripción
+                            </label>
+                            <p id="issue-description">-</p>
+                        </div>
+
+                        <!-- Campos BCF Principal -->
+                        <div class="bcf-field-group" style="margin-top: 20px;">
+                            <div class="bcf-field-group-title">Información del Autor</div>
+                            <div class="issue-fields-grid" style="margin-top: 8px;">
+                                <div class="issue-field">
+                                    <label>
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                                        Autor
+                                    </label>
+                                    <p id="issue-author">-</p>
+                                </div>
+                                <div class="issue-field">
+                                    <label>
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                                        Asignado
+                                    </label>
+                                    <p id="issue-assigned">-</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Fechas -->
+                        <div class="bcf-field-group" style="margin-top: 16px;">
+                            <div class="bcf-field-group-title">Fechas</div>
+                            <div class="issue-fields-grid" style="margin-top: 8px;">
+                                <div class="issue-field">
+                                    <label>
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                                        Creado
+                                    </label>
+                                    <p id="issue-created">-</p>
+                                </div>
+                                <div class="issue-field">
+                                    <label>
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                        Modificado
+                                    </label>
+                                    <p id="issue-modified">-</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Metadatos -->
+                        <div class="bcf-field-group" style="margin-top: 16px;">
+                            <div class="bcf-field-group-title">Metadatos BCF</div>
+                            <div class="issue-field" style="margin-top: 8px;">
+                                <label>
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+                                    Etiquetas
+                                </label>
+                                <div id="issue-labels" class="issue-labels">-</div>
+                            </div>
+                            <div class="issue-fields-grid" style="margin-top: 12px;">
+                                <div class="issue-field">
+                                    <label>
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+                                        Archivo
+                                    </label>
+                                    <p id="issue-bcf-file">-</p>
+                                </div>
+                                <div class="issue-field">
+                                    <label>
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                                        GUID
+                                    </label>
+                                    <code id="issue-guid">-</code>
+                                </div>
+                            </div>
+                            <div class="issue-field" id="issue-link-container" style="display:none; margin-top: 12px;">
+                                <label>
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                                    Enlace
+                                </label>
+                                <a id="issue-link" href="#" target="_blank">-</a>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="issue-actions-section"><h4>Acciones</h4><div class="issue-actions-row"><div class="form-group"><label for="change-status">Estado</label><select id="change-status" class="filter-select"><option value="Open">Abierto</option><option value="In Progress">En Proceso</option><option value="Resolved">Resuelto</option><option value="Closed">Cerrado</option></select></div><button id="btn-save-status" class="btn btn-primary">Guardar</button></div></div>
@@ -531,58 +610,141 @@
     <!-- Modal Crear/Editar Incidencia -->
     <div id="modal-edit-issue" class="modal">
         <div class="modal-backdrop"></div>
-        <div class="modal-content">
-            <div class="modal-header"><h3 id="modal-edit-issue-title">Nueva Incidencia</h3><button class="modal-close" data-close-modal>×</button></div>
+        <div class="modal-content" style="max-width: 560px;">
+            <div class="modal-header">
+                <h3 id="modal-edit-issue-title">Nueva Incidencia</h3>
+                <button class="modal-close" data-close-modal>×</button>
+            </div>
             <form id="form-edit-issue" class="modal-body">
                 <input type="hidden" id="edit-issue-guid">
-                <div class="form-group">
-                    <label for="edit-issue-title">Título *</label>
-                    <input type="text" id="edit-issue-title" required placeholder="Ej: Error en muro planta baja">
-                </div>
-                <div class="form-group">
-                    <label for="edit-issue-description">Descripción</label>
-                    <textarea id="edit-issue-description" rows="3" placeholder="Describe el problema..."></textarea>
-                </div>
-                <div class="issue-fields-grid" style="grid-template-columns: 1fr 1fr; gap: 12px;">
-                    <div class="form-group">
-                        <label for="edit-issue-status">Estado</label>
-                        <select id="edit-issue-status" class="filter-select">
-                            <option value="Open">Abierto</option>
-                            <option value="In Progress">En Proceso</option>
-                            <option value="Resolved">Resuelto</option>
-                            <option value="Closed">Cerrado</option>
-                        </select>
+
+                <!-- Información Principal -->
+                <div class="bcf-fields-section">
+                    <div class="bcf-fields-header" onclick="this.parentElement.classList.toggle('collapsed')">
+                        <span class="bcf-fields-title">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                            Información Principal
+                        </span>
+                        <button type="button" class="bcf-fields-toggle" aria-label="Expandir/Colapsar">−</button>
                     </div>
-                    <div class="form-group">
-                        <label for="edit-issue-priority">Prioridad</label>
-                        <select id="edit-issue-priority" class="filter-select">
-                            <option value="Low">Baja</option>
-                            <option value="Medium" selected>Media</option>
-                            <option value="High">Alta</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="edit-issue-type">Tipo</label>
-                        <select id="edit-issue-type" class="filter-select">
-                            <option value="Error">Error</option>
-                            <option value="Warning">Aviso</option>
-                            <option value="Info">Información</option>
-                            <option value="Request">Petición</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="edit-issue-assigned">Asignado a</label>
-                        <input type="text" id="edit-issue-assigned" placeholder="Nombre de usuario">
+                    <div class="bcf-fields-content">
+                        <div class="form-group" style="margin-bottom: 16px;">
+                            <label for="edit-issue-title">Título *</label>
+                            <input type="text" id="edit-issue-title" required placeholder="Ej: Error en muro planta baja">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label for="edit-issue-description">Descripción</label>
+                            <textarea id="edit-issue-description" rows="3" placeholder="Describe el problema detalladamente..."></textarea>
+                        </div>
                     </div>
                 </div>
-                <div class="form-group">
-                    <label for="edit-issue-labels">Etiquetas (separadas por coma)</label>
-                    <input type="text" id="edit-issue-labels" placeholder="Ej: arquitectura, estructural">
+
+                <!-- Campos BCF -->
+                <div class="bcf-fields-section">
+                    <div class="bcf-fields-header" onclick="this.parentElement.classList.toggle('collapsed')">
+                        <span class="bcf-fields-title">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                            Campos BCF
+                        </span>
+                        <button type="button" class="bcf-fields-toggle" aria-label="Expandir/Colapsar">−</button>
+                    </div>
+                    <div class="bcf-fields-content">
+                        <div class="issue-fields-grid" style="margin-top: 0;">
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label for="edit-issue-status">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;margin-right:4px;vertical-align:middle;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                    Estado
+                                </label>
+                                <select id="edit-issue-status" class="filter-select">
+                                    <option value="Open">Abierto</option>
+                                    <option value="In Progress">En Proceso</option>
+                                    <option value="Resolved">Resuelto</option>
+                                    <option value="Closed">Cerrado</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label for="edit-issue-priority">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;margin-right:4px;vertical-align:middle;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+                                    Prioridad
+                                </label>
+                                <select id="edit-issue-priority" class="filter-select">
+                                    <option value="Low">Baja</option>
+                                    <option value="Medium" selected>Media</option>
+                                    <option value="High">Alta</option>
+                                    <option value="Critical">Crítica</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label for="edit-issue-type">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;margin-right:4px;vertical-align:middle;"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                                    Tipo
+                                </label>
+                                <select id="edit-issue-type" class="filter-select">
+                                    <option value="Error">Error</option>
+                                    <option value="Warning">Aviso</option>
+                                    <option value="Info">Información</option>
+                                    <option value="Request">Petición</option>
+                                    <option value="Clash">Colisión</option>
+                                    <option value="Remark">Observación</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label for="edit-issue-assigned">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;margin-right:4px;vertical-align:middle;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                                    Asignado a
+                                </label>
+                                <input type="text" id="edit-issue-assigned" placeholder="Nombre de usuario">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Metadatos -->
+                <div class="bcf-fields-section">
+                    <div class="bcf-fields-header" onclick="this.parentElement.classList.toggle('collapsed')">
+                        <span class="bcf-fields-title">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+                            Metadatos
+                        </span>
+                        <button type="button" class="bcf-fields-toggle" aria-label="Expandir/Colapsar">−</button>
+                    </div>
+                    <div class="bcf-fields-content">
+                        <div class="form-group" style="margin-bottom: 16px;">
+                            <label for="edit-issue-labels">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;margin-right:4px;vertical-align:middle;"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+                                Etiquetas
+                            </label>
+                            <input type="text" id="edit-issue-labels" placeholder="Ej: arquitectura, estructural (separadas por coma)">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 16px;">
+                            <label for="edit-issue-due-date">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;margin-right:4px;vertical-align:middle;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                                Fecha límite
+                            </label>
+                            <input type="date" id="edit-issue-due-date" class="filter-input">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label for="edit-issue-stage">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;margin-right:4px;vertical-align:middle;"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+                                Fase del proyecto
+                            </label>
+                            <select id="edit-issue-stage" class="filter-select">
+                                <option value="">Sin especificar</option>
+                                <option value="Design">Diseño</option>
+                                <option value="Construction">Construcción</option>
+                                <option value="Coordination">Coordinación</option>
+                                <option value="Review">Revisión</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
             </form>
             <div class="modal-footer">
                 <button type="button" class="btn btn-ghost" data-close-modal>Cancelar</button>
-                <button type="submit" form="form-edit-issue" class="btn btn-primary">Guardar Incidencia</button>
+                <button type="submit" form="form-edit-issue" class="btn btn-primary">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;margin-right:6px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                    Guardar Incidencia
+                </button>
             </div>
         </div>
     </div>
