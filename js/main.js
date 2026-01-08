@@ -30,9 +30,13 @@ import { LogManager } from './log-manager.js';
 import { AuthMgr } from './auth-manager.js';
 import { NotificationDB } from './notification-db.js';
 import { BCFDebugger } from './bcf-debug.js';
+import { AdvancedExport } from './advanced-export.js';
 
 // Inicializar API Client
 export const bcfApi = new BCFApiClient('');
+
+// Inicializar Advanced Export (instancia global)
+export const advancedExport = new AdvancedExport();
 
 // Variable global para archivos pendientes de asignar
 let pendingFiles = [];
@@ -195,7 +199,12 @@ const init = async () => {
         
         // Mostrar la aplicación principal
         $('#app').classList.remove('hidden');
-        
+
+        // Exponer instancias globales para acceso desde consola
+        window.AppState = AppState;
+        window.advancedExport = advancedExport;
+        window.BCFDebugger = BCFDebugger;
+
         logger.info('✅ Aplicación iniciada correctamente');
     } catch (error) {
         console.error('Error fatal al iniciar:', error);
@@ -1257,9 +1266,10 @@ function setupExport() {
     if (btnBcf) {
         btnBcf.addEventListener('click', () => {
             BCFDebugger.log('EVENT', '🖱️ CLICK en botón BCF Export detectado');
-            openBCFExportModal();
+            // Abrir modal avanzado en lugar del modal simple
+            advancedExport.openAdvancedExportModal();
         });
-        BCFDebugger.log('EVENT', '✓ Event listener registrado en botón BCF Export');
+        BCFDebugger.log('EVENT', '✓ Event listener registrado en botón BCF Export (modal avanzado)');
     } else {
         BCFDebugger.error('EVENT', 'Botón BCF Export NO encontrado en DOM', new Error('Button not found'));
     }
