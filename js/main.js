@@ -29,6 +29,7 @@ import { openEditSidebar } from './edit-panel.js';
 import { LogManager } from './log-manager.js';
 import { AuthMgr } from './auth-manager.js';
 import { NotificationDB } from './notification-db.js';
+import { BCFDebugger } from './bcf-debug.js';
 
 // Inicializar API Client
 export const bcfApi = new BCFApiClient('');
@@ -1248,19 +1249,48 @@ function setupExport() {
 
     // BCF Export
     const btnBcf = $('#btn-export-bcf');
-    if (btnBcf) btnBcf.addEventListener('click', () => openBCFExportModal());
+    BCFDebugger.log('EVENT', 'Configurando botón BCF Export', {
+        buttonFound: !!btnBcf,
+        buttonId: btnBcf?.id
+    });
+
+    if (btnBcf) {
+        btnBcf.addEventListener('click', () => {
+            BCFDebugger.log('EVENT', '🖱️ CLICK en botón BCF Export detectado');
+            openBCFExportModal();
+        });
+        BCFDebugger.log('EVENT', '✓ Event listener registrado en botón BCF Export');
+    } else {
+        BCFDebugger.error('EVENT', 'Botón BCF Export NO encontrado en DOM', new Error('Button not found'));
+    }
 
     setupBCFExportModal();
 }
 
 function openBCFExportModal() {
+    BCFDebugger.log('MODAL', '📂 openBCFExportModal() llamada');
+
     if (!AppState.currentProject) {
+        BCFDebugger.log('MODAL', '⚠️ No hay proyecto seleccionado');
         notify('Por favor selecciona un proyecto primero', 'warning');
         return;
     }
 
+    BCFDebugger.log('MODAL', 'Proyecto actual', {
+        projectName: AppState.currentProject.name,
+        issuesCount: AppState.currentIssues?.length
+    });
+
     const modal = $('#modal-export-bcf');
-    if (!modal) return;
+    BCFDebugger.log('MODAL', 'Buscando modal en DOM', {
+        modalFound: !!modal,
+        modalId: modal?.id
+    });
+
+    if (!modal) {
+        BCFDebugger.error('MODAL', 'Modal BCF Export NO encontrado', new Error('Modal not found'));
+        return;
+    }
 
     // Resetear UI
     $('#bcf-export-progress')?.classList.add('hidden');
@@ -1280,7 +1310,12 @@ function openBCFExportModal() {
     if (filenameInput) filenameInput.value = filename;
 
     // Mostrar modal
+    BCFDebugger.log('MODAL', '✅ Abriendo modal BCF Export', {
+        filename,
+        modalClasses: Array.from(modal.classList)
+    });
     modal.classList.add('show');
+    BCFDebugger.log('MODAL', '✓ Modal mostrado con clase "show"');
 }
 
 function updateBCFScopeCount() {
@@ -1320,10 +1355,22 @@ function setupBCFExportModal() {
 }
 
 async function executeBCFExport() {
+    BCFDebugger.log('EXPORT', '🚀 executeBCFExport() iniciada');
+
     const bcfVersion = $('#bcf-version')?.value || '3.0';
     const scope = $('#bcf-scope')?.value || 'all';
     const filename = $('#bcf-filename')?.value || 'export.bcfzip';
     const includeSnapshots = $('#bcf-include-snapshots')?.checked !== false;
+
+    BCFDebugger.log('EXPORT', 'Parámetros de exportación', {
+        bcfVersion,
+        scope,
+        filename,
+        includeSnapshots
+    });
+
+    // Verificar JSZip
+    BCFDebugger.checkJSZip();
 
     // Validar que hay issues para exportar
     let topicsToExport = [];
@@ -1338,7 +1385,14 @@ async function executeBCFExport() {
             .filter(i => i);
     }
 
+    BCFDebugger.log('EXPORT', 'Topics recopilados', {
+        count: topicsToExport.length,
+        scope,
+        firstTopic: topicsToExport[0]?.title
+    });
+
     if (topicsToExport.length === 0) {
+        BCFDebugger.log('EXPORT', '⚠️ No hay topics para exportar');
         $('#bcf-export-error')?.classList.remove('hidden');
         const errorMsg = $('#bcf-export-error-message');
         if (errorMsg) errorMsg.textContent = 'No hay incidencias para exportar con el alcance seleccionado';
@@ -1354,9 +1408,16 @@ async function executeBCFExport() {
     $('#btn-start-bcf-export').disabled = true;
 
     try {
+        BCFDebugger.log('EXPORT', 'Creando instancia de BCFExporter...');
+
         const exporter = new BCFExporter({
             bcfVersion,
             onProgress: (progress) => {
+                BCFDebugger.log('EXPORT', `Progreso: ${progress.percentage}%`, {
+                    current: progress.current,
+                    total: progress.total,
+                    topic: progress.topic
+                });
                 const progressBar = $('#bcf-export-progressbar');
                 const statusText = $('#bcf-export-status');
                 const currentText = $('#bcf-export-current');
@@ -1367,7 +1428,15 @@ async function executeBCFExport() {
             }
         });
 
+        BCFDebugger.log('EXPORT', 'Llamando a exporter.exportTopics()...');
+
         const blob = await exporter.exportTopics(topicsToExport, AppState.currentProject.name);
+
+        BCFDebugger.log('SUCCESS', '✅ Blob generado exitosamente', {
+            size: blob.size,
+            type: blob.type,
+            sizeMB: (blob.size / (1024 * 1024)).toFixed(2)
+        });
 
         // Ocultar progreso
         $('#bcf-export-progress')?.classList.add('hidden');
@@ -1381,7 +1450,9 @@ async function executeBCFExport() {
         }
 
         // Descargar archivo
+        BCFDebugger.log('EXPORT', 'Descargando archivo', { filename });
         BCFExporter.downloadBlob(blob, filename);
+        BCFDebugger.log('SUCCESS', '✓ Descarga iniciada');
 
         // Cerrar modal después de 2 segundos
         setTimeout(() => {
@@ -1391,6 +1462,7 @@ async function executeBCFExport() {
         notify(`BCF exportado exitosamente: ${topicsToExport.length} incidencias`, 'success');
 
     } catch (error) {
+        BCFDebugger.error('EXPORT', 'Error durante exportación BCF', error);
         logger.error('Error exportando BCF:', error);
 
         // Ocultar progreso
