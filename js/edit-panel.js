@@ -4,6 +4,52 @@ const Redux = window.Redux;
 const ReactRedux = window.ReactRedux;
 import { AppState } from './state.js';
 
+// ===== SISTEMA DE LOGS Y VERSIÓN =====
+const PANEL_VERSION = '2.1.0';
+const PANEL_BUILD_DATE = '2026-01-08';
+
+const PanelLogger = {
+  logs: [],
+  enabled: true,
+
+  log(type, message, data = {}) {
+    if (!this.enabled) return;
+    const entry = {
+      timestamp: new Date().toISOString(),
+      type,
+      message,
+      data,
+      version: PANEL_VERSION
+    };
+    this.logs.push(entry);
+    console.log(`[EditPanel v${PANEL_VERSION}] [${type}]`, message, data);
+
+    // Guardar en sessionStorage para debugging
+    try {
+      const stored = JSON.parse(sessionStorage.getItem('editPanelLogs') || '[]');
+      stored.push(entry);
+      if (stored.length > 100) stored.shift(); // Mantener últimos 100 logs
+      sessionStorage.setItem('editPanelLogs', JSON.stringify(stored));
+    } catch (e) {}
+  },
+
+  info(msg, data) { this.log('INFO', msg, data); },
+  warn(msg, data) { this.log('WARN', msg, data); },
+  error(msg, data) { this.log('ERROR', msg, data); },
+  interaction(msg, data) { this.log('INTERACTION', msg, data); },
+  render(msg, data) { this.log('RENDER', msg, data); },
+
+  getVersion() { return { version: PANEL_VERSION, buildDate: PANEL_BUILD_DATE }; },
+  getLogs() { return this.logs; },
+  clearLogs() { this.logs = []; sessionStorage.removeItem('editPanelLogs'); }
+};
+
+// Exponer globalmente para debugging
+window.PanelLogger = PanelLogger;
+window.PANEL_VERSION = PANEL_VERSION;
+
+PanelLogger.info('Panel lateral cargado', { version: PANEL_VERSION, buildDate: PANEL_BUILD_DATE });
+
 const initialState = {
   open: false,
   pinned: false,
@@ -18,7 +64,8 @@ const initialState = {
     type: 'Error',
     assigned: '',
     labels: '',
-    dueDate: ''
+    dueDate: '',
+    stage: ''
   },
   errors: {},
   snapshotUrls: [],
@@ -30,12 +77,29 @@ const initialState = {
     { id: 'Open', label: 'Abierto', color: 'warning' },
     { id: 'In Progress', label: 'En Proceso', color: 'accent' },
     { id: 'Resolved', label: 'Resuelto', color: 'success' },
-    { id: 'Closed', label: 'Cerrado', color: 'muted' }
+    { id: 'Closed', label: 'Cerrado', color: 'muted' },
+    { id: 'Review', label: 'En Revisión', color: 'purple' }
   ],
   customPriorities: [
+    { id: 'Critical', label: 'Crítica', icon: 'alert-triangle', color: 'danger' },
     { id: 'High', label: 'Alta', icon: 'arrow-up', color: 'danger' },
     { id: 'Medium', label: 'Media', icon: 'minus', color: 'warning' },
     { id: 'Low', label: 'Baja', icon: 'arrow-down', color: 'success' }
+  ],
+  customTypes: [
+    { id: 'Error', label: 'Error' },
+    { id: 'Warning', label: 'Aviso' },
+    { id: 'Info', label: 'Información' },
+    { id: 'Request', label: 'Petición' },
+    { id: 'Clash', label: 'Colisión' },
+    { id: 'Remark', label: 'Observación' }
+  ],
+  customStages: [
+    { id: '', label: 'Sin especificar' },
+    { id: 'Design', label: 'Diseño' },
+    { id: 'Construction', label: 'Construcción' },
+    { id: 'Coordination', label: 'Coordinación' },
+    { id: 'Review', label: 'Revisión' }
   ]
 };
 
@@ -988,47 +1052,193 @@ function EditSidebarContent() {
     );
   };
 
-  return React.createElement('div', { className: 'panel open edit-sidebar', role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': 'edit-panel-title', 'aria-describedby': 'edit-panel-sub' },
+  // Log de renderizado
+  React.useEffect(() => {
+    PanelLogger.render('Panel renderizado', {
+      tab: activeTab,
+      issueGuid: form.guid,
+      mode: isBulk ? 'bulk' : 'single',
+      timestamp: new Date().toISOString()
+    });
+  }, [activeTab, form.guid]);
+
+  // Componente de sección colapsable
+  const CollapsibleSection = ({ title, icon, children, defaultOpen = true }) => {
+    const [isOpen, setIsOpen] = React.useState(defaultOpen);
+    return React.createElement('div', { className: `bcf-fields-section ${isOpen ? '' : 'collapsed'}` },
+      React.createElement('div', {
+        className: 'bcf-fields-header',
+        onClick: () => {
+          setIsOpen(!isOpen);
+          PanelLogger.interaction('Toggle sección', { section: title, isOpen: !isOpen });
+        }
+      },
+        React.createElement('span', { className: 'bcf-fields-title' },
+          icon,
+          title
+        ),
+        React.createElement('button', {
+          type: 'button',
+          className: 'bcf-fields-toggle',
+          'aria-label': isOpen ? 'Colapsar' : 'Expandir'
+        }, isOpen ? '−' : '+')
+      ),
+      React.createElement('div', { className: 'bcf-fields-content' }, children)
+    );
+  };
+
+  // Iconos SVG
+  const icons = {
+    status: React.createElement('svg', { viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", style: { width: 16, height: 16 } },
+      React.createElement('circle', { cx: "12", cy: "12", r: "10" }),
+      React.createElement('polyline', { points: "12 6 12 12 16 14" })
+    ),
+    fields: React.createElement('svg', { viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", style: { width: 16, height: 16 } },
+      React.createElement('rect', { x: "3", y: "3", width: "7", height: "7" }),
+      React.createElement('rect', { x: "14", y: "3", width: "7", height: "7" }),
+      React.createElement('rect', { x: "14", y: "14", width: "7", height: "7" }),
+      React.createElement('rect', { x: "3", y: "14", width: "7", height: "7" })
+    ),
+    metadata: React.createElement('svg', { viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", style: { width: 16, height: 16 } },
+      React.createElement('path', { d: "M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" }),
+      React.createElement('line', { x1: "7", y1: "7", x2: "7.01", y2: "7" })
+    )
+  };
+
+  // Campo de selección de Fase/Stage
+  const StageSection = ({ value, onChange }) => {
+    const stages = useSelector(s => s.customStages);
+    return React.createElement('div', { className: 'quick-section' },
+      React.createElement('div', { className: 'section-header' },
+        React.createElement('span', { className: 'section-title' },
+          React.createElement('svg', { viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", style: { width: 14, height: 14, marginRight: 6, verticalAlign: 'middle' } },
+            React.createElement('polygon', { points: "12 2 2 7 12 12 22 7 12 2" }),
+            React.createElement('polyline', { points: "2 17 12 22 22 17" }),
+            React.createElement('polyline', { points: "2 12 12 17 22 12" })
+          ),
+          'Fase del proyecto'
+        )
+      ),
+      React.createElement('select', {
+        className: 'filter-select stage-select',
+        value: value || '',
+        onChange: (e) => {
+          onChange(e.target.value);
+          PanelLogger.interaction('Cambio de fase', { stage: e.target.value });
+        }
+      }, stages.map(s => React.createElement('option', { key: s.id, value: s.id }, s.label)))
+    );
+  };
+
+  return React.createElement('div', {
+    className: 'panel open edit-sidebar',
+    role: 'dialog',
+    'aria-modal': 'true',
+    'aria-labelledby': 'edit-panel-title',
+    'aria-describedby': 'edit-panel-sub',
+    'data-panel-version': PANEL_VERSION
+  },
+    // Indicador de versión (solo visible en dev)
+    React.createElement('div', {
+      className: 'panel-version-badge',
+      style: { position: 'absolute', top: 4, left: 4, fontSize: '9px', color: 'var(--text-muted)', opacity: 0.6 }
+    }, `v${PANEL_VERSION}`),
+
     React.createElement(PanelHeader),
     React.createElement(BulkBanner),
     React.createElement(TabsHeader),
     React.createElement('div', { className: 'tab-content' },
+
+      // TAB CAMPOS - Rediseñado con secciones colapsables
       activeTab === 'campos' ? React.createElement('div', { className: 'campos-container' },
+
+        // Snapshot (solo en modo individual)
         !isBulk ? React.createElement(SnapshotSection, { issue: currentIssue }) : null,
-        React.createElement(StatusPills, { value: form.status || 'Open', onChange: (val) => handleField('status')({ target: { value: val } }) }),
-        React.createElement(PriorityPills, { value: form.priority || 'Medium', onChange: (val) => handleField('priority')({ target: { value: val } }) }),
-        React.createElement(AssigneeSection, { value: form.assigned || '', onChange: (val) => handleField('assigned')({ target: { value: val } }) }),
-        React.createElement('div', { className: 'quick-section' },
-          React.createElement('div', { className: 'section-header' },
-            React.createElement('span', { className: 'section-title' }, 'Fecha límite'),
-            React.createElement('span', { className: 'section-action', onClick: () => handleField('dueDate')({ target: { value: '' } }) }, 'Limpiar')
-          ),
-          React.createElement('input', {
-            type: 'date',
-            className: 'date-input',
-            value: (form.dueDate || '').split('T')[0],
-            onInput: (e) => handleField('dueDate')({ target: { value: e.target.value } })
-          })
+
+        // Sección: Estado y Prioridad
+        React.createElement(CollapsibleSection, { title: 'Estado / Prioridad', icon: icons.status, defaultOpen: true },
+          React.createElement(StatusPills, { value: form.status || 'Open', onChange: (val) => {
+            handleField('status')({ target: { value: val } });
+            PanelLogger.interaction('Cambio de estado', { status: val });
+          }}),
+          React.createElement('div', { className: 'bcf-fields-divider' }),
+          React.createElement(PriorityPills, { value: form.priority || 'Medium', onChange: (val) => {
+            handleField('priority')({ target: { value: val } });
+            PanelLogger.interaction('Cambio de prioridad', { priority: val });
+          }})
         ),
-        React.createElement('div', { className: 'quick-section' },
-          React.createElement('div', { className: 'section-header' },
-            React.createElement('span', { className: 'section-title' }, 'Etiquetas'),
-            React.createElement('span', { className: 'section-action', title: 'Gestionar etiquetas', onClick: () => alert('Gestión de etiquetas próximamente') }, 'Gestionar')
-          ),
-          React.createElement(TagsEditor, { value: form.labels || '', onChange: (val) => handleField('labels')({ target: { value: val } }) })
+
+        // Sección: Campos BCF
+        React.createElement(CollapsibleSection, { title: 'Campos BCF', icon: icons.fields, defaultOpen: true },
+          React.createElement(AssigneeSection, { value: form.assigned || '', onChange: (val) => {
+            handleField('assigned')({ target: { value: val } });
+            PanelLogger.interaction('Cambio de asignado', { assigned: val });
+          }}),
+          React.createElement(StageSection, { value: form.stage || '', onChange: (val) => handleField('stage')({ target: { value: val } }) }),
+          React.createElement('div', { className: 'quick-section' },
+            React.createElement('div', { className: 'section-header' },
+              React.createElement('span', { className: 'section-title' },
+                React.createElement('svg', { viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", style: { width: 14, height: 14, marginRight: 6, verticalAlign: 'middle' } },
+                  React.createElement('rect', { x: "3", y: "4", width: "18", height: "18", rx: "2", ry: "2" }),
+                  React.createElement('line', { x1: "16", y1: "2", x2: "16", y2: "6" }),
+                  React.createElement('line', { x1: "8", y1: "2", x2: "8", y2: "6" }),
+                  React.createElement('line', { x1: "3", y1: "10", x2: "21", y2: "10" })
+                ),
+                'Fecha límite'
+              ),
+              React.createElement('span', { className: 'section-action', onClick: () => handleField('dueDate')({ target: { value: '' } }) }, 'Limpiar')
+            ),
+            React.createElement('input', {
+              type: 'date',
+              className: 'date-input filter-input',
+              value: (form.dueDate || '').split('T')[0],
+              onInput: (e) => {
+                handleField('dueDate')({ target: { value: e.target.value } });
+                PanelLogger.interaction('Cambio de fecha límite', { dueDate: e.target.value });
+              }
+            })
+          )
+        ),
+
+        // Sección: Metadatos
+        React.createElement(CollapsibleSection, { title: 'Metadatos', icon: icons.metadata, defaultOpen: true },
+          React.createElement('div', { className: 'quick-section' },
+            React.createElement('div', { className: 'section-header' },
+              React.createElement('span', { className: 'section-title' },
+                React.createElement('svg', { viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", style: { width: 14, height: 14, marginRight: 6, verticalAlign: 'middle' } },
+                  React.createElement('path', { d: "M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" }),
+                  React.createElement('line', { x1: "7", y1: "7", x2: "7.01", y2: "7" })
+                ),
+                'Etiquetas'
+              ),
+              React.createElement('span', { className: 'section-action', title: 'Gestionar etiquetas', onClick: () => alert('Gestión de etiquetas próximamente') }, 'Gestionar')
+            ),
+            React.createElement(TagsEditor, { value: form.labels || '', onChange: (val) => {
+              handleField('labels')({ target: { value: val } });
+              PanelLogger.interaction('Cambio de etiquetas', { labels: val });
+            }})
+          )
         )
+
       ) : null,
+
+      // TAB COMENTARIOS
       activeTab === 'comentarios' ? React.createElement('div', { className: 'comments-section' },
         React.createElement(CommentsHeader),
         React.createElement(CommentsList),
         React.createElement(CommentsComposer)
       ) : null,
+
+      // TAB DETALLES
       activeTab === 'detalles' ? React.createElement('div', { className: 'detalles-container' },
         React.createElement('textarea', {
           className: 'description-editor',
           placeholder: 'Descripción detallada...',
           value: form.description || '',
-          onInput: (e) => handleField('description')(e)
+          onInput: (e) => {
+            handleField('description')(e);
+            PanelLogger.interaction('Edición de descripción', { length: e.target.value.length });
+          }
         })
       ) : null
     ),
@@ -1102,6 +1312,7 @@ function mapCommonFields(issues) {
     status: getVal('topicStatus'),
     priority: getVal('priority'),
     assigned: getVal('assignedTo'),
+    stage: getVal('stage'),
     dueDate: getVal('dueDate')
   };
 }
@@ -1121,8 +1332,14 @@ function toSnapshotUrl(issue) {
  * Abre el panel en modo edición individual
  */
 function openSingle(guid) {
+  PanelLogger.info('Abriendo panel individual', { guid, version: PANEL_VERSION });
+
   const issue = AppState?.currentIssues?.find(i => i.guid === guid);
-  if (!issue) return;
+  if (!issue) {
+    PanelLogger.warn('Incidencia no encontrada', { guid });
+    return;
+  }
+
   const form = {
     title: issue.title || '',
     description: issue.description || '',
@@ -1131,8 +1348,12 @@ function openSingle(guid) {
     type: issue.topicType || 'Error',
     assigned: issue.assignedTo || '',
     labels: (issue.labels || []).join(', '),
-    dueDate: issue.dueDate || ''
+    dueDate: issue.dueDate || '',
+    stage: issue.stage || ''
   };
+
+  PanelLogger.info('Formulario cargado', { issueTitle: form.title, fields: Object.keys(form) });
+
   const snapshots = [toSnapshotUrl(issue)].filter(Boolean);
   store.dispatch({ type: 'OPEN_SINGLE', payload: { guid, form, snapshots } });
 }
@@ -1141,6 +1362,8 @@ function openSingle(guid) {
  * Abre el panel en modo edición masiva
  */
 function openBulk(guids) {
+  PanelLogger.info('Abriendo panel masivo', { count: guids.length, guids, version: PANEL_VERSION });
+
   const issues = AppState?.currentIssues?.filter(i => guids.includes(i.guid)) || [];
   const common = mapCommonFields(issues);
   const snapshots = issues.map(toSnapshotUrl).filter(Boolean);
@@ -1155,8 +1378,11 @@ function closeEditSidebar() {
  * Guarda cambios de una incidencia en modo individual
  */
 async function saveSingle(form) {
+  PanelLogger.info('Guardando incidencia individual', { guid: form.guid, version: PANEL_VERSION });
+
   if (!form.title || form.title.trim().length === 0) {
     store.dispatch({ type: 'SET_ERROR', payload: { field: 'title', message: 'Requerido' } });
+    PanelLogger.warn('Error de validación: título requerido');
     return;
   }
   const fd = new FormData();
@@ -1169,8 +1395,13 @@ async function saveSingle(form) {
   fd.append('assigned', form.assigned || '');
   fd.append('labels', form.labels || '');
   fd.append('dueDate', form.dueDate || '');
+  fd.append('stage', form.stage || '');
+
   const mod = await import('./issue-manager.js');
   await mod.saveIssue(fd);
+
+  PanelLogger.info('Incidencia guardada exitosamente', { guid: form.guid });
+
   const ui = await import('./ui-utils.js');
   ui.notify('Incidencia actualizada', 'success', 3000);
   closeEditSidebar();
@@ -1182,7 +1413,8 @@ function applyBulkLive(field, value) {
     status: 'topicStatus',
     priority: 'priority',
     assigned: 'assignedTo',
-    dueDate: 'dueDate'
+    dueDate: 'dueDate',
+    stage: 'stage'
   };
   const key = mods[field];
   if (!key) return;
@@ -1206,10 +1438,16 @@ function applyBulkLive(field, value) {
  * Aplica cambios en modo masivo y notifica
  */
 async function saveBulk(form) {
+  PanelLogger.info('Guardando cambios masivos', { count: store.getState().selectedGuids?.length, version: PANEL_VERSION });
+
   applyBulkLive('status', form.status);
   applyBulkLive('priority', form.priority);
   applyBulkLive('assigned', form.assigned);
   applyBulkLive('dueDate', form.dueDate);
+  applyBulkLive('stage', form.stage);
+
+  PanelLogger.info('Cambios masivos aplicados');
+
   const ui = await import('./ui-utils.js');
   ui.notify('Cambios aplicados a la selección', 'success', 3000);
   closeEditSidebar();
